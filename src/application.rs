@@ -413,6 +413,7 @@ impl Scripting {
             vm.ensure_slots(1);
             vm.get_variable("app", "State", 0);
         });
+        let class = self.vm.get_slot_handle(0);
 
         self.vm.set_slot_handle(0, &class);
         let _ = self.vm.call(FunctionSignature::new_getter("destroy"));
