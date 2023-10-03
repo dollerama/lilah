@@ -16,19 +16,9 @@ class State {
     static gameobjects=(v) { __gameobjects=v }
     static data { __data }
     static data=(v) { __data=v }
-    
-    static textures { __textures }
 
     static delta_time { __delta_time }
     static delta_time=(v) { __delta_time = v }
-
-    static load_texture(file) {
-        if(__textures == null) {
-            __textures = []
-        }
-
-        __textures.add(file)
-    }
 
     static instantiate(go, d) {
         if(__gameobjects == null) {
@@ -59,7 +49,6 @@ class State {
     }
 
     static load() {
-        __textures = []
         __destroy = []
     }
 

@@ -318,6 +318,31 @@ impl Scripting {
             let _ = self.vm.call_handle(&sm);
         }
 
+        self.vm.set_slot_handle(0, &class);
+        let sm = self.vm.make_call_handle(FunctionSignature::new_function("get_mapping", 1));
+
+        for entry in &mut app.input.mappings {
+            self.vm.set_slot_handle(0, &class);
+            
+            let a = entry.0.to_string();
+            let mut input = entry.1.pressed_down;
+
+            self.vm.execute(|vm| {
+                vm.set_slot_string(1, a);
+            });
+            let _ = self.vm.call_handle(&sm);
+
+            self.vm.execute(|vm| {
+                vm.set_slot_string(1, "pressed_down");
+                vm.get_map_value(0, 1, 2); 
+                 
+                if let Some(b) = vm.get_slot_bool(2) {
+                    input = b;
+                }            
+            });
+            entry.1.pressed_down = input;
+        }
+
         for entry in &app.input.bindings {
             self.vm.set_slot_handle(0, &class);
             let sb = self.vm.make_call_handle(FunctionSignature::new_function("update_binding", 3));
@@ -345,31 +370,6 @@ impl Scripting {
             Ok(_) => {},
             Err(e) => println!("{}", e)
         }
-
-        // self.vm.set_slot_handle(0, &class);
-        // let sm = self.vm.make_call_handle(FunctionSignature::new_function("get_mapping", 1));
-
-        // for entry in &mut app.input.mappings {
-        //     self.vm.set_slot_handle(0, &class);
-            
-        //     let a = entry.0.to_string();
-        //     let mut input = entry.1.pressed_down;
-
-        //     self.vm.execute(|vm| {
-        //         vm.set_slot_string(1, a);
-        //     });
-        //     let _ = self.vm.call_handle(&sm);
-
-        //     self.vm.execute(|vm| {
-        //         vm.set_slot_string(1, "pressed_down");
-        //         vm.get_map_value(0, 1, 2); 
-                 
-        //         if let Some(b) = vm.get_slot_bool(2) {
-        //             input = b;
-        //         }            
-        //     });
-        //     entry.1.pressed_down = input;
-        // }
     }
 
     pub fn handle_timer(&self, app : &mut App, state : &mut WorldState) {
@@ -412,22 +412,6 @@ impl Scripting {
         self.vm.execute(|vm| {
             vm.ensure_slots(1);
             vm.get_variable("app", "State", 0);
-        });
-
-        let class = self.vm.get_slot_handle(0);
-        self.vm.set_slot_handle(0, &class);
-        let _ = self.vm.call(FunctionSignature::new_getter("textures"));
-        
-        self.vm.execute(|vm| {
-            if let Some(count) = vm.get_list_count(0) {
-                for i in 0..count {
-                    vm.get_list_element(0, i as i32, 1);
-                    let file_2 = vm.get_slot_string(1);
-                    if let Some(f) = file_2 {
-                        state.load_texture(&f, app);
-                    }
-                }
-            }
         });
 
         self.vm.set_slot_handle(0, &class);
