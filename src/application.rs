@@ -322,14 +322,13 @@ impl Scripting {
         let sm = self.vm.make_call_handle(FunctionSignature::new_function("get_mapping", 1));
 
         for entry in &mut app.input.mappings {
-            self.vm.set_slot_handle(0, &class);
-            
             let a = entry.0.to_string();
             let mut input = entry.1.pressed_down;
 
             self.vm.execute(|vm| {
                 vm.set_slot_string(1, a);
             });
+            self.vm.set_slot_handle(0, &class);
             let _ = self.vm.call_handle(&sm);
 
             self.vm.execute(|vm| {
