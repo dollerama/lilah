@@ -3,7 +3,7 @@ use std::{collections::{HashMap, hash_map::DefaultHasher}, hash::{Hasher, Hash}}
 use ruwren::{send_foreign, VM, Class, ModuleLibrary, create_module, SlotType, FunctionSignature, get_slot_checked};
 use sdl2::render::Texture;
 
-use crate::{components::{Component, Transform, Sprite, Rigidbody, Animator, Tickable, ComponentBehaviour}, math::Vec2, application::App};
+use crate::{components::{Component, Transform, Sprite, Rigidbody, Animator, Tickable, ComponentBehaviour, Text}, math::Vec2, application::App, world::StateUpdateContainer};
 use uuid::Uuid;
 
 #[macro_export]
@@ -86,10 +86,15 @@ impl GameObject {
         }
     }
 
-    pub fn load(&mut self, tex: &HashMap<String, Texture>) {
+    pub fn load(&mut self, mut app: &mut App, tex: &HashMap<String, Texture>, fonts: &HashMap<String, Vec<u8>>) -> StateUpdateContainer {
+        let mut font_texture_updates = StateUpdateContainer { textures:None };
+        if self.has::<Text>() {
+            font_texture_updates = self.get_mut::<Text>().load(app, fonts);
+        }
+
         if self.init {
             self.start = true;
-            return;
+            return font_texture_updates;
         }
 
         if self.has::<Sprite>() {
@@ -108,6 +113,7 @@ impl GameObject {
         }
 
         self.init = true;
+        font_texture_updates
     }
 
     pub fn update(&mut self, app: &mut App) {

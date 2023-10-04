@@ -8,6 +8,7 @@ use ruwren::{ModuleLibrary, VMConfig, VMWrapper, BasicFileLoader, ModuleScriptLo
 use sdl2::image::InitFlag;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
+use sdl2::ttf::Sdl2TtfContext;
 use sdl2::{Sdl, EventPump};
 use sdl2::pixels::Color;
 use sdl2::event::Event;
@@ -165,7 +166,6 @@ impl Scripting {
 
             self.receive_state(app, state);
             self.handle_timer(app, state);
-            self.handle_input(app, state);
         }
     }
 }
@@ -173,6 +173,7 @@ impl Scripting {
 /// App wrapper
 pub struct App {
     pub canvas: Canvas<Window>,
+    pub font_context: Sdl2TtfContext,
     pub input: Input,
     pub time: Timer, 
     pub tex_creator : TextureCreator<WindowContext>,
@@ -182,7 +183,7 @@ pub struct App {
 impl App {
     pub fn new(window_title : &str) -> Self {
         let sdl_ctx: Sdl = sdl2::init().unwrap();
-        //let font_context = sdl2::ttf::init().map_err(|e| e.to_string()).unwrap();
+        let font_context = sdl2::ttf::init().map_err(|e| e.to_string()).unwrap();
         let _image_context = sdl2::image::init(InitFlag::PNG | InitFlag::JPG).unwrap();
         let video_subsystem = sdl_ctx.video().unwrap();
         let win: Window = video_subsystem.window(window_title, 800, 600)
@@ -201,6 +202,7 @@ impl App {
             input: Input::new(),
             tex_creator : tc,
             time: Timer::new(),
+            font_context
         }
     }
 
@@ -210,13 +212,6 @@ impl App {
 
     pub fn handle_input(&mut self) -> bool {
         let mut end_app: bool = false;
-
-        for i in &mut self.input.mappings {
-            i.1.changed = false;
-        }
-        for i in &mut self.input.mouse_mapping {
-            i.1.changed = false;
-        }
 
         let mouse_pos = Vec2::new(self.event_pump.mouse_state().x() as f64, self.event_pump.mouse_state().y() as f64);
         self.input.update_mouse_pos(mouse_pos);
@@ -231,25 +226,25 @@ impl App {
                     mouse_btn,
                     ..
                 } => {
-                    self.input.update_mouse((&mouse_btn, &InputInfo{pressed: true, pressed_down: true, changed: true}));
+                    self.input.update_mouse((&mouse_btn, &InputInfo{pressed: true, pressed_down: true}));
                 }
                 Event::MouseButtonUp { 
                     mouse_btn,
                     ..
                 } => {
-                    self.input.update_mouse((&mouse_btn, &InputInfo{pressed: false, pressed_down: false, changed: true}));
+                    self.input.update_mouse((&mouse_btn, &InputInfo{pressed: false, pressed_down: false}));
                 }
                 Event::KeyDown {
                 keycode,
                 ..
                 } => {
-                    self.input.update_mapping((&keycode.unwrap(), &InputInfo{pressed: true, pressed_down: true, changed: true}));
+                    self.input.update_mapping((&keycode.unwrap(), &InputInfo{pressed: true, pressed_down: true}));
                 },
                 Event::KeyUp {
                 keycode,
                 ..
                 } => {
-                    self.input.update_mapping((&keycode.unwrap(), &InputInfo{pressed: false, pressed_down: false, changed: true}));
+                    self.input.update_mapping((&keycode.unwrap(), &InputInfo{pressed: false, pressed_down: false}));
                 },
                 
                 _ => {}
@@ -318,30 +313,6 @@ impl Scripting {
             let _ = self.vm.call_handle(&sm);
         }
 
-        self.vm.set_slot_handle(0, &class);
-        let sm = self.vm.make_call_handle(FunctionSignature::new_function("get_mapping", 1));
-
-        for entry in &mut app.input.mappings {
-            let a = entry.0.to_string();
-            let mut input = entry.1.pressed_down;
-
-            self.vm.execute(|vm| {
-                vm.set_slot_string(1, a);
-            });
-            self.vm.set_slot_handle(0, &class);
-            let _ = self.vm.call_handle(&sm);
-
-            self.vm.execute(|vm| {
-                vm.set_slot_string(1, "pressed_down");
-                vm.get_map_value(0, 1, 2); 
-                 
-                if let Some(b) = vm.get_slot_bool(2) {
-                    input = b;
-                }            
-            });
-            entry.1.pressed_down = input;
-        }
-
         for entry in &app.input.bindings {
             self.vm.set_slot_handle(0, &class);
             let sb = self.vm.make_call_handle(FunctionSignature::new_function("update_binding", 3));
@@ -363,12 +334,7 @@ impl Scripting {
             let _ = vm.set_slot_new_foreign("math", "Vec2", app.input.mouse_pos, 1);
         });
         self.vm.set_slot_handle(0, &class);
-        let a = self.vm.call_handle(&set_mouse);
-
-        match a {
-            Ok(_) => {},
-            Err(e) => println!("{}", e)
-        }
+        let _ = self.vm.call_handle(&set_mouse);
     }
 
     pub fn handle_timer(&self, app : &mut App, state : &mut WorldState) {

@@ -1,7 +1,12 @@
 use debug_print::{debug_println, debug_eprintln};
 use ruwren::{Class, VM, send_foreign, get_slot_checked, create_module, ModuleLibrary};
+use sdl2::pixels::Color;
+use sdl2::render::TextureQuery;
+use sdl2::rwops::RWops;
 use sdl2::{render::Texture, rect::Rect};
+use uuid::Uuid;
 use crate::gameobject::GameObjectId;
+use crate::world::{WorldState, StateUpdateContainer};
 use crate::{application::App, gameobject::GameObject};
 use crate::math::Vec2;
 use std::{any::Any, collections::HashMap};
@@ -92,6 +97,18 @@ pub struct Animator {
 pub struct ComponentBehaviour {
     /// Name of wren class to link to behaviour
     component: String
+}
+
+/// Text Component for GameObjects
+#[derive(Clone)]
+pub struct Text {
+    /// Name of wren class to link to behaviour
+    text: String,
+    font_size: u32,
+    font: String,
+    texture_id: String,
+    changed: bool,
+    size: Vec2
 }
 
 //component impls
@@ -629,6 +646,188 @@ impl Animator {
     }
 }
 
+impl Text {
+    pub fn new(t: &str, font: &str) -> Self {
+        Self {
+            text: t.to_string(),
+            font_size: 24,
+            font: font.to_string(),
+            texture_id: Uuid::new_v4().to_string(),
+            changed: true,
+            size: Vec2::ZERO
+        }
+    }
+
+    pub fn get_text(&self) -> &String {
+        &self.text
+    }
+
+    pub fn set_text(&mut self, t: &str) {
+        self.text = t.to_string();
+        self.changed = true;
+    }
+
+    pub fn get_font(&self) -> &String {
+        &self.font
+    }
+
+    pub fn set_font(&mut self, t: &str) {
+        self.font = t.to_string();
+        self.changed = true;
+    }
+
+    pub fn get_font_size(&self) -> u32 {
+        self.font_size
+    }
+
+    pub fn set_font_size(&mut self, s: u32) {
+        self.font_size = s;
+        self.changed = true;
+    }
+
+    pub fn load(&mut self, app: &mut App, fonts: &HashMap<String, Vec<u8>>) -> StateUpdateContainer {
+        if self.changed {
+            self.changed = false;
+
+            if let Some(font_bytes) = fonts.get(&self.font) {
+                let font = 
+                app.font_context.load_font_from_rwops(
+                    RWops::from_bytes(&font_bytes).unwrap(), 
+                    self.font_size.try_into().unwrap()
+                ).unwrap();
+
+                let surface = font
+                    .render(&self.text)
+                    .blended(Color::RGBA(255, 255, 255, 255))
+                    .map_err(|e| e.to_string()).unwrap();
+                let texture = app.tex_creator
+                    .create_texture_from_surface(&surface)
+                    .map_err(|e| e.to_string()).unwrap();
+
+                let TextureQuery { width, height, .. } = texture.query();
+                self.size = Vec2::new(width as f64, height as f64);
+
+                StateUpdateContainer { textures: Some((self.texture_id.clone(), texture)) }
+            }
+            else {
+                StateUpdateContainer { textures: None }
+            }
+        }
+        else {
+            StateUpdateContainer { textures: None }
+        }
+    }
+
+    pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform) {
+        app.canvas.copy(
+        &textures[&self.texture_id], 
+        None, 
+        Some(Rect::new(t.position.x as i32, t.position.y as i32, self.size.x as u32, self.size.y as u32))
+        ).unwrap();
+    }
+
+    //wren
+    fn wren_as_component(&self, vm: &VM) {
+        send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    fn wren_get_text(&self, vm: &VM) {
+        vm.set_slot_string(0, self.text.clone());
+    }
+
+    fn wren_get_font(&self, vm: &VM) {
+        vm.set_slot_string(0, self.font.clone());
+    }
+
+    fn wren_get_font_size(&self, vm: &VM) {
+        vm.set_slot_double(0, self.font_size as f64);
+    }
+
+    fn wren_set_text(&mut self, vm: &VM) {
+        let a = vm.get_slot_string(1);
+        if let Some(a) = a {
+            self.set_text(&a);
+        }
+        else {
+            eprintln!("Unable to set text with non String.")
+        }
+    }
+
+    fn wren_set_font(&mut self, vm: &VM) {
+        let a = vm.get_slot_string(1);
+        if let Some(a) = a {
+            self.set_font(&a);
+        }
+        else {
+            eprintln!("Unable to set font with non String.")
+        }
+    }
+
+    fn wren_set_font_size(&mut self, vm: &VM) {
+        let a = vm.get_slot_double(1);
+        if let Some(a) = a {
+            self.set_font_size(a as u32);
+        }
+        else {
+            eprintln!("Unable to set font size with non Double.")
+        }
+    }
+
+    fn wren_get_text_from_gamobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            vm.set_slot_string(0, comp.get_mut::<Text>().get_text());
+        }
+    }
+
+    fn wren_get_font_from_gamobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            vm.set_slot_string(0, comp.get_mut::<Text>().get_font());
+        }
+    }
+
+    fn wren_get_font_size_from_gamobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            vm.set_slot_double(0, comp.get_mut::<Text>().get_font_size() as f64);
+        }
+    }
+
+    fn wren_set_text_from_gamobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            let a = vm.get_slot_string(2);
+            if let Some(a) = a {
+                comp.get_mut::<Text>().set_text(&a);
+            }
+            else {
+                eprintln!("Unable to set text with non String.")
+            }
+        }
+    }
+
+    fn wren_set_font_from_gamobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            let a = vm.get_slot_string(2);
+            if let Some(a) = a {
+                comp.get_mut::<Text>().set_font(&a);
+            }
+            else {
+                eprintln!("Unable to set font with non String.")
+            }
+        }
+    }
+
+    fn wren_set_font_size_from_gamobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            let a = vm.get_slot_double(2);
+            if let Some(a) = a {
+                comp.get_mut::<Text>().set_font_size(a as u32);
+            }
+            else {
+                eprintln!("Unable to set font size with non Double.")
+            }
+        }
+    }
+}
+
 impl Sprite {
     pub fn new(t_id: &str) -> Self {
         Self {
@@ -867,6 +1066,24 @@ impl Component for ComponentBehaviour {
     }
 }
 
+impl Component for Text {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn send_to_wren(&self, slot : usize, vm : &VM) {
+        send_foreign!(vm, "engine", "Text", self.clone() => slot);
+    }
+
+    fn clone_dyn(&self) -> Box<dyn Component> {
+        Box::new(self.clone())
+    }
+}
+
 impl Tickable<Sprite> for Rigidbody {
     fn tick(&mut self, _: f32, d: &Sprite) {
         let sprite_size = d.get_size();
@@ -929,6 +1146,14 @@ impl Class for ComponentBehaviour {
 impl Class for Animator {
     fn initialize(_: &VM) -> Animator {
         Animator::new()
+    }
+}
+
+impl Class for Text {
+    fn initialize(vm: &VM) -> Text {
+        let b = get_slot_checked!(vm => string 1);
+        let c = get_slot_checked!(vm => string 2);
+        Text::new(&b, &c)
     }
 }
 
@@ -1026,6 +1251,22 @@ create_module! (
 
     class("ComponentBehaviour") crate::components::ComponentBehaviour => componentBehaviour {
         instance(getter "as_component") wren_as_component
+    }
+
+    class("Text") crate::components::Text => text {
+        instance(getter "as_component") wren_as_component,
+        instance(getter "text") wren_get_text,
+        instance(getter "font") wren_get_font,
+        instance(getter "font_size") wren_get_font_size,
+        instance(setter "text") wren_set_text,
+        instance(setter "font") wren_set_font,
+        instance(setter "font_size") wren_set_font_size,
+        static(fn "get_text", 1) wren_get_text_from_gamobject,
+        static(fn "get_font", 1) wren_get_font_from_gamobject,
+        static(fn "get_font_size", 1) wren_get_font_size_from_gamobject,
+        static(fn "set_text", 2) wren_set_text_from_gamobject,
+        static(fn "set_font", 2) wren_set_font_from_gamobject,
+        static(fn "set_font_size", 2) wren_set_font_size_from_gamobject
     }
 
     module => engine

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use debug_print::{debug_print, debug_println, debug_eprintln};
-use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform}, gameobject::GameObjectId};
+use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId};
 use crate::gameobject::GameObject;
 use ruwren::{VM, create_module, Class, get_slot_checked, ModuleLibrary, FunctionSignature, VMWrapper};
 use sdl2::{render::Texture, image::LoadTexture};
@@ -13,9 +13,14 @@ macro_rules! load_texture {
 }
 pub use load_texture;
 
+pub struct StateUpdateContainer {
+    pub textures: Option<(String, Texture)>
+}
+
 pub struct WorldState {
     pub gameobjects: HashMap<String, GameObject>,
-    pub textures : HashMap<String, Texture>
+    pub textures : HashMap<String, Texture>,
+    pub fonts : HashMap<String, Vec<u8>>,
 }
 
 impl WorldState {
@@ -102,7 +107,8 @@ impl World {
         Self {
             state : WorldState {
                 gameobjects: HashMap::new(),
-                textures : HashMap::new()
+                textures : HashMap::new(),
+                fonts: HashMap::new()
             },
             setup_callback  : None,
             start_callback : None,
@@ -131,7 +137,7 @@ impl World {
         }
 
         for (_, i) in &mut self.state.gameobjects {
-            i.load(&self.state.textures);   
+            i.load(app, &self.state.textures, &self.state.fonts);   
         }
 
         if self.start_callback.is_some() {
@@ -145,6 +151,7 @@ impl World {
             if app.pre_frame() {
                 break 'running;
             }
+            scripting.handle_input(app, &mut self.state);
 
             scripting.tick(app, &mut self.state);
             if self.update_callback.is_some() {
@@ -161,16 +168,28 @@ impl World {
     }
 
     fn update_go(&mut self, mut app: &mut App) {
+        let mut font_texture_updates = Vec::new();
         for (_, i) in &mut self.state.gameobjects {
-            i.load(&self.state.textures);   
+            font_texture_updates.push(i.load(app,&self.state.textures, &self.state.fonts));   
             i.update(&mut app);
+        }
+
+        for ftu in font_texture_updates {
+            if let Some(ftu) = ftu.textures {
+                self.state.textures.insert(ftu.0, ftu.1);
+            }
         }
     }
 
     pub fn draw(&self, app: &mut App) {
         for (_, i) in &self.state.gameobjects {
-            if i.has::<Sprite>() && i.has::<Transform>() {
-                i.get::<Sprite>().draw(app, &self.state.textures, i.get::<Transform>());
+            if i.has::<Transform>() {
+                if i.has::<Sprite>() {
+                    i.get::<Sprite>().draw(app, &self.state.textures, i.get::<Transform>());
+                }
+                if i.has::<Text>() {
+                    i.get::<Text>().draw(app, &self.state.textures, i.get::<Transform>());
+                }
             }
         }
     }

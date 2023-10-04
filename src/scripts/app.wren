@@ -110,11 +110,7 @@ class Input {
     static set_mouse_pos(pos) {
         __mouse_pos = Vec2.new(pos.x, pos.y)
     }
-
-    static get_mapping(key) {
-        return __mappings[key]
-    }
-
+    
     static update_mapping(key, pressed, pressed_down) {
         if(__mappings == null) {
             __mappings = {}

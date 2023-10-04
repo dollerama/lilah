@@ -7,7 +7,6 @@ use crate::math::Vec2;
 pub struct InputInfo {
     pub pressed: bool,
     pub pressed_down: bool,
-    pub changed: bool,
 }
 
 /// Contains info needed for bindings

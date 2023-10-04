@@ -24,6 +24,23 @@ class Behaviour {
 
 foreign class Component {}
 
+foreign class Text {
+    construct new(text, font) {}
+    foreign as_component
+    foreign text
+    foreign font
+    foreign font_size
+    foreign text=(v)
+    foreign font=(v)
+    foreign font_size=(v)
+    foreign static get_text(go)
+    foreign static get_font(go)
+    foreign static get_font_size(go)
+    foreign static set_text(go, text)
+    foreign static set_font(go, font)
+    foreign static set_font_size(go, fs)
+}
+
 foreign class Sprite {
     construct new(i) {}
     foreign as_component
