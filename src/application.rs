@@ -1,15 +1,14 @@
 extern crate sdl2;
 use std::collections::HashMap;
-use std::fs;
 use std::path::Path;
 use std::time::Duration;
 
-use ruwren::{ModuleLibrary, VMConfig, VMWrapper, BasicFileLoader, ModuleScriptLoader, FunctionSignature};
-use sdl2::image::InitFlag;
+use ruwren::{ModuleLibrary, VMConfig, VMWrapper, BasicFileLoader, FunctionSignature, Class, VM};
 use sdl2::keyboard::Keycode;
+use sdl2::mixer::{AUDIO_S16LSB, DEFAULT_CHANNELS};
 use sdl2::mouse::MouseButton;
 use sdl2::ttf::Sdl2TtfContext;
-use sdl2::{Sdl, EventPump};
+use sdl2::{Sdl, EventPump, AudioSubsystem};
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::video::{Window, WindowContext};
@@ -22,7 +21,7 @@ use crate::time::Timer;
 use crate::world::WorldState;
 
 #[macro_export]
-macro_rules! load_script {
+macro_rules! embed_script {
     ($path: expr, $scripting:ident) => {
         let module_str = $path.to_string();
         let module_name_full = module_str.split("/").collect::<Vec<&str>>();
@@ -31,7 +30,7 @@ macro_rules! load_script {
         $scripting.load_script(module_name_final[0], include_str!($path));
     };
 }
-pub use load_script;
+pub use embed_script;
 
 /// Scripting wrapper
 pub struct Scripting {
@@ -164,8 +163,9 @@ impl Scripting {
                 }
             } 
 
-            self.receive_state(app, state);
+            self.receive_audio(app, state);
             self.handle_timer(app, state);
+            self.receive_state(app, state);
         }
     }
 }
@@ -178,13 +178,24 @@ pub struct App {
     pub time: Timer, 
     pub tex_creator : TextureCreator<WindowContext>,
     event_pump : EventPump,
+    audio_context : AudioSubsystem
 }
 
 impl App {
     pub fn new(window_title : &str) -> Self {
         let sdl_ctx: Sdl = sdl2::init().unwrap();
         let font_context = sdl2::ttf::init().map_err(|e| e.to_string()).unwrap();
-        let _image_context = sdl2::image::init(InitFlag::PNG | InitFlag::JPG).unwrap();
+        let _image_context = sdl2::image::init(sdl2::image::InitFlag::PNG | sdl2::image::InitFlag::JPG).unwrap();
+        let audio_context = sdl_ctx.audio().unwrap();
+
+        let frequency = 44_100;
+        let format = AUDIO_S16LSB; // signed 16 bit samples, in little-endian byte order
+        let channels = DEFAULT_CHANNELS; // Stereo
+        let chunk_size = 1_024;
+        sdl2::mixer::open_audio(frequency, format, channels, chunk_size).unwrap();
+        let _mixer_context = sdl2::mixer::init(sdl2::mixer::InitFlag::MP3 | sdl2::mixer::InitFlag::FLAC | sdl2::mixer::InitFlag::OGG).unwrap();
+        sdl2::mixer::allocate_channels(4);
+
         let video_subsystem = sdl_ctx.video().unwrap();
         let win: Window = video_subsystem.window(window_title, 800, 600)
             .position_centered()
@@ -202,7 +213,8 @@ impl App {
             input: Input::new(),
             tex_creator : tc,
             time: Timer::new(),
-            font_context
+            font_context,
+            audio_context
         }
     }
 
@@ -373,30 +385,124 @@ impl Scripting {
         let _ = self.vm.call_handle(&set_gs);
     }
 
+    pub fn receive_audio(&self, app : &mut App, state : &mut WorldState) {
+        self.vm.execute(|vm| {
+            vm.ensure_slots(1);
+            vm.get_variable("app", "Audio", 0);
+        });
+        let audio_class = self.vm.get_slot_handle(0);
+
+        //recieve audio
+        self.vm.set_slot_handle(0, &audio_class);
+        let _ = self.vm.call(FunctionSignature::new_getter("dirty"));
+        let mut dirty = false;
+        self.vm.execute(|vm| {                
+            if let Some(d) = vm.get_slot_bool(0) {
+                dirty = d;
+            }
+        });
+        if dirty {
+            self.vm.set_slot_handle(0, &audio_class);
+            let _ = self.vm.call(FunctionSignature::new_getter("command"));
+
+            let mut command = String::from("");
+            self.vm.execute(|vm| {                
+                if let Some(cmd) = vm.get_slot_string(0) {
+                    command = cmd;
+                }
+            });
+
+            self.vm.set_slot_handle(0, &audio_class);
+            let _ = self.vm.call(FunctionSignature::new_getter("volume"));
+
+            self.vm.execute(|vm| {                
+                if let Some(vol) = vm.get_slot_double(0) {
+                    sdl2::mixer::Music::set_volume(vol as i32);
+                }
+            });
+
+            match command.as_ref() {
+                "play" => {
+                    sdl2::mixer::Music::resume();  
+                }
+                "pause" => {
+                    sdl2::mixer::Music::pause();  
+                }
+                "pause_fade" => {
+                    self.vm.set_slot_handle(0, &audio_class);
+                    let _ = self.vm.call(FunctionSignature::new_getter("fade"));
+                    let mut fade = 0;
+                    self.vm.execute(|vm| {                
+                        if let Some(f) = vm.get_slot_double(0) {
+                            fade = f as i32;
+                        }
+                    });
+                    let _ = sdl2::mixer::Music::fade_out(fade); 
+                }
+                "start" => {
+                    self.vm.set_slot_handle(0, &audio_class);
+                    let _ = self.vm.call(FunctionSignature::new_getter("music"));
+                    let mut song = String::from("");
+
+                    self.vm.execute(|vm| {                
+                        if let Some(file) = vm.get_slot_string(0) {
+                            song = file;
+                        }
+                    });
+
+                    if let Some(music) = state.music.get(&song) {
+                        let _ = music.play(-1);
+                    }  
+                }
+                "start_fade" => {
+                    self.vm.set_slot_handle(0, &audio_class);
+                    let _ = self.vm.call(FunctionSignature::new_getter("music"));
+                    let mut song = String::from("");
+
+                    self.vm.execute(|vm| {                
+                        if let Some(file) = vm.get_slot_string(0) {
+                            song = file;
+                        }
+                    });
+
+                    self.vm.set_slot_handle(0, &audio_class);
+                    let _ = self.vm.call(FunctionSignature::new_getter("fade"));
+                    let mut fade = 0;
+                    self.vm.execute(|vm| {                
+                        if let Some(f) = vm.get_slot_double(0) {
+                            fade = f as i32;
+                        }
+                    });
+
+                    if let Some(music) = state.music.get(&song) {
+                        let _ = music.fade_in(-1, fade);
+                    }  
+                }
+                _ => {}
+            }
+        }
+        else {
+            self.vm.execute(|vm| {                
+                vm.set_slot_double(1, sdl2::mixer::Music::get_volume() as f64);
+            });
+
+            self.vm.set_slot_handle(0, &audio_class);
+            let _ = self.vm.call(FunctionSignature::new_setter("volume"));
+        }
+        //end
+    }
+
     pub fn receive_state(&self, app : &mut App, state : &mut WorldState) {
+        //get classes
         self.vm.execute(|vm| {
             vm.ensure_slots(1);
             vm.get_variable("app", "State", 0);
         });
-        let class = self.vm.get_slot_handle(0);
+        let state_class = self.vm.get_slot_handle(0);
+        //end
 
-        self.vm.set_slot_handle(0, &class);
-        let _ = self.vm.call(FunctionSignature::new_getter("destroy"));
-
-        self.vm.execute(|vm| {
-            if let Some(count) = vm.get_list_count(0) {
-                for i in 0..count {
-                    vm.get_list_element(0, i as i32, 1);
-                    
-                    let go = vm.get_slot_foreign::<GameObject>(1);
-                    if let Some(g) = go {
-                        state.gameobjects.remove(&g.id.uuid);
-                    }
-                }
-            }
-        });
-
-        self.vm.set_slot_handle(0, &class);
+        //recieve gameobjects
+        self.vm.set_slot_handle(0, &state_class);
         let _ = self.vm.call(FunctionSignature::new_getter("gameobjects"));
 
         self.vm.execute(|vm| {
@@ -414,7 +520,26 @@ impl Scripting {
             }
         });
 
-        self.vm.set_slot_handle(0, &class);
-        let _ = self.vm.call(FunctionSignature::new_function("load", 0));
+        self.vm.set_slot_handle(0, &state_class);
+        let _ = self.vm.call(FunctionSignature::new_getter("destroy"));
+
+        self.vm.execute(|vm| {
+            if let Some(count) = vm.get_list_count(0) {
+                for i in 0..count {
+                    vm.get_list_element(0, i as i32, 1);
+                    
+                    let go = vm.get_slot_foreign::<GameObject>(1);
+                    if let Some(g) = go {
+                        state.gameobjects.remove(&g.id.uuid);
+                    }
+                }
+            }
+        });
+        //end
+
+        //clear all
+        self.vm.set_slot_handle(0, &state_class);
+        let _ = self.vm.call(FunctionSignature::new_function("clear", 0));
+        //end
     }
 }

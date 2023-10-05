@@ -9,9 +9,53 @@ class GameObjectRef {
     }
 }
 
+class Audio {
+    static music { __music }
+    static command { __command }
+    static dirty { __dirty }
+    static volume { __volume }
+    static fade { __fade }
+    static volume=(v) { 
+        __dirty = true
+        __volume = v 
+    }
+
+    static play(file) {
+        __command = "start"
+        __music = file
+        __dirty = true
+    }
+
+    static play(file, fade_in_ms) {
+        __command = "start_fade"
+        __music = file
+        __fade = fade_in_ms
+        __dirty = true
+    }
+
+    static play() {
+        __command = "play"
+        __dirty = true
+    }
+
+    static pause() {
+        __command = "pause"
+        __dirty = true
+    }
+
+    static pause(fade_out_ms) {
+        __command = "pause_fade"
+        __fade = fade_out_ms
+        __dirty = true
+    }
+
+    static clear() {
+        __dirty = false
+    }
+}
+
 class State {
     static destroy { __destroy }
-
     static gameobjects { __gameobjects }
     static gameobjects=(v) { __gameobjects=v }
     static data { __data }
@@ -48,8 +92,9 @@ class State {
         return GameObjectRef.new(__gameobjects.count-1)
     }
 
-    static load() {
+    static clear() {
         __destroy = []
+        Audio.clear()
     }
 
     static destroy(key) {

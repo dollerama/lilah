@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 use debug_print::{debug_print, debug_println, debug_eprintln};
 use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId};
 use crate::gameobject::GameObject;
@@ -6,24 +6,57 @@ use ruwren::{VM, create_module, Class, get_slot_checked, ModuleLibrary, Function
 use sdl2::{render::Texture, image::LoadTexture};
 
 #[macro_export]
-macro_rules! load_texture {
+macro_rules! embed_texture {
     ($path: expr, $state:ident, $app:ident) => {
         $state.load_texture_bytes($path, include_bytes!($path), $app);
     };
 }
+pub use embed_texture;
+
+#[macro_export]
+macro_rules! embed_font {
+    ($path: expr, $state:ident) => {
+        $state.fonts.insert($path.to_string(), include_bytes!($path).to_vec());
+    };
+}
+pub use embed_font;
+
+#[macro_export]
+macro_rules! embed_music {
+    ($path: expr, $state:ident) => {
+        $state.load_audio_bytes($path, include_bytes!($path));
+    };
+}
+pub use embed_music;
+
+#[macro_export]
+macro_rules! load_texture {
+    ($path: expr, $state:ident, $app:ident) => {
+        $state.load_texture($path, $app);
+    };
+}
 pub use load_texture;
+
+#[macro_export]
+macro_rules! load_music {
+    ($path: expr, $state:ident) => {
+        $state.load_audio($path, $path);
+    };
+}
+pub use load_music;
 
 pub struct StateUpdateContainer {
     pub textures: Option<(String, Texture)>
 }
 
-pub struct WorldState {
+pub struct WorldState<'a> {
     pub gameobjects: HashMap<String, GameObject>,
     pub textures : HashMap<String, Texture>,
     pub fonts : HashMap<String, Vec<u8>>,
+    pub music : HashMap<String, sdl2::mixer::Music<'a>>
 }
 
-impl WorldState {
+impl<'a> WorldState<'a> {
     pub fn wrap(&self, key: &str) -> Option<&GameObject> {
         if let Some(g) = self.gameobjects.iter().find(|(_, k)| (k.id.name == key || k.id.uuid == key)) {
             Some(g.1)
@@ -92,23 +125,46 @@ impl WorldState {
             }
         };
     }
+
+    pub fn load_audio(&mut self, name: &str, source : &str) {
+        match sdl2::mixer::Music::from_file(Path::new(source)) {
+            Ok(music) => {
+                self.music.insert(name.to_string(), music);
+            }
+            Err(e) => {
+                debug_eprintln!("Audio Error: {}", e);
+            }
+        }
+    }
+
+    pub fn load_audio_bytes(&mut self, name: &str, source : &'static [u8]) {
+        match sdl2::mixer::Music::from_static_bytes(source) {
+            Ok(music) => {
+                self.music.insert(name.to_string(), music);
+            }
+            Err(e) => {
+                debug_eprintln!("Audio Error: {}", e);
+            }
+        }
+    }
 }
 
-pub struct World {
-    pub state : WorldState,
+pub struct World<'a> {
+    pub state : WorldState<'a>,
     pub setup_callback : Option<Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>>,
     pub start_callback : Option<Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>>,
     pub update_callback : Option<Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>>
 }
 
-impl World {
+impl<'a> World<'a> {
     //builder
     pub fn new() -> Self {
         Self {
             state : WorldState {
                 gameobjects: HashMap::new(),
                 textures : HashMap::new(),
-                fonts: HashMap::new()
+                fonts: HashMap::new(),
+                music: HashMap::new()
             },
             setup_callback  : None,
             start_callback : None,
@@ -116,22 +172,22 @@ impl World {
         }
     }
 
-    pub fn setup(mut self, s : Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>) -> World {
+    pub fn setup(mut self, s : Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>) -> World<'a> {
         self.setup_callback  = Some(s);
         self
     }
 
-    pub fn start(mut self, s : Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>) -> World {
+    pub fn start(mut self, s : Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>) -> World<'a> {
         self.start_callback  = Some(s);
         self
     }
     
-    pub fn tick(mut self, s : Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>) -> World {
+    pub fn tick(mut self, s : Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>) -> World<'a> {
         self.update_callback  = Some(s);
         self
     }
 
-    pub fn run(mut self, app : &mut App, scripting : &mut Scripting) -> World {
+    pub fn run(mut self, app : &mut App, scripting : &mut Scripting) -> World<'a> {
         if self.setup_callback.is_some() {
             self.setup_callback.as_mut().unwrap()(app, &mut self.state, scripting);
         }

@@ -1,5 +1,5 @@
 import "math" for Vec2
-import "app" for State, Input, GameObjectRef
+import "app" for State, Input, GameObjectRef, Audio
 import "engine" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text
  
 class Player is Behaviour {
@@ -29,6 +29,8 @@ class Player is Behaviour {
         Animator.set_state(gameobject.ref, "Row0")
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
+
+        Audio.play("assets/test.mp3", 5000)
     }
     
     static update(id) {
@@ -47,5 +49,13 @@ class Player is Behaviour {
         // if(gameobject.ref.get_component("Rigidbody").colliding != null) {
         //     State.destroy(gameobject.ref.get_component("Rigidbody").colliding["uuid"])
         // }
+
+        if(Input.key("P")) {
+            Audio.pause(5000)
+        }
+
+        if(Input.key("O")) {
+            Audio.play("assets/test.mp3", 5000)
+        }
     }
 }

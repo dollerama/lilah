@@ -1,19 +1,12 @@
-use lilah::application::App;
-use lilah::application::Scripting;
-use lilah::load_script;
+use lilah::application::*;
 use lilah::world::*;
-use sdl2::pixels::Color;
-use sdl2::rect::Rect;
-use sdl2::render::TextureQuery;
-use sdl2::rwops;
-use sdl2::rwops::RWops;
 
 fn setup(app : &mut App, state : &mut WorldState, scripting : &mut Scripting) {
-    load_script!("assets/scripts/Player.wren", scripting);
-    load_script!("assets/scripts/Player2.wren", scripting);
-
-    load_texture!("assets/test.png", state, app);
-    state.fonts.insert("assets/Lora-Regular.ttf".to_string(), include_bytes!("assets/Lora-Regular.ttf").to_vec());
+    embed_script!("assets/scripts/Player.wren", scripting);
+    embed_script!("assets/scripts/Player2.wren", scripting);
+    embed_texture!("assets/test.png", state, app);
+    embed_font!("assets/Lora-Regular.ttf", state);
+    embed_music!("assets/test.mp3", state);
 }
 
 pub fn main() {  
