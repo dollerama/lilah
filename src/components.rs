@@ -1,4 +1,3 @@
-use debug_print::{debug_println, debug_eprintln};
 use ruwren::{Class, VM, send_foreign, get_slot_checked, create_module, ModuleLibrary};
 use sdl2::pixels::Color;
 use sdl2::render::TextureQuery;
@@ -6,7 +5,7 @@ use sdl2::rwops::RWops;
 use sdl2::{render::Texture, rect::Rect};
 use uuid::Uuid;
 use crate::gameobject::GameObjectId;
-use crate::world::{WorldState, StateUpdateContainer};
+use crate::world::StateUpdateContainer;
 use crate::{application::App, gameobject::GameObject};
 use crate::math::Vec2;
 use std::{any::Any, collections::HashMap};
@@ -25,18 +24,6 @@ pub trait Tickable<T: Component> {
     /// ```
     fn tick(&mut self, dt: f32, d: &T);
 }
-
-// pub trait Buildable<T: Component> {
-//     fn build(&mut self, d: &T);
-// }
-
-// pub trait Initable<T: Component> {
-//     fn init(&mut self, d: &T);
-// }
-
-// pub trait Drawable<T: Component> {
-//     fn draw(&mut self, d: &T);
-// }
 
 pub trait Component {
     fn as_any(&self) -> &dyn Any;
@@ -133,6 +120,10 @@ impl Sfx {
         }
     }
 
+    pub fn play(&mut self) {
+        self.play_state = true;
+    }
+
     //for wren
     fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
@@ -143,8 +134,10 @@ impl Sfx {
     }
 
     fn wren_name_setter(&mut self, vm: &VM) {
-        let s = get_slot_checked!(vm => string 1);
-        self.name = s;
+        match vm.get_slot_string(1) {
+            Some(name) => self.name = name.clone(),
+            None => { eprintln!("Sfx Error: Arg (1) must be of type String"); }
+        }
     }
 
     fn wren_file_getter(&self, vm: &VM) {
@@ -156,53 +149,79 @@ impl Sfx {
     }
 
     fn wren_volume_setter(&mut self, vm: &VM) {
-        let s = get_slot_checked!(vm => num 1);
-        self.volume = s;
+        match vm.get_slot_double(1) {
+            Some(volume) => self.volume = volume,
+            None => { eprintln!("Sfx Error: Arg (1) must be of type Double"); }
+        }
     }
 
-    fn wren_play(&mut self, vm: &VM) {
+    fn wren_play(&mut self, _vm: &VM) {
         self.play_state = true;
     }
 
     fn wren_set_volume_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let name = vm.get_slot_string(2);
-            let vol = vm.get_slot_double(3);
-            if let (Some(n), Some(v)) = (name, vol) {
-                for i in comp.wrap_all_mut::<Sfx>() {
-                    if i.name == n {
-                        i.volume = v;
-                        break;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                let name = vm.get_slot_string(2);
+                let vol = vm.get_slot_double(3);
+                if let (Some(n), Some(v)) = (name, vol) {
+                    for i in comp.wrap_all_mut::<Sfx>() {
+                        if i.name == n {
+                            i.volume = v;
+                            break;
+                        }
                     }
                 }
+                else {
+                    eprintln!("Sfx Error: Arg (2) must be of type String and Arg (3) must be of type Double");
+                }
+            }
+            None => {
+                eprintln!("Sfx Error: Arg (1) must be of type GameObject");
             }
         }
     }
 
     fn wren_play_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let name = vm.get_slot_string(2);
-            if let Some(n) = name {
-                for i in comp.wrap_all_mut::<Sfx>() {
-                    if i.name == n {
-                        i.play_state = true;
-                        break;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                let name = vm.get_slot_string(2);
+                if let Some(n) = name {
+                    for i in comp.wrap_all_mut::<Sfx>() {
+                        if i.name == n {
+                            i.play_state = true;
+                            break;
+                        }
                     }
                 }
+                else {
+                    eprintln!("Sfx Error: Arg (2) must be of type String");
+                }
+            }
+            None => {
+                eprintln!("Sfx Error: Arg (1) must be of type GameObject");
             }
         }
     }
 
     fn wren_get_volume_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let name = vm.get_slot_string(2);
-            if let Some(n) = name {
-                for i in comp.wrap_all_mut::<Sfx>() {
-                    if i.name == n {
-                        vm.set_slot_double(0, i.volume);
-                        break;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                let name = vm.get_slot_string(2);
+                if let Some(n) = name {
+                    for i in comp.wrap_all_mut::<Sfx>() {
+                        if i.name == n {
+                            vm.set_slot_double(0, i.volume);
+                            break;
+                        }
                     }
                 }
+                else {
+                    eprintln!("Sfx Error: Arg (2) must be of type String");
+                }
+            }
+            None => {
+                eprintln!("Sfx Error: Arg (1) must be of type GameObject");
             }
         }
     }
@@ -236,116 +255,197 @@ impl Transform {
     }
 
     fn wren_set_pos(&mut self, vm: &VM) {
-        if let Some(a) = vm.get_slot_foreign::<Vec2>(1) {
-            self.position = a.clone();
+        match vm.get_slot_foreign::<Vec2>(1) {
+            Some(pos) => self.position = *pos,
+            None => { eprintln!("Transform Error: Arg (1) must be of type Vec2"); }
         }
     }
 
     fn wren_set_scale(&mut self, vm: &VM) {
-        if let Some(a) = vm.get_slot_foreign::<Vec2>(1) {
-            self.position = a.clone();
+        match vm.get_slot_foreign::<Vec2>(1) {
+            Some(scale) => self.scale = *scale,
+            None => { eprintln!("Transform Error: Arg (1) must be of type Vec2"); }
         }
     }
 
     fn wren_set_rotation(&mut self, vm: &VM) {
-        self.rotation = get_slot_checked!(vm => num 1);
+        match vm.get_slot_double(1) {
+            Some(rotation) => self.rotation = rotation,
+            None => { eprintln!("Transform Error: Arg (1) must be of type Double"); }
+        }
     }
 
     fn wren_set_pos_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => foreign Vec2 => 2);
-            comp.get_mut::<Transform>().position = *p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_foreign::<Vec2>(2) {
+                    Some(pos) => comp.get_mut::<Transform>().position = *pos,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Vec2"); }
+                }
+            }
+            None => {
+                eprintln!("Transform Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_set_pos_x_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Transform>().position.x = p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(pos_x) => comp.get_mut::<Transform>().position.x = pos_x,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_set_pos_y_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 1);
-            comp.get_mut::<Transform>().position.y = p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(pos_y) => comp.get_mut::<Transform>().position.y = pos_y,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_update_pos_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => foreign Vec2 => 2);
-            comp.get_mut::<Transform>().position += *p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_foreign::<Vec2>(2) {
+                    Some(pos) => comp.get_mut::<Transform>().position += *pos,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Vec2"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_update_pos_x_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Transform>().position.x += p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(pos_x) => comp.get_mut::<Transform>().position.x += pos_x,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_update_pos_y_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Transform>().position.y += p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(pos_y) => comp.get_mut::<Transform>().position.y += pos_y,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_set_scale_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => foreign Vec2 => 2);
-            comp.get_mut::<Transform>().scale = *p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_foreign::<Vec2>(2) {
+                    Some(scale) => comp.get_mut::<Transform>().scale = *scale,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Vec2"); }
+                }
+            }
+            None => {
+                eprintln!("Transform Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_set_scale_x_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Transform>().scale.x = p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(scale_x) => comp.get_mut::<Transform>().scale.x = scale_x,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_set_scale_y_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Transform>().scale.y = p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(scale_y) => comp.get_mut::<Transform>().scale.y = scale_y,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_update_scale_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => foreign Vec2 => 2);
-            comp.get_mut::<Transform>().scale += *p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_foreign::<Vec2>(2) {
+                    Some(scale) => comp.get_mut::<Transform>().scale += *scale,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Vec2"); }
+                }
+            }
+            None => {
+                eprintln!("Transform Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_update_scale_x_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Transform>().scale.x += p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(scale_x) => comp.get_mut::<Transform>().scale.x += scale_x,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_update_scale_y_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Transform>().scale.y += p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(scale_y) => comp.get_mut::<Transform>().scale.y += scale_y,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_set_rot_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let i = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Transform>().rotation = i;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(rotation) => comp.get_mut::<Transform>().rotation = rotation,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_update_rot_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let i = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Transform>().rotation += i;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(rotation) => comp.get_mut::<Transform>().rotation += rotation,
+                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
         }
     }
     //for wren
@@ -421,8 +521,10 @@ impl Rigidbody {
     }
 
     fn wren_vel_setter(&mut self, vm: &VM) {
-        let p = get_slot_checked!(vm => foreign Vec2 => 1);
-        self.velocity = *p;
+        match vm.get_slot_foreign::<Vec2>(1) {
+            Some(vel) => self.velocity = *vel,
+            None => { eprintln!("Rigidbody Error: Arg (1) must be of type Vec2"); }
+        }
     }
 
     fn wren_solid_getter(&self, vm: &VM) {
@@ -430,8 +532,10 @@ impl Rigidbody {
     }
 
     fn wren_solid_setter(&mut self, vm: &VM) {
-        let s = get_slot_checked!(vm => bool 1);
-        self.solid = s;
+        match vm.get_slot_bool(1) {
+            Some(solid) => self.solid = solid,
+            None => { eprintln!("Rigidbody Error: Arg (1) must be of type bool"); }
+        }
     }
 
     fn wren_colliding_getter(&mut self, vm: &VM) {
@@ -450,89 +554,162 @@ impl Rigidbody {
     }
 
     fn wren_colliding_from_gameobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            if let Some(coll) = comp.get::<Rigidbody>().colliding.clone() {
-                vm.set_slot_new_map(0);
-                vm.set_slot_string(2, "id");
-                vm.set_slot_string(3, coll.name.clone());
-                vm.set_map_value(0, 2, 3);
-                vm.set_slot_string(2, "uuid");
-                vm.set_slot_string(3, coll.uuid.clone());
-                vm.set_map_value(0, 2, 3);
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                if let Some(coll) = comp.get::<Rigidbody>().colliding.clone() {
+                    vm.set_slot_new_map(0);
+                    vm.set_slot_string(2, "id");
+                    vm.set_slot_string(3, coll.name.clone());
+                    vm.set_map_value(0, 2, 3);
+                    vm.set_slot_string(2, "uuid");
+                    vm.set_slot_string(3, coll.uuid.clone());
+                    vm.set_map_value(0, 2, 3);
+                }
+                else {
+                    vm.set_slot_null(0)
+                }
             }
-            else {
-                vm.set_slot_null(0)
-            }
+            None => { eprintln!("Rigidbody Error: Arg (1) must be of type GameObject"); }
         }
     }
 
     fn wren_set_vel_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => foreign Vec2 => 2);
-            comp.get_mut::<Rigidbody>().velocity = *p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_foreign::<Vec2>(2) {
+                    Some(vel) => comp.get_mut::<Rigidbody>().velocity = *vel,
+                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Vec2"); }
+                }
+            }
+            None => {
+                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_set_pos_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => foreign Vec2 => 2);
-            comp.get_mut::<Rigidbody>().position = *p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_foreign::<Vec2>(2) {
+                    Some(pos) => comp.get_mut::<Rigidbody>().position = *pos,
+                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Vec2"); }
+                }
+            }
+            None => {
+                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_set_pos_x_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Rigidbody>().position.x = p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(pos_x) => comp.get_mut::<Rigidbody>().position.x = pos_x,
+                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => {
+                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_set_pos_y_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Rigidbody>().position.y = p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(pos_y) => comp.get_mut::<Rigidbody>().position.y = pos_y,
+                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => {
+                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_set_vel_x_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Rigidbody>().velocity.x = p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(vel_x) => comp.get_mut::<Rigidbody>().velocity.x = vel_x,
+                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => {
+                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_set_vel_y_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Rigidbody>().velocity.y = p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(vel_y) => comp.get_mut::<Rigidbody>().velocity.y = vel_y,
+                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => {
+                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_set_solid_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let s = get_slot_checked!(vm => bool 2);
-            comp.get_mut::<Rigidbody>().solid = s;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_bool(2) {
+                    Some(solid) => comp.get_mut::<Rigidbody>().solid = solid,
+                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type bool"); }
+                }
+            }
+            None => {
+                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_update_vel_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => foreign Vec2 => 2);
-            comp.get_mut::<Rigidbody>().velocity += *p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_foreign::<Vec2>(2) {
+                    Some(vel) => comp.get_mut::<Rigidbody>().velocity += *vel,
+                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Vec2"); }
+                }
+            }
+            None => {
+                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_update_vel_x_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Rigidbody>().velocity.x += p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(vel_x) => comp.get_mut::<Rigidbody>().velocity.x += vel_x,
+                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => {
+                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_update_vel_y_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => num 2);
-            comp.get_mut::<Rigidbody>().velocity.y += p;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(vel_y) => comp.get_mut::<Rigidbody>().velocity.y += vel_y,
+                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                }
+            }
+            None => {
+                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 }
@@ -640,104 +817,211 @@ impl Animator {
         vm.set_slot_double(0, self.speed);   
     }
 
-    fn wren_play(&mut self, vm: &VM) {
+    fn wren_play(&mut self, _vm: &VM) {
         self.play();  
     }
 
-    fn wren_stop(&mut self, vm: &VM) {
+    fn wren_stop(&mut self, _vm: &VM) {
         self.stop();  
     }
 
     fn wren_get_state(&self, vm: &VM) {
-        if let Some(state) = vm.get_slot_string(1) {
-            if let Some(s) = self.states.get(&state) {
-                vm.set_slot_new_map(0);
-                vm.set_slot_string(1, state);
-                send_foreign!(vm, "math", "Vec2", Vec2::new(s.0 as f64, s.1 as f64) => 2);
-                vm.set_map_value(0, 1, 2);
+        match vm.get_slot_string(1) {
+            Some(state) => {
+                match self.states.get(&state) {
+                    Some(s) => {
+                        vm.set_slot_new_map(0);
+                        vm.set_slot_string(1, state);
+                        send_foreign!(vm, "math", "Vec2", Vec2::new(s.0 as f64, s.1 as f64) => 2);
+                        vm.set_map_value(0, 1, 2);
+                    }
+                    None => {
+                        eprintln!("Animator Error: State->{} not found", state);
+                    }
+                }
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type String");
             }
         }
     }
 
     fn wren_set_state(&mut self, vm: &VM) {
-        if let Some(state) = vm.get_slot_string(1) {
-            self.set_state(&state);
+        match vm.get_slot_string(1) {
+            Some(state) => {
+                self.set_state(&state);
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type String");
+            }
         }
     }
 
     fn wren_insert_state(&mut self, vm: &VM) {
-        if let Some(state) = vm.get_slot_string(1) {
-            let loc = get_slot_checked!(vm => foreign Vec2 => 2);
-            self.states.insert(state, (loc.x as i32, loc.y as i32));
+        match vm.get_slot_string(1) {
+            Some(state) => {
+                match vm.get_slot_foreign::<Vec2>(2) {
+                    Some(loc) => {
+                        self.states.insert(state, (loc.x as i32, loc.y as i32));
+                    }
+                    None => {
+                        eprintln!("Animator Error: Arg (2) must be of type Vec2");
+                    }
+                }
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type String");
+            }
         }
     }
 
     fn wren_set_speed(&mut self, vm: &VM) {
-        if let Some(speed) = vm.get_slot_double(1) {
-            self.speed = speed;
+        match vm.get_slot_double(1) {
+            Some(speed) => {
+                self.speed = speed;
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type Double");
+            }
         }
     }
 
     fn wren_set_frame(&mut self, vm: &VM) {
-        if let Some(frame) = vm.get_slot_double(1) {
-            self.current_frame = frame;
+        match vm.get_slot_double(1) {
+            Some(frame) => {
+                self.current_frame = frame;
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type Double");
+            }
         }
     }
 
     fn wren_play_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            comp.get_mut::<Animator>().play();
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                comp.get_mut::<Animator>().play();
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_stop_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            comp.get_mut::<Animator>().stop();
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                comp.get_mut::<Animator>().stop();
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type GameObject");
+            }
         }
     }
 
     fn wren_set_state_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            if let Some(state) = vm.get_slot_string(2) {
-                comp.get_mut::<Animator>().set_state(&state);
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_string(2) {
+                    Some(state) => {
+                        comp.get_mut::<Animator>().set_state(&state);
+                    }
+                    None => {
+                        eprintln!("Animator Error: Arg (2) must be of type String");
+                    }
+                }
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type GameObject");
             }
         }
     }
 
     fn wren_get_state_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            if let Some(state) = vm.get_slot_string(1) {
-                if let Some(s) = comp.get::<Animator>().states.get(&state) {
-                    vm.set_slot_new_map(0);
-                    vm.set_slot_string(1, state);
-                    send_foreign!(vm, "math", "Vec2", Vec2::new(s.0 as f64, s.1 as f64) => 2);
-                    vm.set_map_value(0, 1, 2);
+        match vm.get_slot_foreign::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_string(2) {
+                    Some(state) => {
+                        match comp.get::<Animator>().states.get(&state) {
+                            Some(s) => {
+                                vm.set_slot_new_map(0);
+                                vm.set_slot_string(1, state);
+                                send_foreign!(vm, "math", "Vec2", Vec2::new(s.0 as f64, s.1 as f64) => 2);
+                                vm.set_map_value(0, 1, 2);
+                            }
+                            None => {
+                                eprintln!("Animator Error: State->{} not found", state);
+                            }
+                        }
+                    }
+                    None => {
+                        eprintln!("Animator Error: Arg (2) must be of type String");
+                    }
                 }
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type GameObject");
             }
         }
     }
 
     fn wren_insert_state_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            if let Some(state) = vm.get_slot_string(2) {
-                let loc = get_slot_checked!(vm => foreign Vec2 => 3);
-                comp.get_mut::<Animator>().states.insert(state, (loc.x as i32, loc.y as i32));
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_string(2) {
+                    Some(state) => {
+                        match vm.get_slot_foreign::<Vec2>(3) {
+                            Some(loc) => {
+                                comp.get_mut::<Animator>().states.insert(state, (loc.x as i32, loc.y as i32));
+                            }
+                            None => {
+                                eprintln!("Animator Error: Arg (3) must be of type Vec2");
+                            }
+                        }
+                    }
+                    None => {
+                        eprintln!("Animator Error: Arg (2) must be of type String");
+                    }
+                }
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type GameObject");
             }
         }
     }
 
     fn wren_set_speed_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            if let Some(speed) = vm.get_slot_double(2) {
-                comp.get_mut::<Animator>().speed = speed;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(speed) => {
+                        comp.get_mut::<Animator>().speed = speed;
+                    }
+                    None => {
+                        eprintln!("Animator Error: Arg (2) must be of type Double");
+                    }
+                }
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type GameObject");
             }
         }
     }
 
     fn wren_set_frame_from_gamobject(vm: &VM) {
-        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            if let Some(frame) = vm.get_slot_double(2) {
-                comp.get_mut::<Animator>().current_frame = frame;
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(frame) => {
+                        comp.get_mut::<Animator>().current_frame = frame;
+                    }
+                    None => {
+                        eprintln!("Animator Error: Arg (2) must be of type Double");
+                    }
+                }
+            }
+            None => {
+                eprintln!("Animator Error: Arg (1) must be of type GameObject");
             }
         }
     }
@@ -807,6 +1091,7 @@ impl Text {
                 StateUpdateContainer { textures: Some((self.texture_id.clone(), texture)), sfx: None }
             }
             else {
+                eprintln!("Text Error: Could not find {}", self.font);
                 StateUpdateContainer { textures: None, sfx: None  }
             }
         }
@@ -816,11 +1101,13 @@ impl Text {
     }
 
     pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform) {
-        app.canvas.copy(
+        if let Err(e) = app.canvas.copy(
         &textures[&self.texture_id], 
         None, 
         Some(Rect::new(t.position.x as i32, t.position.y as i32, self.size.x as u32, self.size.y as u32))
-        ).unwrap();
+        ) {
+            eprintln!("Text Error: {}", e);
+        }
     }
 
     //wren
@@ -846,7 +1133,7 @@ impl Text {
             self.set_text(&a);
         }
         else {
-            eprintln!("Unable to set text with non String.")
+            eprintln!("Text Error: Arg (1) must be of type String");
         }
     }
 
@@ -856,7 +1143,7 @@ impl Text {
             self.set_font(&a);
         }
         else {
-            eprintln!("Unable to set font with non String.")
+            eprintln!("Text Error: Arg (1) must be of type String");
         }
     }
 
@@ -866,7 +1153,7 @@ impl Text {
             self.set_font_size(a as u32);
         }
         else {
-            eprintln!("Unable to set font size with non Double.")
+            eprintln!("Text Error: Arg (1) must be of type Double");
         }
     }
 
@@ -874,17 +1161,26 @@ impl Text {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             vm.set_slot_string(0, comp.get_mut::<Text>().get_text());
         }
+        else {
+            eprintln!("Text Error: Arg (1) must be of type GameObject");
+        }
     }
 
     fn wren_get_font_from_gamobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             vm.set_slot_string(0, comp.get_mut::<Text>().get_font());
         }
+        else {
+            eprintln!("Text Error: Arg (1) must be of type GameObject");
+        }
     }
 
     fn wren_get_font_size_from_gamobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             vm.set_slot_double(0, comp.get_mut::<Text>().get_font_size() as f64);
+        }
+        else {
+            eprintln!("Text Error: Arg (1) must be of type GameObject");
         }
     }
 
@@ -895,8 +1191,11 @@ impl Text {
                 comp.get_mut::<Text>().set_text(&a);
             }
             else {
-                eprintln!("Unable to set text with non String.")
+                eprintln!("Text Error: Arg (2) must be of type String");
             }
+        }
+        else {
+            eprintln!("Text Error: Arg (1) must be of type GameObject");
         }
     }
 
@@ -907,8 +1206,11 @@ impl Text {
                 comp.get_mut::<Text>().set_font(&a);
             }
             else {
-                eprintln!("Unable to set font with non String.")
+                eprintln!("Text Error: Arg (2) must be of type String");
             }
+        }
+        else {
+            eprintln!("Text Error: Arg (1) must be of type GameObject");
         }
     }
 
@@ -919,8 +1221,11 @@ impl Text {
                 comp.get_mut::<Text>().set_font_size(a as u32);
             }
             else {
-                eprintln!("Unable to set font size with non Double.")
+                eprintln!("Text Error: Arg (2) must be of type Double");
             }
+        }
+        else {
+            eprintln!("Text Error: Arg (1) must be of type GameObject");
         }
     }
 }
@@ -944,7 +1249,7 @@ impl Sprite {
             );
         }
         else {
-            debug_eprintln!("Sprite Error: Unable to Get Texture Id {}", self.texture_id);
+            eprintln!("Sprite Error: Unable to Get Texture Id {}", self.texture_id);
         }
 
         self.anim_sprite_sheet(self.index_cut.0, self.index_cut.1);
@@ -968,7 +1273,7 @@ impl Sprite {
     }
 
     pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform) {
-        app.canvas.copy_ex(
+        if let Err(e) = app.canvas.copy_ex(
             &textures[&self.texture_id], 
             Rect::new(
                 self.index.0,
@@ -984,7 +1289,9 @@ impl Sprite {
             None,
             t.scale.x < 0.0,
             t.scale.y < 0.0
-        ).unwrap();
+        ) {
+            eprintln!("Sprite Error: {}", e);
+        }
     }
 
     //for wren
@@ -1001,9 +1308,12 @@ impl Sprite {
     }
 
     fn wren_cut_sprite_sheet(&mut self, vm: &VM) {
-        let xy = get_slot_checked!(vm => foreign Vec2 => 1);
-        let colrow = get_slot_checked!(vm => foreign Vec2 => 2);
-        self.cut_sprite_sheet(xy.x as i32, xy.y as i32, colrow.x as u32, colrow.y as u32);
+        if let (Some(xy), Some(colrow)) = (vm.get_slot_foreign::<Vec2>(1), vm.get_slot_foreign::<Vec2>(1)) {
+            self.cut_sprite_sheet(xy.x as i32, xy.y as i32, colrow.x as u32, colrow.y as u32);
+        }
+        else {
+            eprintln!("Sprite Error: Arg (1) and Arg(2) must be of type Vec2");
+        }
     }
 
 
@@ -1011,18 +1321,32 @@ impl Sprite {
         vm.set_slot_string(0, self.texture_id.clone());
     }
 
-    fn wren_set_size_from_gamobject(vm: &VM) {
+    fn _wren_set_size_from_gamobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let p = get_slot_checked!(vm => foreign Vec2 => 2);
-            comp.get_mut::<Sprite>().base_size = (p.x as u32, p.y as u32);
+            if let Some(pos) = vm.get_slot_foreign::<Vec2>(2) {
+                comp.get_mut::<Sprite>().base_size = (pos.x as u32, pos.y as u32);
+            }
+            else {
+                eprintln!("Sprite Error: Arg (2) must be of type Vec2");
+            }
+        }
+        else {
+            eprintln!("Sprite Error: Arg (1) must be of type GameObject");
         }
     }
 
     fn wren_cut_sprite_sheet_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            let xy = get_slot_checked!(vm => foreign Vec2 => 2);
-            let colrow = get_slot_checked!(vm => foreign Vec2 => 3);
-            comp.get_mut::<Sprite>().cut_sprite_sheet(xy.x as i32, xy.y as i32, colrow.x as u32, colrow.y as u32);
+            if let (Some(xy), Some(colrow)) = (vm.get_slot_foreign::<Vec2>(2), vm.get_slot_foreign::<Vec2>(3)) {
+                comp.get_mut::<Sprite>()
+                .cut_sprite_sheet(xy.x as i32, xy.y as i32, colrow.x as u32, colrow.y as u32);
+            }
+            else {
+                eprintln!("Sprite Error: Arg (2) and Arg(3) must be of type Vec2");
+            }
+        }
+        else {
+            eprintln!("Sprite Error: Arg (1) must be of type GameObject");
         }
     }
 }
@@ -1233,28 +1557,43 @@ impl Class for Box<dyn Component> {
 
 impl Class for Transform {
     fn initialize(vm: &VM) -> Transform {
-        let p = get_slot_checked!(vm => foreign Vec2 => 1);
-        Transform::new(*p)
+        if let Some(pos) = vm.get_slot_foreign::<Vec2>(1) {
+            Transform::new(*pos)
+        }
+        else {
+            eprintln!("Transform Error: Arg (1) must be of type Vec2 constructor will be defaulted");
+            Transform::new(Vec2::default())
+        }
     }
 }
 
 impl Class for Sprite {
     fn initialize(vm: &VM) -> Sprite {
-        let t_id = get_slot_checked!(vm => string 1);
-        Sprite::new(t_id.as_str())
+        if let Some(t_id) = vm.get_slot_string(1) {
+            Sprite::new(t_id.as_str())
+        }
+        else {
+            eprintln!("Sprite Error: Arg (1) must be of type String constructor will be defaulted");
+            Sprite::new("")
+        }
     }
 }
 
 impl Class for Rigidbody {
-    fn initialize(vm: &VM) -> Rigidbody {
+    fn initialize(_vm: &VM) -> Rigidbody {
         Rigidbody::new_without_pos()
     }
 }
 
 impl Class for ComponentBehaviour {
     fn initialize(vm: &VM) -> ComponentBehaviour {
-        let b = get_slot_checked!(vm => string 1);
-        ComponentBehaviour::new(b)
+        if let Some(c) = vm.get_slot_string(1) {
+            ComponentBehaviour::new(c)
+        }
+        else {
+            eprintln!("ComponentBehaviour Error: Arg (1) must be of type String constructor will be defaulted");
+            ComponentBehaviour::new("".to_string())
+        }
     }
 }
 
@@ -1266,17 +1605,25 @@ impl Class for Animator {
 
 impl Class for Sfx {
     fn initialize(vm: &VM) -> Sfx {
-        let b = get_slot_checked!(vm => string 1);
-        let c = get_slot_checked!(vm => string 2);
-        Sfx::new(b, c)
+        if let (Some(b), Some(c)) = (vm.get_slot_string(1), vm.get_slot_string(2)) {
+            Sfx::new(b, c)
+        }
+        else {
+            eprintln!("Sfx Error: Arg (1) and Arg(2) must be of type String constructor will be defaulted");
+            Sfx::new("".to_string(), "".to_string())
+        }
     }
 }
 
 impl Class for Text {
     fn initialize(vm: &VM) -> Text {
-        let b = get_slot_checked!(vm => string 1);
-        let c = get_slot_checked!(vm => string 2);
-        Text::new(&b, &c)
+        if let (Some(b), Some(c)) = (vm.get_slot_string(1), vm.get_slot_string(2)) {
+            Text::new(b.as_str(), c.as_str())
+        }
+        else {
+            eprintln!("Text Error: Arg (1) and Arg(2) must be of type String constructor will be defaulted");
+            Text::new("", "")
+        }
     }
 }
 
@@ -1372,7 +1719,7 @@ create_module! (
         static(fn "set_frame", 2) wren_set_frame_from_gamobject
     }
 
-    class("ComponentBehaviour") crate::components::ComponentBehaviour => componentBehaviour {
+    class("ComponentBehaviour") crate::components::ComponentBehaviour => component_behaviour {
         instance(getter "as_component") wren_as_component
     }
 

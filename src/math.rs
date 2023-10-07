@@ -1,6 +1,6 @@
 use std::{ops, hash::Hasher, hash::Hash};
 
-use ruwren::{Class, get_slot_checked, VM, create_module, ModuleLibrary, send_foreign};
+use ruwren::{Class, VM, create_module, ModuleLibrary};
 
 /// Vector for 2d translations etc.
 /// # Examples
@@ -42,11 +42,15 @@ pub struct Vec2 {
 impl Class for Vec2 {
     /// Wren constructor
     fn initialize(vm: &VM) -> Self {
-        let x = get_slot_checked!(vm => num 1);
-        let y = get_slot_checked!(vm => num 2);
-        Vec2 {
-            x: x as f64,
-            y: y as f64
+        if let (Some(x), Some(y)) = (vm.get_slot_double(1), vm.get_slot_double(2)) {
+            Vec2 {
+                x: x as f64,
+                y: y as f64
+            }
+        }
+        else {
+            eprintln!("Vec2 Error: Arg (1) and Arg(2) must be of type Double constructor will be defaulted");
+            Vec2::ZERO
         }
     }
 }
@@ -137,11 +141,21 @@ impl Vec2 {
     }
 
     fn wren_set_x(&mut self, vm: &VM) {
-        self.x = get_slot_checked!(vm => num 1);
+        if let Some(x) = vm.get_slot_double(1) {
+            self.x = x;
+        }
+        else {
+            eprintln!("Vec2 Error: Arg (1) must be of type Double");
+        }
     }
 
     fn wren_set_y(&mut self, vm: &VM) {
-        self.y = get_slot_checked!(vm => num 1);
+        if let Some(y) = vm.get_slot_double(1) {
+            self.y = y;
+        }
+        else {
+            eprintln!("Vec2 Error: Arg (1) must be of type Double");
+        }
     }
 
     fn wren_magnitude(&mut self, vm: &VM) {
@@ -159,7 +173,7 @@ impl Vec2 {
         }
     }
 
-    fn wren_normalize(&mut self, vm: &VM) {
+    fn wren_normalize(&mut self, _vm: &VM) {
         self.normalize();
     }
 

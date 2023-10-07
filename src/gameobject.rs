@@ -1,6 +1,7 @@
-use std::{collections::{HashMap, hash_map::DefaultHasher}, hash::{Hasher, Hash}};
+use std::collections::HashMap;
 
-use ruwren::{send_foreign, VM, Class, ModuleLibrary, create_module, SlotType, FunctionSignature, get_slot_checked};
+use debug_print::debug_println;
+use ruwren::{send_foreign, VM, Class, get_slot_checked};
 use sdl2::{render::Texture, mixer::Chunk};
 
 use crate::{components::{Component, Transform, Sprite, Rigidbody, Animator, Tickable, ComponentBehaviour, Text, Sfx}, math::Vec2, application::App, world::StateUpdateContainer};
@@ -70,8 +71,13 @@ impl Clone for GameObject {
 
 impl Class for GameObject {
     fn initialize(vm: &VM) -> GameObject {
-        let id = get_slot_checked!(vm => string 1);
-        GameObject::new(id)
+        if let Some(id) = vm.get_slot_string(1) {
+            GameObject::new(id)
+        }
+        else {
+            debug_println!("GameObject warning: Arg (1) must be of type String constructor will be defaulted");
+            GameObject::new(Uuid::new_v4().to_string())
+        }
     }
 }
 
@@ -86,7 +92,7 @@ impl GameObject {
         }
     }
 
-    pub fn load(&mut self, mut app: &mut App, tex: &HashMap<String, Texture>, fonts: &HashMap<String, Vec<u8>>, sfx: &HashMap<String, Chunk>) -> StateUpdateContainer {
+    pub fn load(&mut self, app: &mut App, tex: &HashMap<String, Texture>, fonts: &HashMap<String, Vec<u8>>, sfx: &HashMap<String, Chunk>) -> StateUpdateContainer {
         let mut state_updates = StateUpdateContainer { textures:None, sfx:None };
         if self.has::<Text>() {
             state_updates.textures = self.get_mut::<Text>().load(app, fonts).textures;
@@ -273,8 +279,12 @@ impl GameObject {
     }
 
     pub fn wren_setter_name(&mut self, vm: &VM) {
-        let new_name = get_slot_checked!(vm => string 1);
-        self.id.name = new_name;
+        if let Some(new_name) = vm.get_slot_string(1) {
+            self.id.name = new_name;
+        }
+        else {
+            eprintln!("GameObject Error: Arg (1) must be of type String");
+        }
     }
 
     pub fn wren_getter_name(&mut self, vm: &VM) {
@@ -290,124 +300,164 @@ impl GameObject {
     }
 
     pub fn wren_add_component(&mut self, vm : &VM) {
-        let c = get_slot_checked!(vm => foreign Box<dyn Component> => 1);
-        self.components.push(c.clone_dyn());
+        if let Some(c) = vm.get_slot_foreign::<Box<dyn Component>>(1) {
+            self.components.push(c.clone_dyn());
+        }
+        else if let Some(c) = vm.get_slot_foreign::<Transform>(1) {
+            self.components.push(Box::new(c.clone()));
+        }
+        else {
+            eprintln!("See [add_component] ->\n\tGameObject Error: Arg (1) must be of type Component");
+        }
     }
 
     pub fn wren_get_component(&self, vm : &VM) {
-        let c = vm.get_slot_string(1).unwrap();
-        for i in self.components.iter().enumerate() {
-            match c.as_str() {
-                "Transform" => {
-                    if let Some(b) = i.1.as_any().downcast_ref::<Transform>() {
-                        b.send_to_wren(0, vm);
-                        return;
+        if let Some(c) = vm.get_slot_string(1) {
+            for i in self.components.iter().enumerate() {
+                match c.as_str() {
+                    "Transform" => {
+                        if let Some(b) = i.1.as_any().downcast_ref::<Transform>() {
+                            b.send_to_wren(0, vm);
+                            return;
+                        }
                     }
-                }
-                "Sprite" => {
-                    if let Some(b) = i.1.as_any().downcast_ref::<Sprite>() {
-                        b.send_to_wren(0, vm);
-                        return;
+                    "Sprite" => {
+                        if let Some(b) = i.1.as_any().downcast_ref::<Sprite>() {
+                            b.send_to_wren(0, vm);
+                            return;
+                        }
                     }
-                }
-                "Rigidbody" => {
-                    if let Some(b) = i.1.as_any().downcast_ref::<Rigidbody>() {
-                        b.send_to_wren(0, vm);
-                        return;
+                    "Rigidbody" => {
+                        if let Some(b) = i.1.as_any().downcast_ref::<Rigidbody>() {
+                            b.send_to_wren(0, vm);
+                            return;
+                        }
                     }
-                }
-                "Animator" => {
-                    if let Some(b) = i.1.as_any().downcast_ref::<Animator>() {
-                        b.send_to_wren(0, vm);
-                        return;
+                    "Animator" => {
+                        if let Some(b) = i.1.as_any().downcast_ref::<Animator>() {
+                            b.send_to_wren(0, vm);
+                            return;
+                        }
                     }
-                }
-                "ComponentBehaviour" => {
-                    if let Some(b) = i.1.as_any().downcast_ref::<ComponentBehaviour>() {
-                        b.send_to_wren(0, vm);
-                        return;
+                    "ComponentBehaviour" => {
+                        if let Some(b) = i.1.as_any().downcast_ref::<ComponentBehaviour>() {
+                            b.send_to_wren(0, vm);
+                            return;
+                        }
                     }
-                }
-                "Sfx" => {
-                    if let Some(b) = i.1.as_any().downcast_ref::<Sfx>() {
-                        b.send_to_wren(0, vm);
-                        return;
+                    "Sfx" => {
+                        if let Some(b) = i.1.as_any().downcast_ref::<Sfx>() {
+                            b.send_to_wren(0, vm);
+                            return;
+                        }
                     }
-                }
-                _ => { 
-                    vm.set_slot_null(0);
+                    _ => { 
+                        eprintln!("See [get_component] ->\n\tGameObject Error: Could not find Component->{}", c);
+                        vm.set_slot_null(0);
+                    }
                 }
             }
+        }
+        else {
+            eprintln!("See [get_component] ->\n\tGameObject Error: Arg (1) must be of type String");
         }
     }
 
     pub fn wren_set_component(&mut self, vm : &VM) {
-        let component_str = vm.get_slot_string(1).unwrap();
-
-        for i in 0..self.components.len() {
-            match component_str.as_str() {
-                "Transform" => {
-                    if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
-                        if let (Some(a), Some(b)) = 
-                        (self.components[i].as_any_mut().downcast_mut::<Transform>(),
-                        comp.as_any().downcast_ref::<Transform>()) {
-                            self.components[i] = b.clone_dyn();
+        if let Some(component_str) = vm.get_slot_string(1) {
+            for i in 0..self.components.len() {
+                match component_str.as_str() {
+                    "Transform" => {
+                        if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
+                            if let (Some(_a), Some(b)) = 
+                            (self.components[i].as_any_mut().downcast_mut::<Transform>(),
+                            comp.as_any().downcast_ref::<Transform>()) {
+                                self.components[i] = b.clone_dyn();
+                                return;
+                            }
+                        }
+                        else {
+                            eprintln!("GameObject Error: Arg (2) must be of type Component");
                             return;
                         }
                     }
-                }
-                "Sprite" => {
-                    if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
-                        if let (Some(a), Some(b)) = 
-                        (self.components[i].as_any_mut().downcast_mut::<Sprite>(),
-                        comp.as_any().downcast_ref::<Sprite>()) {
-                            self.components[i] = b.clone_dyn();
+                    "Sprite" => {
+                        if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
+                            if let (Some(_a), Some(b)) = 
+                            (self.components[i].as_any_mut().downcast_mut::<Sprite>(),
+                            comp.as_any().downcast_ref::<Sprite>()) {
+                                self.components[i] = b.clone_dyn();
+                                return;
+                            }
+                        }
+                        else {
+                            eprintln!("GameObject Error: Arg (2) must be of type Component");
+                        }
+                    }
+                    "Rigidbody" => {
+                        if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
+                            if let (Some(_a), Some(b)) = 
+                            (self.components[i].as_any_mut().downcast_mut::<Rigidbody>(),
+                            comp.as_any().downcast_ref::<Rigidbody>()) {
+                                self.components[i] = b.clone_dyn();
+                                return;
+                            }
+                        }
+                        else {
+                            eprintln!("GameObject Error: Arg (2) must be of type Component");
                             return;
                         }
                     }
-                }
-                "Rigidbody" => {
-                    if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
-                        if let (Some(a), Some(b)) = 
-                        (self.components[i].as_any_mut().downcast_mut::<Rigidbody>(),
-                        comp.as_any().downcast_ref::<Rigidbody>()) {
-                            self.components[i] = b.clone_dyn();
+                    "Animator" => {
+                        if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
+                            if let (Some(_a), Some(b)) = 
+                            (self.components[i].as_any_mut().downcast_mut::<Animator>(),
+                            comp.as_any().downcast_ref::<Animator>()) {
+                                self.components[i] = b.clone_dyn();
+                                return;
+                            }
+                        }
+                        else {
+                            eprintln!("GameObject Error: Arg (2) must be of type Component");
                             return;
                         }
                     }
-                }
-                "Animator" => {
-                    if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
-                        if let (Some(a), Some(b)) = 
-                        (self.components[i].as_any_mut().downcast_mut::<Animator>(),
-                        comp.as_any().downcast_ref::<Animator>()) {
-                            self.components[i] = b.clone_dyn();
+                    "ComponentBehaviour" => {
+                        if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
+                            if let (Some(_a), Some(b)) = 
+                            (self.components[i].as_any_mut().downcast_mut::<ComponentBehaviour>(),
+                            comp.as_any().downcast_ref::<ComponentBehaviour>()) {
+                                self.components[i] = b.clone_dyn();
+                                return;
+                            }
+                        }
+                        else {
+                            eprintln!("GameObject Error: Arg (2) must be of type Component");
                             return;
                         }
                     }
-                }
-                "ComponentBehaviour" => {
-                    if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
-                        if let (Some(a), Some(b)) = 
-                        (self.components[i].as_any_mut().downcast_mut::<ComponentBehaviour>(),
-                        comp.as_any().downcast_ref::<ComponentBehaviour>()) {
-                            self.components[i] = b.clone_dyn();
+                    "Sfx" => {
+                        if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
+                            if let (Some(_a), Some(b)) = 
+                            (self.components[i].as_any_mut().downcast_mut::<Sfx>(),
+                            comp.as_any().downcast_ref::<Sfx>()) {
+                                self.components[i] = b.clone_dyn();
+                                return;
+                            }
+                        }
+                        else {
+                            eprintln!("GameObject Error: Arg (2) must be of type Component");
                             return;
                         }
                     }
-                }
-                "Sfx" => {
-                    if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
-                        if let (Some(a), Some(b)) = 
-                        (self.components[i].as_any_mut().downcast_mut::<Sfx>(),
-                        comp.as_any().downcast_ref::<Sfx>()) {
-                            self.components[i] = b.clone_dyn();
-                            return;
-                        }
+                    _ => { 
+                        eprintln!("GameObject Error: Could not find Component->{}", component_str);
                     }
                 }
-                _ => { }
             }
+        }
+        else {
+            eprintln!("GameObject Error: Arg (1) must be of type String");
         }
     }
 }

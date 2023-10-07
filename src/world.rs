@@ -1,9 +1,8 @@
 use std::{collections::HashMap, path::Path};
-use data2sound::{encode_bytes, decode_bytes};
-use debug_print::{debug_print, debug_println, debug_eprintln};
+use data2sound::decode_bytes;
+use debug_print::{debug_println, debug_eprintln};
 use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId};
 use crate::gameobject::GameObject;
-use ruwren::{VM, create_module, Class, get_slot_checked, ModuleLibrary, FunctionSignature, VMWrapper};
 use sdl2::{render::Texture, image::LoadTexture};
 
 #[macro_export]
@@ -82,6 +81,7 @@ impl<'a> WorldState<'a> {
             Some(g.1)
         }
         else {
+            eprintln!("World State Error: Tried to get gameobject->{} got None", key);
             None
         }
     }
@@ -91,6 +91,7 @@ impl<'a> WorldState<'a> {
             Some(g.1)
         }
         else {
+            eprintln!("World State Error: Tried to get gameobject->{} got None", key);
             None
         }
     }
@@ -100,7 +101,7 @@ impl<'a> WorldState<'a> {
             g.1
         }
         else {
-            panic!("tried to get gameobject got None")
+            panic!("World State Error: Tried to get gameobject->{} got None", key);
         }
     }
 
@@ -109,12 +110,12 @@ impl<'a> WorldState<'a> {
             g.1
         }
         else {
-            panic!("tried to get gameobject got None")
+            panic!("World State Error: Tried to get gameobject->{} got None", key);
         }
     }
 
     pub fn insert_wren(&mut self, g : GameObject) {
-        let mut g2 = g.clone();
+        let g2 = g.clone();
         self.gameobjects.insert(g2.id.uuid.clone(), g2);
     }
 
@@ -127,10 +128,11 @@ impl<'a> WorldState<'a> {
     pub fn load_texture(&mut self, file : &str, app : &App) {
         match app.tex_creator.load_texture(file) {
             Ok(v) => {
+                debug_println!("Texture loaded: {}", file);
                 self.textures.insert(file.to_string(), v);
             }
             Err(e) => {
-                debug_eprintln!("Texture Error: {}", e);
+                eprintln!("Texture Error: {}", e);
             }
         };
     }
@@ -138,10 +140,11 @@ impl<'a> WorldState<'a> {
     pub fn load_texture_bytes(&mut self, name: &str, source : &[u8], app : &App) {
         match app.tex_creator.load_texture_bytes(source) {
             Ok(v) => {
+                debug_println!("Texture loaded: {}", name);
                 self.textures.insert(name.to_string(), v);
             }
             Err(e) => {
-                debug_eprintln!("Texture Error: {}", e);
+                eprintln!("Texture Error: {}", e);
             }
         };
     }
@@ -149,10 +152,11 @@ impl<'a> WorldState<'a> {
     pub fn load_music(&mut self, name: &str, source : &str) {
         match sdl2::mixer::Music::from_file(Path::new(source)) {
             Ok(music) => {
+                debug_println!("Music loaded: {}", name);
                 self.music.insert(name.to_string(), music);
             }
             Err(e) => {
-                debug_eprintln!("Audio Error: {}", e);
+                debug_eprintln!("Music Error: {}", e);
             }
         }
     }
@@ -160,10 +164,11 @@ impl<'a> WorldState<'a> {
     pub fn load_music_bytes(&mut self, name: &str, source : &'static [u8]) {
         match sdl2::mixer::Music::from_static_bytes(source) {
             Ok(music) => {
+                debug_println!("Music loaded: {}", name);
                 self.music.insert(name.to_string(), music);
             }
             Err(e) => {
-                debug_eprintln!("Audio Error: {}", e);
+                eprintln!("Music Error: {}", e);
             }
         }
     }
@@ -171,11 +176,11 @@ impl<'a> WorldState<'a> {
     pub fn load_sfx(&mut self, name: &str, source : &str) {
         match sdl2::mixer::Chunk::from_file(Path::new(source)) {
             Ok(sfx) => {
-                debug_println!("Audio loaded: {}", name);
+                debug_println!("Sfx loaded: {}", name);
                 self.sfx.insert(name.to_string(), sfx);
             }
             Err(e) => {
-                debug_eprintln!("Audio Error: {}", e);
+                eprintln!("Sfx Error: {}", e);
             }
         }
     }
@@ -184,10 +189,11 @@ impl<'a> WorldState<'a> {
         let encoded = decode_bytes(source).unwrap();
         match sdl2::mixer::Chunk::from_raw_buffer(encoded.into()) {
             Ok(sfx) => {
+                debug_println!("Sfx loaded: {}", name);
                 self.sfx.insert(name.to_string(), sfx);
             }
             Err(e) => {
-                debug_eprintln!("Audio Error: {}", e);
+                eprintln!("Sfx Error: {}", e);
             }
         }
     }

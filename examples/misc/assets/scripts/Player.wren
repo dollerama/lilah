@@ -1,7 +1,7 @@
 import "math" for Vec2
 import "app" for State, Input, GameObjectRef, Audio
 import "engine" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
- 
+
 class Player is Behaviour {
     construct new() {
         super(Player)
@@ -11,12 +11,13 @@ class Player is Behaviour {
         Input.update_binding("Horizontal", "A", "D")
         Input.update_binding("Vertical", "W", "S")
 
-        gameobject.add_component(Transform.new(Vec2.new(500,0)).as_component) 
+        gameobject.add_component(Transform.new(Vec2.new(500,0))) 
         gameobject.add_component(Sprite.new("assets/test.png").as_component)  
         gameobject.add_component(Rigidbody.new().as_component)
         gameobject.add_component(Animator.new().as_component)
         gameobject.add_component(Text.new("Hello Lilah!", "assets/Lora-Regular.ttf").as_component)
-        gameobject.add_component(Sfx.new("sfx", "assets/sfx.wav").as_component)
+        var s = Sfx.new("sfx", "assets/sfx.wav")
+        gameobject.add_component(s.as_component)
         gameobject.add_component(this.behaviour)
 
         gameobject = State.instantiate(gameobject)

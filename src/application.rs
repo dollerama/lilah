@@ -1,9 +1,9 @@
 extern crate sdl2;
 use std::collections::HashMap;
-use std::path::Path;
 use std::time::Duration;
 
-use ruwren::{ModuleLibrary, VMConfig, VMWrapper, BasicFileLoader, FunctionSignature, Class, VM};
+use debug_print::debug_println;
+use ruwren::{ModuleLibrary, VMConfig, VMWrapper, BasicFileLoader, FunctionSignature};
 use sdl2::keyboard::Keycode;
 use sdl2::mixer::{AUDIO_S16LSB, DEFAULT_CHANNELS};
 use sdl2::mouse::MouseButton;
@@ -42,11 +42,8 @@ pub struct Scripting {
 
 impl Scripting {
     pub fn new() -> Self {
-        let mut modules = HashMap::new();
-
-        let binding = std::env::current_exe().unwrap();
-        let current = Path::new(&binding).parent();
-        let mut loader = BasicFileLoader::new().base_dir("");
+        let modules = HashMap::new();
+        let loader = BasicFileLoader::new().base_dir("");
 
         let mut lib = ModuleLibrary::new();
 
@@ -55,6 +52,7 @@ impl Scripting {
 
         let vm = VMConfig::new().enable_relative_import(true).library(&lib).script_loader(loader).build();
 
+        //std engine modules
         vm.interpret("math", include_str!("scripts/math.wren")).unwrap();
         vm.interpret("app", include_str!("scripts/app.wren")).unwrap();
         vm.interpret("engine", include_str!("scripts/engine.wren")).unwrap();
@@ -66,11 +64,15 @@ impl Scripting {
     }
 
     pub fn load_script(&mut self, module: &str, source: &str) {
-        let mut src = source.to_string();
         let mod_name = module.to_string();
-        src = format!("{}\nvar {} = {}.new()", src, mod_name.to_lowercase(), mod_name);
+        let src = format!("{}\nvar {} = {}.new()", source, mod_name.to_lowercase(), mod_name);
+
         self.modules.insert(mod_name.clone(), src.clone());
-        self.vm.interpret(format!("{}Main", mod_name), src).unwrap();
+
+        match self.vm.interpret(format!("{}Main", mod_name), src) {
+            Ok(_) => { debug_println!("Script Loaded: Module->{}", mod_name) }
+            Err(e) => { panic!("Script Error: Could not load Module->{}\n{}", mod_name, e) }
+        }
     }
     
     pub fn tick(&mut self, app : &mut App, state : &mut WorldState) {
@@ -178,7 +180,7 @@ pub struct App {
     pub time: Timer, 
     pub tex_creator : TextureCreator<WindowContext>,
     event_pump : EventPump,
-    audio_context : AudioSubsystem
+    _audio_context : AudioSubsystem
 }
 
 impl App {
@@ -194,7 +196,7 @@ impl App {
         let chunk_size = 1_024;
         sdl2::mixer::open_audio(frequency, format, channels, chunk_size).unwrap();
         let _mixer_context = sdl2::mixer::init(sdl2::mixer::InitFlag::MP3 | sdl2::mixer::InitFlag::FLAC | sdl2::mixer::InitFlag::OGG).unwrap();
-        sdl2::mixer::allocate_channels(16);
+        sdl2::mixer::allocate_channels(128);
 
         let video_subsystem = sdl_ctx.video().unwrap();
         let win: Window = video_subsystem.window(window_title, 800, 600)
@@ -214,7 +216,7 @@ impl App {
             tex_creator : tc,
             time: Timer::new(),
             font_context,
-            audio_context
+            _audio_context: audio_context
         }
     }
 
@@ -284,7 +286,7 @@ impl App {
 }
 
 impl Scripting {
-    pub fn handle_input(&self, app : &mut App, state : &mut WorldState) {
+    pub fn handle_input(&self, app : &mut App, _state : &mut WorldState) {
         self.vm.execute(|vm| {
             vm.ensure_slots(1);
             vm.get_variable("app", "Input", 0);
@@ -349,7 +351,7 @@ impl Scripting {
         let _ = self.vm.call_handle(&set_mouse);
     }
 
-    pub fn handle_timer(&self, app : &mut App, state : &mut WorldState) {
+    pub fn handle_timer(&self, app : &mut App, _state : &mut WorldState) {
         self.vm.execute(|vm| {
             vm.ensure_slots(2);
             vm.get_variable("app", "State", 0); 
@@ -431,7 +433,7 @@ impl Scripting {
         }
     }
 
-    pub fn receive_audio(&self, app : &mut App, state : &mut WorldState) {
+    pub fn receive_audio(&self, _app : &mut App, state : &mut WorldState) {
         self.vm.execute(|vm| {
             vm.ensure_slots(1);
             vm.get_variable("app", "Audio", 0);
@@ -539,7 +541,7 @@ impl Scripting {
         //end
     }
 
-    pub fn receive_state(&self, app : &mut App, state : &mut WorldState) {
+    pub fn receive_state(&self, _app : &mut App, state : &mut WorldState) {
         //get classes
         self.vm.execute(|vm| {
             vm.ensure_slots(1);
