@@ -139,6 +139,21 @@ foreign class GameObject {
     foreign name=(v)
 }
 
+foreign class Sfx {
+    construct new(name, file) {}
+
+    foreign as_component
+    foreign name
+    foreign name=(v)
+    foreign volume
+    foreign volume=(v)
+    foreign file
+    foreign play()
+    foreign static get_volume(go, name)
+    foreign static set_volume(go, name, amt)
+    foreign static play(go, name)
+}
+
 foreign class ComponentBehaviour {
     construct new(b) { }
     foreign as_component

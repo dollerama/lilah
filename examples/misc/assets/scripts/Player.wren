@@ -1,6 +1,6 @@
 import "math" for Vec2
 import "app" for State, Input, GameObjectRef, Audio
-import "engine" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text
+import "engine" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
  
 class Player is Behaviour {
     construct new() {
@@ -16,6 +16,7 @@ class Player is Behaviour {
         gameobject.add_component(Rigidbody.new().as_component)
         gameobject.add_component(Animator.new().as_component)
         gameobject.add_component(Text.new("Hello Lilah!", "assets/Lora-Regular.ttf").as_component)
+        gameobject.add_component(Sfx.new("sfx", "assets/sfx.wav").as_component)
         gameobject.add_component(this.behaviour)
 
         gameobject = State.instantiate(gameobject)
@@ -30,7 +31,7 @@ class Player is Behaviour {
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
 
-        Audio.play("assets/test.mp3", 5000)
+        //Audio.play("assets/test.mp3", 5000)
     }
     
     static update(id) {
@@ -46,15 +47,16 @@ class Player is Behaviour {
 
         Text.set_text(gameobject.ref, "%(gameobject.ref.get_component("Rigidbody").velocity.x) x %(gameobject.ref.get_component("Rigidbody").velocity.y)")
 
-        // if(gameobject.ref.get_component("Rigidbody").colliding != null) {
-        //     State.destroy(gameobject.ref.get_component("Rigidbody").colliding["uuid"])
-        // }
+        if(gameobject.ref.get_component("Rigidbody").colliding != null) {
+            //State.destroy(gameobject.ref.get_component("Rigidbody").colliding["uuid"])
+            Sfx.play(gameobject.ref, "sfx")
+        }
 
-        if(Input.key("P")) {
+        if(Input.key_down("P")) {
             Audio.pause(5000)
         }
 
-        if(Input.key("O")) {
+        if(Input.key_down("O")) {
             Audio.play("assets/test.mp3", 5000)
         }
     }

@@ -53,6 +53,16 @@ pub struct Transform {
     pub rotation: f64,
 }
 
+/// Sfx Component for GameObjects
+#[derive(Clone)]
+pub struct Sfx {
+    pub name: String,
+    pub file: String,
+    pub play_state: bool,
+    pub volume: f64,
+    pub channel: Option<sdl2::mixer::Channel>
+}
+
 /// Rigidbody Component for GameObjects
 #[derive(PartialEq, Clone)]
 pub struct Rigidbody {
@@ -112,6 +122,93 @@ pub struct Text {
 }
 
 //component impls
+impl Sfx {
+    pub fn new(name: String, file: String) -> Self {
+        Self {
+            name,
+            file,
+            play_state: false,
+            volume: 128.0,
+            channel: None
+        }
+    }
+
+    //for wren
+    fn wren_as_component(&self, vm: &VM) {
+        send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    fn wren_name_getter(&self, vm: &VM) {
+        vm.set_slot_string(0, self.name.clone());
+    }
+
+    fn wren_name_setter(&mut self, vm: &VM) {
+        let s = get_slot_checked!(vm => string 1);
+        self.name = s;
+    }
+
+    fn wren_file_getter(&self, vm: &VM) {
+        vm.set_slot_string(0, self.file.clone());
+    }
+
+    fn wren_volume_getter(&self, vm: &VM) {
+        vm.set_slot_double(0, self.volume);
+    }
+
+    fn wren_volume_setter(&mut self, vm: &VM) {
+        let s = get_slot_checked!(vm => num 1);
+        self.volume = s;
+    }
+
+    fn wren_play(&mut self, vm: &VM) {
+        self.play_state = true;
+    }
+
+    fn wren_set_volume_from_gamobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            let name = vm.get_slot_string(2);
+            let vol = vm.get_slot_double(3);
+            if let (Some(n), Some(v)) = (name, vol) {
+                for i in comp.wrap_all_mut::<Sfx>() {
+                    if i.name == n {
+                        i.volume = v;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    fn wren_play_from_gamobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            let name = vm.get_slot_string(2);
+            if let Some(n) = name {
+                for i in comp.wrap_all_mut::<Sfx>() {
+                    if i.name == n {
+                        i.play_state = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    fn wren_get_volume_from_gamobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            let name = vm.get_slot_string(2);
+            if let Some(n) = name {
+                for i in comp.wrap_all_mut::<Sfx>() {
+                    if i.name == n {
+                        vm.set_slot_double(0, i.volume);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+//component impls
 impl Transform {
     pub fn new(pos: Vec2) -> Self {
         Self {
@@ -122,7 +219,7 @@ impl Transform {
     }
 
     //for wren
-    fn wren_wren_as_component(&self, vm: &VM) {
+    fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
@@ -527,7 +624,7 @@ impl Animator {
     }
 
     //for wren
-    fn wren_wren_as_component(&self, vm: &VM) {
+    fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
@@ -707,14 +804,14 @@ impl Text {
                 let TextureQuery { width, height, .. } = texture.query();
                 self.size = Vec2::new(width as f64, height as f64);
 
-                StateUpdateContainer { textures: Some((self.texture_id.clone(), texture)) }
+                StateUpdateContainer { textures: Some((self.texture_id.clone(), texture)), sfx: None }
             }
             else {
-                StateUpdateContainer { textures: None }
+                StateUpdateContainer { textures: None, sfx: None  }
             }
         }
         else {
-            StateUpdateContainer { textures: None }
+            StateUpdateContainer { textures: None, sfx: None }
         }
     }
 
@@ -891,7 +988,7 @@ impl Sprite {
     }
 
     //for wren
-    fn wren_wren_as_component(&self, vm: &VM) {
+    fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
@@ -1084,6 +1181,24 @@ impl Component for Text {
     }
 }
 
+impl Component for Sfx {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn send_to_wren(&self, slot : usize, vm : &VM) {
+        send_foreign!(vm, "engine", "Sfx", self.clone() => slot);
+    }
+
+    fn clone_dyn(&self) -> Box<dyn Component> {
+        Box::new(self.clone())
+    }
+}
+
 impl Tickable<Sprite> for Rigidbody {
     fn tick(&mut self, _: f32, d: &Sprite) {
         let sprite_size = d.get_size();
@@ -1149,6 +1264,14 @@ impl Class for Animator {
     }
 }
 
+impl Class for Sfx {
+    fn initialize(vm: &VM) -> Sfx {
+        let b = get_slot_checked!(vm => string 1);
+        let c = get_slot_checked!(vm => string 2);
+        Sfx::new(b, c)
+    }
+}
+
 impl Class for Text {
     fn initialize(vm: &VM) -> Text {
         let b = get_slot_checked!(vm => string 1);
@@ -1159,7 +1282,7 @@ impl Class for Text {
 
 create_module! (
     class("Transform") crate::components::Transform => transform {
-        instance(getter "as_component") wren_wren_as_component,
+        instance(getter "as_component") wren_as_component,
         instance(getter "position") wren_get_pos,
         instance(getter "scale") wren_get_scale,
         instance(getter "rotation") wren_get_rotation,
@@ -1186,7 +1309,7 @@ create_module! (
     }
 
     class("Sprite") crate::components::Sprite => sprite {
-        instance(getter "as_component") wren_wren_as_component,
+        instance(getter "as_component") wren_as_component,
         instance(getter "size") wren_get_size,
         instance(getter "texture_id") wren_get_texture_id,
         instance(getter "current_index") wren_get_index,
@@ -1229,7 +1352,7 @@ create_module! (
     }
 
     class("Animator") crate::components::Animator => animator {
-        instance(getter "as_component") wren_wren_as_component,
+        instance(getter "as_component") wren_as_component,
         instance(getter "playing") wren_playing_getter,
         instance(getter "frame") wren_frame_getter,
         instance(getter "speed") wren_speed_getter,
@@ -1267,6 +1390,19 @@ create_module! (
         static(fn "set_text", 2) wren_set_text_from_gamobject,
         static(fn "set_font", 2) wren_set_font_from_gamobject,
         static(fn "set_font_size", 2) wren_set_font_size_from_gamobject
+    }
+
+    class("Sfx") crate::components::Sfx => sfx {
+        instance(getter "as_component") wren_as_component,
+        instance(getter "name") wren_name_getter,
+        instance(setter "name") wren_name_setter,
+        instance(getter "volume") wren_volume_getter,
+        instance(setter "volume") wren_volume_setter,
+        instance(getter "file") wren_file_getter,
+        instance(fn "play", 0) wren_play,
+        static(fn "get_volume", 2) wren_get_volume_from_gamobject,
+        static(fn "set_volume", 3) wren_set_volume_from_gamobject,
+        static(fn "play", 2) wren_play_from_gamobject
     }
 
     module => engine

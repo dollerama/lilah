@@ -1,4 +1,5 @@
 use std::{collections::HashMap, path::Path};
+use data2sound::{encode_bytes, decode_bytes};
 use debug_print::{debug_print, debug_println, debug_eprintln};
 use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId};
 use crate::gameobject::GameObject;
@@ -24,10 +25,19 @@ pub use embed_font;
 #[macro_export]
 macro_rules! embed_music {
     ($path: expr, $state:ident) => {
-        $state.load_audio_bytes($path, include_bytes!($path));
+        $state.load_music_bytes($path, include_bytes!($path));
     };
 }
 pub use embed_music;
+
+
+#[macro_export]
+macro_rules! embed_sfx {
+    ($path: expr, $state:ident) => {
+        $state.load_sfx_bytes($path, include_bytes!($path));
+    };
+}
+pub use embed_sfx;
 
 #[macro_export]
 macro_rules! load_texture {
@@ -40,20 +50,30 @@ pub use load_texture;
 #[macro_export]
 macro_rules! load_music {
     ($path: expr, $state:ident) => {
-        $state.load_audio($path, $path);
+        $state.load_music($path, $path);
     };
 }
 pub use load_music;
 
+#[macro_export]
+macro_rules! load_sfx {
+    ($path: expr, $state:ident) => {
+        $state.load_sfx($path, $path);
+    };
+}
+pub use load_sfx;
+
 pub struct StateUpdateContainer {
-    pub textures: Option<(String, Texture)>
+    pub textures: Option<(String, Texture)>,
+    pub sfx: Option<Vec<(String, i32)>>
 }
 
 pub struct WorldState<'a> {
     pub gameobjects: HashMap<String, GameObject>,
     pub textures : HashMap<String, Texture>,
     pub fonts : HashMap<String, Vec<u8>>,
-    pub music : HashMap<String, sdl2::mixer::Music<'a>>
+    pub music : HashMap<String, sdl2::mixer::Music<'a>>,
+    pub sfx : HashMap<String, sdl2::mixer::Chunk>
 }
 
 impl<'a> WorldState<'a> {
@@ -126,7 +146,7 @@ impl<'a> WorldState<'a> {
         };
     }
 
-    pub fn load_audio(&mut self, name: &str, source : &str) {
+    pub fn load_music(&mut self, name: &str, source : &str) {
         match sdl2::mixer::Music::from_file(Path::new(source)) {
             Ok(music) => {
                 self.music.insert(name.to_string(), music);
@@ -137,10 +157,34 @@ impl<'a> WorldState<'a> {
         }
     }
 
-    pub fn load_audio_bytes(&mut self, name: &str, source : &'static [u8]) {
+    pub fn load_music_bytes(&mut self, name: &str, source : &'static [u8]) {
         match sdl2::mixer::Music::from_static_bytes(source) {
             Ok(music) => {
                 self.music.insert(name.to_string(), music);
+            }
+            Err(e) => {
+                debug_eprintln!("Audio Error: {}", e);
+            }
+        }
+    }
+
+    pub fn load_sfx(&mut self, name: &str, source : &str) {
+        match sdl2::mixer::Chunk::from_file(Path::new(source)) {
+            Ok(sfx) => {
+                debug_println!("Audio loaded: {}", name);
+                self.sfx.insert(name.to_string(), sfx);
+            }
+            Err(e) => {
+                debug_eprintln!("Audio Error: {}", e);
+            }
+        }
+    }
+
+    pub fn load_sfx_bytes(&mut self, name: &str, source : &'static [u8]) {
+        let encoded = decode_bytes(source).unwrap();
+        match sdl2::mixer::Chunk::from_raw_buffer(encoded.into()) {
+            Ok(sfx) => {
+                self.sfx.insert(name.to_string(), sfx);
             }
             Err(e) => {
                 debug_eprintln!("Audio Error: {}", e);
@@ -164,7 +208,8 @@ impl<'a> World<'a> {
                 gameobjects: HashMap::new(),
                 textures : HashMap::new(),
                 fonts: HashMap::new(),
-                music: HashMap::new()
+                music: HashMap::new(),
+                sfx: HashMap::new()
             },
             setup_callback  : None,
             start_callback : None,
@@ -193,7 +238,7 @@ impl<'a> World<'a> {
         }
 
         for (_, i) in &mut self.state.gameobjects {
-            i.load(app, &self.state.textures, &self.state.fonts);   
+            i.load(app, &self.state.textures, &self.state.fonts, &self.state.sfx);   
         }
 
         if self.start_callback.is_some() {
@@ -224,15 +269,22 @@ impl<'a> World<'a> {
     }
 
     fn update_go(&mut self, mut app: &mut App) {
-        let mut font_texture_updates = Vec::new();
+        let mut state_updates = Vec::new();
         for (_, i) in &mut self.state.gameobjects {
-            font_texture_updates.push(i.load(app,&self.state.textures, &self.state.fonts));   
+            state_updates.push(i.load(app,&self.state.textures, &self.state.fonts, &self.state.sfx));   
             i.update(&mut app);
         }
 
-        for ftu in font_texture_updates {
-            if let Some(ftu) = ftu.textures {
+        for su in state_updates {
+            if let Some(ftu) = su.textures {
                 self.state.textures.insert(ftu.0, ftu.1);
+            }
+            if let Some(stu) = su.sfx {
+                for i in stu {
+                    if let Some(j) = self.state.sfx.get_mut(&i.0) {
+                        j.set_volume(i.1);
+                    }
+                }
             }
         }
     }

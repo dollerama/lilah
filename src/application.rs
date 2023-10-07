@@ -194,7 +194,7 @@ impl App {
         let chunk_size = 1_024;
         sdl2::mixer::open_audio(frequency, format, channels, chunk_size).unwrap();
         let _mixer_context = sdl2::mixer::init(sdl2::mixer::InitFlag::MP3 | sdl2::mixer::InitFlag::FLAC | sdl2::mixer::InitFlag::OGG).unwrap();
-        sdl2::mixer::allocate_channels(4);
+        sdl2::mixer::allocate_channels(16);
 
         let video_subsystem = sdl_ctx.video().unwrap();
         let win: Window = video_subsystem.window(window_title, 800, 600)
@@ -383,6 +383,52 @@ impl Scripting {
         
         self.vm.set_slot_handle(0, &class);
         let _ = self.vm.call_handle(&set_gs);
+
+        self.vm.execute(|vm| {
+            vm.get_variable("app", "Input", 0);
+        });
+        let input_class = self.vm.get_slot_handle(0);
+
+        for entry in &mut app.input.mappings {
+            self.vm.set_slot_handle(0, &input_class);
+            let sm = self.vm.make_call_handle(FunctionSignature::new_function("is_pressed", 1));
+            let a = entry.0.to_string();
+            self.vm.execute(|vm| {
+                vm.set_slot_string(1, a);
+            });
+            self.vm.set_slot_handle(0, &input_class);
+            let _ = self.vm.call_handle(&sm);
+            let mut b = entry.1.pressed_down;    
+            self.vm.execute(|vm| {
+                if let Some(pressed) = vm.get_slot_bool(0) {
+                    b = pressed;
+                }
+            });
+            entry.1.pressed_down = b;
+        }
+
+        for entry in &mut app.input.mouse_mapping {
+            self.vm.set_slot_handle(0, &input_class);
+            let sm = self.vm.make_call_handle(FunctionSignature::new_function("is_mouse_pressed", 1));
+            let a = match entry.0 {
+                MouseButton::Left => "Left",
+                MouseButton::Middle => "Middle",
+                MouseButton::Right => "Right",
+                _ => "Unknown",
+            };
+            self.vm.execute(|vm| {
+                vm.set_slot_string(1, a);
+            });
+            self.vm.set_slot_handle(0, &input_class);
+            let _ = self.vm.call_handle(&sm);
+            let mut b = entry.1.pressed_down;    
+            self.vm.execute(|vm| {
+                if let Some(pressed) = vm.get_slot_bool(0) {
+                    b = pressed;
+                }
+            });
+            entry.1.pressed_down = b;
+        }
     }
 
     pub fn receive_audio(&self, app : &mut App, state : &mut WorldState) {
@@ -475,6 +521,7 @@ impl Scripting {
                     });
 
                     if let Some(music) = state.music.get(&song) {
+                        sdl2::mixer::Music::halt();
                         let _ = music.fade_in(-1, fade);
                     }  
                 }

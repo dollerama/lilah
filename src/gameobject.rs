@@ -1,9 +1,9 @@
 use std::{collections::{HashMap, hash_map::DefaultHasher}, hash::{Hasher, Hash}};
 
 use ruwren::{send_foreign, VM, Class, ModuleLibrary, create_module, SlotType, FunctionSignature, get_slot_checked};
-use sdl2::render::Texture;
+use sdl2::{render::Texture, mixer::Chunk};
 
-use crate::{components::{Component, Transform, Sprite, Rigidbody, Animator, Tickable, ComponentBehaviour, Text}, math::Vec2, application::App, world::StateUpdateContainer};
+use crate::{components::{Component, Transform, Sprite, Rigidbody, Animator, Tickable, ComponentBehaviour, Text, Sfx}, math::Vec2, application::App, world::StateUpdateContainer};
 use uuid::Uuid;
 
 #[macro_export]
@@ -86,15 +86,37 @@ impl GameObject {
         }
     }
 
-    pub fn load(&mut self, mut app: &mut App, tex: &HashMap<String, Texture>, fonts: &HashMap<String, Vec<u8>>) -> StateUpdateContainer {
-        let mut font_texture_updates = StateUpdateContainer { textures:None };
+    pub fn load(&mut self, mut app: &mut App, tex: &HashMap<String, Texture>, fonts: &HashMap<String, Vec<u8>>, sfx: &HashMap<String, Chunk>) -> StateUpdateContainer {
+        let mut state_updates = StateUpdateContainer { textures:None, sfx:None };
         if self.has::<Text>() {
-            font_texture_updates = self.get_mut::<Text>().load(app, fonts);
+            state_updates.textures = self.get_mut::<Text>().load(app, fonts).textures;
         }
+
+        let mut sfx_updates = vec!();
+
+        for c in self.wrap_all_mut::<Sfx>() {
+            if c.play_state {
+                if let Some(chunk) = sfx.get(&c.file) {
+                    sfx_updates.push((c.file.clone(), c.volume as i32));
+                    match sdl2::mixer::Channel::all().play(chunk,0) {
+                        Ok(ch) => {
+                            c.channel = Some(ch);
+                            ch.expire(-1);
+                            c.play_state = false;
+                        }
+                        Err(e) => {
+                            eprintln!("Sfx error: {}", e)
+                        }
+                    }
+                }
+            }
+        }
+
+        state_updates.sfx = Some(sfx_updates);
 
         if self.init {
             self.start = true;
-            return font_texture_updates;
+            return state_updates;
         }
 
         if self.has::<Sprite>() {
@@ -113,7 +135,7 @@ impl GameObject {
         }
 
         self.init = true;
-        font_texture_updates
+        state_updates
     }
 
     pub fn update(&mut self, app: &mut App) {
@@ -306,6 +328,12 @@ impl GameObject {
                         return;
                     }
                 }
+                "Sfx" => {
+                    if let Some(b) = i.1.as_any().downcast_ref::<Sfx>() {
+                        b.send_to_wren(0, vm);
+                        return;
+                    }
+                }
                 _ => { 
                     vm.set_slot_null(0);
                 }
@@ -363,6 +391,16 @@ impl GameObject {
                         if let (Some(a), Some(b)) = 
                         (self.components[i].as_any_mut().downcast_mut::<ComponentBehaviour>(),
                         comp.as_any().downcast_ref::<ComponentBehaviour>()) {
+                            self.components[i] = b.clone_dyn();
+                            return;
+                        }
+                    }
+                }
+                "Sfx" => {
+                    if let Some(comp) = vm.get_slot_foreign::<Box<dyn Component>>(2) {
+                        if let (Some(a), Some(b)) = 
+                        (self.components[i].as_any_mut().downcast_mut::<Sfx>(),
+                        comp.as_any().downcast_ref::<Sfx>()) {
                             self.components[i] = b.clone_dyn();
                             return;
                         }

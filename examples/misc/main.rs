@@ -7,6 +7,7 @@ fn setup(app : &mut App, state : &mut WorldState, scripting : &mut Scripting) {
     embed_texture!("assets/test.png", state, app);
     embed_font!("assets/Lora-Regular.ttf", state);
     embed_music!("assets/test.mp3", state);
+    embed_sfx!("assets/sfx.wav", state);
 }
 
 pub fn main() {  

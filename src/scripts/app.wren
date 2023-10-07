@@ -133,6 +133,21 @@ class State {
 class Input {
     static mouse_pos { __mouse_pos }
 
+    //private
+    static is_pressed(key) {
+        if (!__mappings.containsKey(key)) {
+            return false
+        }
+        return __mappings[key]["pressed_down"]
+    }
+    //private
+    static is_mouse_pressed(key) {
+        if (!__mouse_mappings.containsKey(key)) {
+            return false
+        }
+        return __mouse_mappings[key]["pressed_down"]
+    }
+
     static mappings { 
         if(__mappings == null) {
             __mappings = {}
