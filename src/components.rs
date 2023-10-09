@@ -23,7 +23,7 @@ pub trait Tickable<T: Component> {
     ///     }
     /// }
     /// ```
-    fn tick(&mut self, dt: f32, d: &T);
+    fn tick(&mut self, dt: f64, d: &T);
 }
 
 pub trait Component {
@@ -778,7 +778,7 @@ impl Animator {
         self.states.insert(key.to_string(), (i, j));
     }
 
-    pub fn update(&mut self, dt: f32) {
+    pub fn update(&mut self, dt: f64) {
         if self.playing && self.current_state != String::from("None") {
             if self.current_frame > self.states.get(&self.current_state).unwrap().0 as f64 {
                 self.current_frame = 0.0;
@@ -1543,26 +1543,26 @@ impl Component for Sfx {
 }
 
 impl Tickable<Sprite> for Rigidbody {
-    fn tick(&mut self, _: f32, d: &Sprite) {
+    fn tick(&mut self, _: f64, d: &Sprite) {
         let sprite_size = d.get_size();
         self.bounds = Vec2::new(sprite_size.0 as f64, sprite_size.1 as f64);
     }
 }
 
 impl Tickable<Rigidbody> for Transform {
-    fn tick(&mut self, _: f32, d: &Rigidbody) {
+    fn tick(&mut self, _: f64, d: &Rigidbody) {
         self.position = d.position;
     }
 }
 
 impl Tickable<Sprite> for Animator {
-    fn tick(&mut self, dt: f32, _: &Sprite) {
+    fn tick(&mut self, dt: f64, _: &Sprite) {
         self.update(dt);
     }
 }
 
 impl Tickable<Animator> for Sprite {
-    fn tick(&mut self, _: f32, d: &Animator) {
+    fn tick(&mut self, _: f64, d: &Animator) {
         d.update_sprite(self);
     }
 }

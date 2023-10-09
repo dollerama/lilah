@@ -18,6 +18,7 @@ class Behaviour {
     static start(id) {}
     static update(id) {}
 
+    setup() {}
     start() {}
     update() {}
 }

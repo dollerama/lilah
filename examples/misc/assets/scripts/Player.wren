@@ -51,7 +51,7 @@ class Player is Behaviour {
         }
         
         if(Input.key("Space")) {
-            //State.fullscreen = !State.fullscreen
+            State.fullscreen = !State.fullscreen
             Transform.update_position_x(State.camera.ref, 2)
         }
 

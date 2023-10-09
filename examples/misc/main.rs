@@ -1,6 +1,4 @@
 use lilah::application::*;
-use lilah::components::Transform;
-use lilah::gameobject::GameObject;
 use lilah::math::Vec2;
 use lilah::world::*;
 

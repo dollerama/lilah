@@ -1,9 +1,10 @@
 extern crate sdl2;
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::time::Duration;
 
 use debug_print::debug_println;
-use ruwren::{ModuleLibrary, VMConfig, VMWrapper, BasicFileLoader, FunctionSignature};
+use ruwren::{ModuleLibrary, VMConfig, VMWrapper, BasicFileLoader, FunctionSignature, Handle, FunctionHandle};
 use sdl2::keyboard::Keycode;
 use sdl2::mixer::{AUDIO_S16LSB, DEFAULT_CHANNELS};
 use sdl2::mouse::MouseButton;
@@ -129,18 +130,16 @@ impl Scripting {
     
     pub fn tick(&mut self, app : &mut App, state : &mut WorldState) {
         for m in &self.modules {
-            self.vm.execute(|vm| {
-                vm.ensure_slots(1);
-                vm.get_variable(format!("{}Main", m.0), m.0.to_lowercase(), 0);
-            });
+            let class = Scripting::get_class_handle(
+                &self.vm, 
+                &format!("{}Main", m.0), 
+                &m.0.to_lowercase()
+            );
 
-            let class = self.vm.get_slot_handle(0);
+            let frame_getter = Scripting::get_getter_handle(&self.vm, "frame");
+            let frame_setter = Scripting::get_setter_handle(&self.vm, "frame");
 
-            let frame_getter = self.vm.make_call_handle(FunctionSignature::new_getter("frame"));
-            let frame_setter = self.vm.make_call_handle(FunctionSignature::new_setter("frame"));
-            
-            self.vm.set_slot_handle(0, &class);
-            let _ = self.vm.call_handle(&frame_getter);
+            Scripting::call_handle(&self.vm, &class, &frame_getter);
 
             let mut frame = 0;
             self.vm.execute(|vm| {
@@ -151,67 +150,54 @@ impl Scripting {
 
             match frame {
                 0 => {
-                    let setup_function = self.vm.make_call_handle(FunctionSignature::new_function("setup", 0));
-
-                    self.vm.set_slot_handle(0, &class);
-                    let _ = self.vm.call_handle(&setup_function);
+                    Scripting::call_fn(&self.vm, &class, "setup", 0); 
 
                     self.vm.execute(|vm| {
                         vm.set_slot_double(1, (frame+1).into());
                     });
 
-                    self.vm.set_slot_handle(0, &class);
-                    let _ = self.vm.call_handle(&frame_setter);
+                    Scripting::call_handle(&self.vm, &class, &frame_setter);
                 }
                 1 => {
-                    let start_function = self.vm.make_call_handle(FunctionSignature::new_function("start", 0));
-
-                    self.vm.set_slot_handle(0, &class);
-                    let _ = self.vm.call_handle(&start_function);
+                    Scripting::call_fn(&self.vm, &class, "start", 0); 
 
                     self.vm.execute(|vm| {
                         vm.set_slot_double(1, (frame+1).into());
                     });
 
-                    self.vm.set_slot_handle(0, &class);
-                    let _ = self.vm.call_handle(&frame_setter);               
+                    Scripting::call_handle(&self.vm, &class, &frame_setter);             
                 }
                 _ => {
-                    let update_function = self.vm.make_call_handle(FunctionSignature::new_function("update", 0));
-
-                    self.vm.set_slot_handle(0, &class);
-                    let _ = self.vm.call_handle(&update_function);
+                    Scripting::call_fn(&self.vm, &class, "update", 0); 
 
                     self.vm.execute(|vm| {
                         vm.set_slot_double(1, (frame+1).into());
                     });
 
-                    self.vm.set_slot_handle(0, &class);
-                    let _ = self.vm.call_handle(&frame_setter);
+                    Scripting::call_handle(&self.vm, &class, &frame_setter);
                 }
             }
 
             for g in &mut state.gameobjects {
                 if g.1.has::<ComponentBehaviour>() {
                     if g.1.get::<ComponentBehaviour>().get_component() == m.0 {
-                        self.vm.execute(|vm| {
-                            vm.ensure_slots(1);
-                            vm.get_variable(format!("{}Main", m.0), m.0, 0);
-                        });
+                        let obj = Scripting::get_class_handle(
+                            &self.vm, 
+                            &format!("{}Main", m.0), 
+                            &m.0
+                        );
 
                         if g.1.init && !g.1.start {
-                            let static_start_function = self.vm.make_call_handle(FunctionSignature::new_function("start", 1));
                             self.vm.execute(|vm| {
                                 vm.set_slot_double(1, g.1.wren_id as f64)
                             });
-                            let _ = self.vm.call_handle(&static_start_function);
+                            Scripting::call_fn(&self.vm, &obj, "start", 1);
                         }
                         if g.1.init && g.1.start {
-                            let static_update_function = self.vm.make_call_handle(FunctionSignature::new_function("update", 1));
                             self.vm.execute(|vm| {
                                 vm.set_slot_double(1, g.1.wren_id as f64)
                             });
-                            let _ = self.vm.call_handle(&static_update_function);
+                            Scripting::call_fn(&self.vm, &obj, "update", 1);
                         }
                     }
                 }
@@ -221,6 +207,53 @@ impl Scripting {
             self.handle_timer(app, state);
             self.receive_state(app, state);
         }
+    }
+
+    pub fn get_class_handle<'a>(vm: &'a VMWrapper, module: &str, class: &str) -> Rc<Handle<'a>> {
+        vm.execute(|vm| {
+            vm.get_variable(module, class, 0);
+        });
+        vm.get_slot_handle(0)
+    }
+
+    pub fn call_getter<'a>(vm: &'a VMWrapper, class: &Rc<Handle<'a>>, function: &str) {
+        vm.set_slot_handle(0, &class);
+        if let Err(e) = vm.call(FunctionSignature::new_getter(function)) {
+            LilahError!(Scripting, e);
+        }
+    }
+
+    pub fn call_setter<'a>(vm: &'a VMWrapper, class: &Rc<Handle<'a>>, function: &str) {
+        vm.set_slot_handle(0, &class);
+        if let Err(e) = vm.call(FunctionSignature::new_setter(function)) {
+            LilahError!(Scripting, e);
+        }
+    }
+
+    pub fn call_fn<'a>(vm: &'a VMWrapper, class: &Rc<Handle<'a>>, function: &str, arity: usize) {
+        vm.set_slot_handle(0, &class);
+        if let Err(e) = vm.call(FunctionSignature::new_function(function, arity)) {
+            LilahError!(Scripting, e);
+        }
+    }
+
+    pub fn call_handle<'a>(vm: &'a VMWrapper, class: &Rc<Handle<'a>>, function: &Rc<FunctionHandle<'a>>) {
+        vm.set_slot_handle(0, &class);
+        if let Err(e) = vm.call_handle(&function) {
+            LilahError!(Scripting, e);
+        }
+    }
+
+    pub fn get_getter_handle<'a>(vm: &'a VMWrapper, function: &str) -> Rc<FunctionHandle<'a>> {
+        vm.make_call_handle(FunctionSignature::new_getter(function))
+    }
+
+    pub fn get_setter_handle<'a>(vm: &'a VMWrapper, function: &str) -> Rc<FunctionHandle<'a>> {
+        vm.make_call_handle(FunctionSignature::new_setter(function))
+    }
+
+    pub fn get_fn_handle<'a>(vm: &'a VMWrapper, function: &str, arity: usize) -> Rc<FunctionHandle<'a>> {
+        vm.make_call_handle(FunctionSignature::new_function(function, arity))
     }
 }
 
@@ -256,7 +289,11 @@ impl App {
             .opengl()
             .build()
             .unwrap();
-        let canv: Canvas<Window> = win.into_canvas().present_vsync().build().unwrap();
+        let canv: Canvas<Window> = win.into_canvas()
+        .index(App::find_sdl_gl_driver().unwrap())
+        .present_vsync()
+        .build()
+        .unwrap();
         
         let event_pump = sdl_ctx.event_pump().unwrap();
         let tc = canv.texture_creator();
@@ -270,6 +307,15 @@ impl App {
             font_context,
             _audio_context: audio_context,
         }
+    }
+
+    fn find_sdl_gl_driver() -> Option<u32> {
+        for (index, item) in sdl2::render::drivers().enumerate() {
+            if item.name == "opengl" {
+                return Some(index as u32);
+            }
+        }
+        None
     }
 
     pub fn toggle_fullscreen(&mut self) {
@@ -321,7 +367,7 @@ impl App {
         }
     }
 
-    pub fn delta_time(&self) -> f32 {
+    pub fn delta_time(&self) -> f64 {
         self.time.delta_time
     }
 
@@ -384,21 +430,18 @@ impl App {
     /// Draws canvas and sleeps until next frame
     pub fn present_frame(&mut self) {
         self.canvas.present();
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        ::std::thread::sleep(Duration::new(0, ((60.0-self.time.fps())/1000.0) as u32));
     }
 }
 
 impl Scripting {
     pub fn handle_input(&self, app : &mut App, _state : &mut WorldState) {
-        self.vm.execute(|vm| {
-            vm.ensure_slots(1);
-            vm.get_variable("app", "Input", 0);
-        });
-        let class = self.vm.get_slot_handle(0);
+        let class = Scripting::get_class_handle(&self.vm, "app", "Input");
+
+        let update_mapping_handle = Scripting::get_fn_handle(&self.vm, "update_mapping", 3);
 
         for entry in &app.input.mappings {
-            self.vm.set_slot_handle(0, &class);
-            let sm = self.vm.make_call_handle(FunctionSignature::new_function("update_mapping", 3));
             let a = entry.0.to_string();
             let b = entry.1.pressed;
             let c = entry.1.pressed_down;
@@ -407,13 +450,12 @@ impl Scripting {
                 vm.set_slot_bool(2, b);
                 vm.set_slot_bool(3, c);
             });
-            self.vm.set_slot_handle(0, &class);
-            let _ = self.vm.call_handle(&sm);
+            Scripting::call_handle(&self.vm, &class, &update_mapping_handle);
         }
 
+        let update_mouse_mapping_handle = Scripting::get_fn_handle(&self.vm, "update_mouse_mapping", 3);
+
         for entry in &app.input.mouse_mapping {
-            self.vm.set_slot_handle(0, &class);
-            let sm = self.vm.make_call_handle(FunctionSignature::new_function("update_mouse_mapping", 3));
             let a = match entry.0 {
                 MouseButton::Left => "Left",
                 MouseButton::Middle => "Middle",
@@ -428,12 +470,12 @@ impl Scripting {
                 vm.set_slot_bool(2, b);
                 vm.set_slot_bool(3, c);
             });
-            let _ = self.vm.call_handle(&sm);
+            Scripting::call_handle(&self.vm, &class, &update_mouse_mapping_handle);
         }
 
+        let update_binding_handle = Scripting::get_fn_handle(&self.vm, "update_binding", 3);
+
         for entry in &app.input.bindings {
-            self.vm.set_slot_handle(0, &class);
-            let sb = self.vm.make_call_handle(FunctionSignature::new_function("update_binding", 3));
             let a = entry.0.to_string();
             let b = entry.1.negative.to_string();
             let c = entry.1.positive.to_string();
@@ -443,41 +485,27 @@ impl Scripting {
                 vm.set_slot_string(2, b);
                 vm.set_slot_string(3, c);
             });
-            let _ = self.vm.call_handle(&sb);
+            Scripting::call_handle(&self.vm, &class, &update_binding_handle);
         }
-
-        self.vm.set_slot_handle(0, &class);
-        let set_mouse = self.vm.make_call_handle(FunctionSignature::new_function("set_mouse_pos", 1));
+        
         self.vm.execute(|vm| {
             let _ = vm.set_slot_new_foreign("math", "Vec2", app.input.mouse_pos, 1);
         });
-        self.vm.set_slot_handle(0, &class);
-        let _ = self.vm.call_handle(&set_mouse);
+        Scripting::call_fn(&self.vm, &class, "set_mouse_pos", 1);
     }
 
     pub fn handle_timer(&self, app : &mut App, _state : &mut WorldState) {
-        self.vm.execute(|vm| {
-            vm.ensure_slots(2);
-            vm.get_variable("app", "State", 0); 
-        });
-
-        let st = self.vm.make_call_handle(FunctionSignature::new_setter("delta_time"));
+        let state_class = Scripting::get_class_handle(&self.vm, "app", "State");
         let val = app.time.delta_time as f64;
-
         self.vm.execute(|vm| {
             vm.set_slot_double(1, val);
         });
-        let _ = self.vm.call_handle(&st);
+        Scripting::call_setter(&self.vm, &state_class, "delta_time");
     }
 
     pub fn send_state(&self, app : &mut App, state : &mut WorldState) {
-        self.vm.execute(|vm| {
-            vm.get_variable("app", "State", 0);
-        });
-        let class = self.vm.get_slot_handle(0);
-      
-        self.vm.set_slot_handle(0, &class);
-        let set_gs = self.vm.make_call_handle(FunctionSignature::new_setter("gameobjects"));
+        let class = Scripting::get_class_handle(&self.vm, "app", "State");
+        let input_class = Scripting::get_class_handle(&self.vm, "app", "Input");
 
         self.vm.execute(|vm| {
             vm.set_slot_new_list(1);
@@ -486,33 +514,21 @@ impl Scripting {
                 vm.insert_in_list(1, i.0 as i32, 2);
             }
         });
-        
-        self.vm.set_slot_handle(0, &class);
-        let _ = self.vm.call_handle(&set_gs);
-
-        self.vm.set_slot_handle(0, &class);
-        let set_fullscreen = self.vm.make_call_handle(FunctionSignature::new_setter("fullscreen"));
+        Scripting::call_setter(&self.vm, &class, "gameobjects");
 
         self.vm.execute(|vm| {
             vm.set_slot_bool(1, app.get_fullscreen());
         });
-        self.vm.set_slot_handle(0, &class);
-        let _ = self.vm.call_handle(&set_fullscreen);
+        Scripting::call_setter(&self.vm, &class, "fullscreen");
 
-        self.vm.execute(|vm| {
-            vm.get_variable("app", "Input", 0);
-        });
-        let input_class = self.vm.get_slot_handle(0);
+        let is_pressed = Scripting::get_fn_handle(&self.vm, "is_pressed", 1);
 
         for entry in &mut app.input.mappings {
-            self.vm.set_slot_handle(0, &input_class);
-            let sm = self.vm.make_call_handle(FunctionSignature::new_function("is_pressed", 1));
             let a = entry.0.to_string();
             self.vm.execute(|vm| {
                 vm.set_slot_string(1, a);
             });
-            self.vm.set_slot_handle(0, &input_class);
-            let _ = self.vm.call_handle(&sm);
+            Scripting::call_handle(&self.vm, &input_class, &is_pressed);
 
             let mut b = None;    
             self.vm.execute(|vm| {
@@ -526,9 +542,9 @@ impl Scripting {
             }
         }
 
+        let is_mouse_pressed = Scripting::get_fn_handle(&self.vm, "is_mouse_pressed", 1);
+
         for entry in &mut app.input.mouse_mapping {
-            self.vm.set_slot_handle(0, &input_class);
-            let sm = self.vm.make_call_handle(FunctionSignature::new_function("is_mouse_pressed", 1));
             let a = match entry.0 {
                 MouseButton::Left => "Left",
                 MouseButton::Middle => "Middle",
@@ -538,8 +554,8 @@ impl Scripting {
             self.vm.execute(|vm| {
                 vm.set_slot_string(1, a);
             });
-            self.vm.set_slot_handle(0, &input_class);
-            let _ = self.vm.call_handle(&sm);
+            Scripting::call_handle(&self.vm, &input_class, &is_mouse_pressed);
+
             let mut b = entry.1.pressed_down;    
             self.vm.execute(|vm| {
                 if let Some(pressed) = vm.get_slot_bool(0) {
@@ -551,24 +567,20 @@ impl Scripting {
     }
 
     pub fn receive_audio(&self, _app : &mut App, state : &mut WorldState) {
-        self.vm.execute(|vm| {
-            vm.ensure_slots(1);
-            vm.get_variable("app", "Audio", 0);
-        });
-        let audio_class = self.vm.get_slot_handle(0);
+        let audio_class = Scripting::get_class_handle(&self.vm, "app", "Audio");
 
         //recieve audio
-        self.vm.set_slot_handle(0, &audio_class);
-        let _ = self.vm.call(FunctionSignature::new_getter("dirty"));
+        Scripting::call_getter(&self.vm, &audio_class, "dirty");
+
         let mut dirty = false;
         self.vm.execute(|vm| {                
             if let Some(d) = vm.get_slot_bool(0) {
                 dirty = d;
             }
         });
+
         if dirty {
-            self.vm.set_slot_handle(0, &audio_class);
-            let _ = self.vm.call(FunctionSignature::new_getter("command"));
+            Scripting::call_getter(&self.vm, &audio_class, "command");
 
             let mut command = String::from("");
             self.vm.execute(|vm| {                
@@ -577,8 +589,7 @@ impl Scripting {
                 }
             });
 
-            self.vm.set_slot_handle(0, &audio_class);
-            let _ = self.vm.call(FunctionSignature::new_getter("volume"));
+            Scripting::call_getter(&self.vm, &audio_class, "volume");
 
             self.vm.execute(|vm| {                
                 if let Some(vol) = vm.get_slot_double(0) {
@@ -594,8 +605,8 @@ impl Scripting {
                     sdl2::mixer::Music::pause();  
                 }
                 "pause_fade" => {
-                    self.vm.set_slot_handle(0, &audio_class);
-                    let _ = self.vm.call(FunctionSignature::new_getter("fade"));
+                    Scripting::call_getter(&self.vm, &audio_class, "fade");
+
                     let mut fade = 0;
                     self.vm.execute(|vm| {                
                         if let Some(f) = vm.get_slot_double(0) {
@@ -605,8 +616,7 @@ impl Scripting {
                     let _ = sdl2::mixer::Music::fade_out(fade); 
                 }
                 "start" => {
-                    self.vm.set_slot_handle(0, &audio_class);
-                    let _ = self.vm.call(FunctionSignature::new_getter("music"));
+                    Scripting::call_getter(&self.vm, &audio_class, "music");
                     let mut song = String::from("");
 
                     self.vm.execute(|vm| {                
@@ -620,8 +630,7 @@ impl Scripting {
                     }  
                 }
                 "start_fade" => {
-                    self.vm.set_slot_handle(0, &audio_class);
-                    let _ = self.vm.call(FunctionSignature::new_getter("music"));
+                    Scripting::call_getter(&self.vm, &audio_class, "music");
                     let mut song = String::from("");
 
                     self.vm.execute(|vm| {                
@@ -630,16 +639,16 @@ impl Scripting {
                         }
                     });
 
-                    self.vm.set_slot_handle(0, &audio_class);
-                    let _ = self.vm.call(FunctionSignature::new_getter("fade"));
-                    let mut fade = 0;
-                    self.vm.execute(|vm| {                
-                        if let Some(f) = vm.get_slot_double(0) {
-                            fade = f as i32;
-                        }
-                    });
-
                     if let Some(music) = state.music.get(&song) {
+                        Scripting::call_getter(&self.vm, &audio_class, "fade");
+                        let mut fade = 0;
+                        
+                        self.vm.execute(|vm| {                
+                            if let Some(f) = vm.get_slot_double(0) {
+                                fade = f as i32;
+                            }
+                        });
+
                         sdl2::mixer::Music::halt();
                         let _ = music.fade_in(-1, fade);
                     }  
@@ -652,24 +661,15 @@ impl Scripting {
                 vm.set_slot_double(1, sdl2::mixer::Music::get_volume() as f64);
             });
 
-            self.vm.set_slot_handle(0, &audio_class);
-            let _ = self.vm.call(FunctionSignature::new_setter("volume"));
+            Scripting::call_setter(&self.vm, &audio_class, "volume");
         }
         //end
     }
 
     pub fn receive_state(&self, app : &mut App, state : &mut WorldState) {
-        //get classes
-        self.vm.execute(|vm| {
-            vm.ensure_slots(1);
-            vm.get_variable("app", "State", 0);
-        });
-        let state_class = self.vm.get_slot_handle(0);
-        //end
+        let state_class = Scripting::get_class_handle(&self.vm, "app", "State");
 
-        //recieve gameobjects
-        self.vm.set_slot_handle(0, &state_class);
-        let _ = self.vm.call(FunctionSignature::new_getter("gameobjects"));
+        Scripting::call_getter(&self.vm, &state_class, "gameobjects");
 
         self.vm.execute(|vm| {
             if let Some(count) = vm.get_list_count(0) {
@@ -686,8 +686,7 @@ impl Scripting {
             }
         });
 
-        self.vm.set_slot_handle(0, &state_class);
-        let _ = self.vm.call(FunctionSignature::new_getter("destroy"));
+        Scripting::call_getter(&self.vm, &state_class, "destroy");
 
         self.vm.execute(|vm| {
             if let Some(count) = vm.get_list_count(0) {
@@ -701,11 +700,8 @@ impl Scripting {
                 }
             }
         });
-        //end
 
-        self.vm.set_slot_handle(0, &state_class);
-        let get_fullscreen = self.vm.make_call_handle(FunctionSignature::new_getter("fullscreen"));
-        let _ = self.vm.call_handle(&get_fullscreen);
+        Scripting::call_getter(&self.vm, &state_class, "fullscreen");
 
         self.vm.execute(|vm| {
             if let Some(is_sfull) = vm.get_slot_bool(0) {
@@ -715,9 +711,6 @@ impl Scripting {
             }
         });
 
-        //clear all
-        self.vm.set_slot_handle(0, &state_class);
-        let _ = self.vm.call(FunctionSignature::new_function("clear", 0));
-        //end
+        Scripting::call_fn(&self.vm, &state_class, "clear", 0);
     }
 }
