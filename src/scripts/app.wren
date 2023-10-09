@@ -55,14 +55,25 @@ class Audio {
 }
 
 class State {
+    static camera { 
+        if(__camera == null) {
+            __camera = State.find("Camera")
+        }
+        return __camera 
+    }
     static destroy { __destroy }
+
     static gameobjects { __gameobjects }
     static gameobjects=(v) { __gameobjects=v }
+
     static data { __data }
     static data=(v) { __data=v }
 
     static delta_time { __delta_time }
     static delta_time=(v) { __delta_time = v }
+
+    static fullscreen { __fullscreen }
+    static fullscreen=(v) { __fullscreen = v }
 
     static instantiate(go, d) {
         if(__gameobjects == null) {
@@ -128,6 +139,10 @@ class State {
         }
         return null
     }
+
+    static to_world_space(input) {
+        return Vec2.new(input.x+camera.ref.get_component("Transform").position.x, input.y+camera.ref.get_component("Transform").position.y)
+    }
 }
 
 class Input {
@@ -175,6 +190,7 @@ class Input {
         if(__mappings == null) {
             __mappings = {}
         }
+
         __mappings[key] = {"pressed": pressed, "pressed_down": pressed_down}
     }
 

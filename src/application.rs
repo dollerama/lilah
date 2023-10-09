@@ -11,7 +11,7 @@ use sdl2::ttf::Sdl2TtfContext;
 use sdl2::{Sdl, EventPump, AudioSubsystem};
 use sdl2::pixels::Color;
 use sdl2::event::Event;
-use sdl2::video::{Window, WindowContext};
+use sdl2::video::{Window, WindowContext, FullscreenType};
 use sdl2::render::{Canvas, TextureCreator};
 use crate::components::ComponentBehaviour;
 use crate::gameobject::GameObject;
@@ -31,6 +31,58 @@ macro_rules! embed_script {
     };
 }
 pub use embed_script;
+
+#[macro_export]
+macro_rules! LilahTypeError {
+    ($class: ty, $arg: literal, $t: ty) => {
+        eprintln!("--> {} ({}:{})\n |\tArg ({}) must be of type {}", stringify!($class), file!(), line!(), $arg, stringify!($t));
+    }
+}
+pub use LilahTypeError;
+
+#[macro_export]
+macro_rules! LilahTypePanic {
+    ($class: ty, $arg: literal, $t: ty) => {
+        panic!("--> {} ({}:{})\n |\tArg ({}) must be of type {}", stringify!($class), file!(), line!(), $arg, stringify!($t));
+    }
+}
+pub use LilahTypePanic;
+
+#[macro_export]
+macro_rules! LilahError {
+    ($class: ty, $arg: ident) => {
+        eprintln!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg);
+    };
+    ($class: ty, $arg: literal) => {
+        eprintln!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg);
+    };
+    ($class: ty, $arg: expr) => {
+        eprintln!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg);
+    };
+}
+pub use LilahError;
+
+#[macro_export]
+macro_rules! LilahPanic {
+    ($class: ty, $arg: literal) => {
+        panic!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg)
+    };
+    ($class: ty, $arg: ident) => {
+        panic!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg)
+    };
+    ($class: ty, $arg: expr) => {
+        panic!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg)
+    };
+}
+pub use LilahPanic;
+
+#[macro_export]
+macro_rules! LilahNotFoundError {
+    ($class: ty, $t: ty, $arg: ident) => {
+        eprintln!("--> {} ({}:{})\n |\tCould Not Find {}({})", stringify!($class), file!(), line!(), stringify!($t), $arg);
+    }
+}
+pub use LilahNotFoundError;
 
 /// Scripting wrapper
 pub struct Scripting {
@@ -180,11 +232,11 @@ pub struct App {
     pub time: Timer, 
     pub tex_creator : TextureCreator<WindowContext>,
     event_pump : EventPump,
-    _audio_context : AudioSubsystem
+    _audio_context : AudioSubsystem,
 }
 
 impl App {
-    pub fn new(window_title : &str) -> Self {
+    pub fn new(window_title : &str, window_size: Vec2) -> Self {
         let sdl_ctx: Sdl = sdl2::init().unwrap();
         let font_context = sdl2::ttf::init().map_err(|e| e.to_string()).unwrap();
         let _image_context = sdl2::image::init(sdl2::image::InitFlag::PNG | sdl2::image::InitFlag::JPG).unwrap();
@@ -199,7 +251,7 @@ impl App {
         sdl2::mixer::allocate_channels(128);
 
         let video_subsystem = sdl_ctx.video().unwrap();
-        let win: Window = video_subsystem.window(window_title, 800, 600)
+        let win: Window = video_subsystem.window(window_title, window_size.x as u32, window_size.y as u32)
             .position_centered()
             .opengl()
             .build()
@@ -216,7 +268,56 @@ impl App {
             tex_creator : tc,
             time: Timer::new(),
             font_context,
-            _audio_context: audio_context
+            _audio_context: audio_context,
+        }
+    }
+
+    pub fn toggle_fullscreen(&mut self) {
+        match self.canvas.window().fullscreen_state() {
+            FullscreenType::Off => {
+                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::Desktop) {
+                    LilahPanic!(App, e);
+                }
+            }
+            FullscreenType::True => {
+                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::Off) {
+                    LilahPanic!(App, e);
+                }
+            }
+            FullscreenType::Desktop => {
+                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::Off) {
+                    LilahPanic!(App, e);
+                }
+            }
+        }
+    }
+
+    pub fn get_fullscreen(&self) -> bool {
+        match self.canvas.window().fullscreen_state() {
+            FullscreenType::Off => {
+                false
+            }
+            FullscreenType::True => {
+                true
+            }
+            FullscreenType::Desktop => {
+                true
+            }
+        }
+    }
+
+    pub fn set_fullscreen(&mut self, set: bool) {
+        match set {
+            true => {
+                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::Desktop) {
+                    LilahPanic!(App, e);
+                }
+            }
+            false => {
+                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::Off) {
+                    LilahPanic!(App, e);
+                }
+            }
         }
     }
 
@@ -233,7 +334,7 @@ impl App {
         for event in self.event_pump.poll_iter() {
             match event {
                 Event::Quit {..} |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                Event::KeyDown { keycode: Some(Keycode::Escape), repeat: false, .. } => {
                     end_app = true;
                 },
                 Event::MouseButtonDown { 
@@ -250,12 +351,14 @@ impl App {
                 }
                 Event::KeyDown {
                 keycode,
+                repeat: false,
                 ..
                 } => {
                     self.input.update_mapping((&keycode.unwrap(), &InputInfo{pressed: true, pressed_down: true}));
                 },
                 Event::KeyUp {
                 keycode,
+                repeat: false,
                 ..
                 } => {
                     self.input.update_mapping((&keycode.unwrap(), &InputInfo{pressed: false, pressed_down: false}));
@@ -304,6 +407,7 @@ impl Scripting {
                 vm.set_slot_bool(2, b);
                 vm.set_slot_bool(3, c);
             });
+            self.vm.set_slot_handle(0, &class);
             let _ = self.vm.call_handle(&sm);
         }
 
@@ -386,6 +490,15 @@ impl Scripting {
         self.vm.set_slot_handle(0, &class);
         let _ = self.vm.call_handle(&set_gs);
 
+        self.vm.set_slot_handle(0, &class);
+        let set_fullscreen = self.vm.make_call_handle(FunctionSignature::new_setter("fullscreen"));
+
+        self.vm.execute(|vm| {
+            vm.set_slot_bool(1, app.get_fullscreen());
+        });
+        self.vm.set_slot_handle(0, &class);
+        let _ = self.vm.call_handle(&set_fullscreen);
+
         self.vm.execute(|vm| {
             vm.get_variable("app", "Input", 0);
         });
@@ -400,13 +513,17 @@ impl Scripting {
             });
             self.vm.set_slot_handle(0, &input_class);
             let _ = self.vm.call_handle(&sm);
-            let mut b = entry.1.pressed_down;    
+
+            let mut b = None;    
             self.vm.execute(|vm| {
                 if let Some(pressed) = vm.get_slot_bool(0) {
-                    b = pressed;
+                    b = Some(pressed);
                 }
             });
-            entry.1.pressed_down = b;
+
+            if let Some(pd) = b {
+                entry.1.pressed_down = pd;
+            }
         }
 
         for entry in &mut app.input.mouse_mapping {
@@ -541,7 +658,7 @@ impl Scripting {
         //end
     }
 
-    pub fn receive_state(&self, _app : &mut App, state : &mut WorldState) {
+    pub fn receive_state(&self, app : &mut App, state : &mut WorldState) {
         //get classes
         self.vm.execute(|vm| {
             vm.ensure_slots(1);
@@ -585,6 +702,18 @@ impl Scripting {
             }
         });
         //end
+
+        self.vm.set_slot_handle(0, &state_class);
+        let get_fullscreen = self.vm.make_call_handle(FunctionSignature::new_getter("fullscreen"));
+        let _ = self.vm.call_handle(&get_fullscreen);
+
+        self.vm.execute(|vm| {
+            if let Some(is_sfull) = vm.get_slot_bool(0) {
+                if is_sfull != app.get_fullscreen() {
+                    app.toggle_fullscreen();
+                }
+            }
+        });
 
         //clear all
         self.vm.set_slot_handle(0, &state_class);

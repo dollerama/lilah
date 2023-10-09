@@ -1,10 +1,7 @@
 use std::collections::HashMap;
-
-use debug_print::debug_println;
-use ruwren::{send_foreign, VM, Class, get_slot_checked};
+use ruwren::{send_foreign, VM, Class};
 use sdl2::{render::Texture, mixer::Chunk};
-
-use crate::{components::{Component, Transform, Sprite, Rigidbody, Animator, Tickable, ComponentBehaviour, Text, Sfx}, math::Vec2, application::App, world::StateUpdateContainer};
+use crate::{components::{Component, Transform, Sprite, Rigidbody, Animator, Tickable, ComponentBehaviour, Text, Sfx}, math::Vec2, application::App, world::StateUpdateContainer, LilahTypeError, LilahNotFoundError, LilahTypePanic};
 use uuid::Uuid;
 
 #[macro_export]
@@ -75,8 +72,7 @@ impl Class for GameObject {
             GameObject::new(id)
         }
         else {
-            debug_println!("GameObject warning: Arg (1) must be of type String constructor will be defaulted");
-            GameObject::new(Uuid::new_v4().to_string())
+            LilahTypePanic!(GameObject, 1, String);
         }
     }
 }
@@ -283,7 +279,7 @@ impl GameObject {
             self.id.name = new_name;
         }
         else {
-            eprintln!("GameObject Error: Arg (1) must be of type String");
+            LilahTypeError!(GameObject, 1, String);
         }
     }
 
@@ -306,13 +302,18 @@ impl GameObject {
         else if let Some(c) = vm.get_slot_foreign::<Transform>(1) {
             self.components.push(Box::new(c.clone()));
         }
+        else if let Some(c) = vm.get_slot_foreign::<Rigidbody>(1) {
+            self.components.push(Box::new(c.clone()));
+        }
         else {
-            eprintln!("See [add_component] ->\n\tGameObject Error: Arg (1) must be of type Component");
+            LilahTypeError!(GameObject, 1, Component);
         }
     }
 
     pub fn wren_get_component(&self, vm : &VM) {
+        let mut finding = String::from("");
         if let Some(c) = vm.get_slot_string(1) {
+            finding = c.clone();
             for i in self.components.iter().enumerate() {
                 match c.as_str() {
                     "Transform" => {
@@ -351,20 +352,21 @@ impl GameObject {
                             return;
                         }
                     }
-                    _ => { 
-                        eprintln!("See [get_component] ->\n\tGameObject Error: Could not find Component->{}", c);
-                        vm.set_slot_null(0);
-                    }
+                    _ => { }
                 }
             }
         }
         else {
-            eprintln!("See [get_component] ->\n\tGameObject Error: Arg (1) must be of type String");
+            LilahTypeError!(GameObject, 1, String);
         }
+        LilahNotFoundError!(GameObject, Component, finding);
+        vm.set_slot_null(0);
     }
 
     pub fn wren_set_component(&mut self, vm : &VM) {
+        let mut finding = String::from("");
         if let Some(component_str) = vm.get_slot_string(1) {
+            finding = component_str.clone();
             for i in 0..self.components.len() {
                 match component_str.as_str() {
                     "Transform" => {
@@ -377,7 +379,7 @@ impl GameObject {
                             }
                         }
                         else {
-                            eprintln!("GameObject Error: Arg (2) must be of type Component");
+                            LilahTypeError!(GameObject, 2, Component);
                             return;
                         }
                     }
@@ -391,7 +393,8 @@ impl GameObject {
                             }
                         }
                         else {
-                            eprintln!("GameObject Error: Arg (2) must be of type Component");
+                            LilahTypeError!(GameObject, 2, Component);
+                            return;
                         }
                     }
                     "Rigidbody" => {
@@ -404,7 +407,7 @@ impl GameObject {
                             }
                         }
                         else {
-                            eprintln!("GameObject Error: Arg (2) must be of type Component");
+                            LilahTypeError!(GameObject, 2, Component);
                             return;
                         }
                     }
@@ -418,7 +421,7 @@ impl GameObject {
                             }
                         }
                         else {
-                            eprintln!("GameObject Error: Arg (2) must be of type Component");
+                            LilahTypeError!(GameObject, 2, Component);
                             return;
                         }
                     }
@@ -432,7 +435,7 @@ impl GameObject {
                             }
                         }
                         else {
-                            eprintln!("GameObject Error: Arg (2) must be of type Component");
+                            LilahTypeError!(GameObject, 2, Component);
                             return;
                         }
                     }
@@ -446,18 +449,18 @@ impl GameObject {
                             }
                         }
                         else {
-                            eprintln!("GameObject Error: Arg (2) must be of type Component");
+                            LilahTypeError!(GameObject, 2, Component);
                             return;
                         }
                     }
-                    _ => { 
-                        eprintln!("GameObject Error: Could not find Component->{}", component_str);
-                    }
+                    _ => { }
                 }
             }
         }
         else {
-            eprintln!("GameObject Error: Arg (1) must be of type String");
+            LilahTypeError!(GameObject, 1, String);
         }
+
+        LilahNotFoundError!(GameObject, Component, finding);
     }
 }

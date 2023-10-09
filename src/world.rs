@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::Path};
 use data2sound::decode_bytes;
-use debug_print::{debug_println, debug_eprintln};
-use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId};
+use debug_print::debug_println;
+use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId, LilahError, LilahPanic};
 use crate::gameobject::GameObject;
 use sdl2::{render::Texture, image::LoadTexture};
 
@@ -81,7 +81,7 @@ impl<'a> WorldState<'a> {
             Some(g.1)
         }
         else {
-            eprintln!("World State Error: Tried to get gameobject->{} got None", key);
+            LilahError!(World, format!("Tried to get gameobject->{} got None", key));
             None
         }
     }
@@ -91,7 +91,7 @@ impl<'a> WorldState<'a> {
             Some(g.1)
         }
         else {
-            eprintln!("World State Error: Tried to get gameobject->{} got None", key);
+            LilahError!(World, format!("Tried to get gameobject->{} got None", key));
             None
         }
     }
@@ -101,7 +101,7 @@ impl<'a> WorldState<'a> {
             g.1
         }
         else {
-            panic!("World State Error: Tried to get gameobject->{} got None", key);
+            LilahPanic!(World, format!("Tried to get gameobject->{} got None", key))
         }
     }
 
@@ -110,7 +110,7 @@ impl<'a> WorldState<'a> {
             g.1
         }
         else {
-            panic!("World State Error: Tried to get gameobject->{} got None", key);
+            LilahPanic!(World, format!("Tried to get gameobject->{} got None", key))
         }
     }
 
@@ -132,7 +132,7 @@ impl<'a> WorldState<'a> {
                 self.textures.insert(file.to_string(), v);
             }
             Err(e) => {
-                eprintln!("Texture Error: {}", e);
+                LilahError!(Texture, e);
             }
         };
     }
@@ -144,7 +144,7 @@ impl<'a> WorldState<'a> {
                 self.textures.insert(name.to_string(), v);
             }
             Err(e) => {
-                eprintln!("Texture Error: {}", e);
+                LilahError!(Texture, e);
             }
         };
     }
@@ -156,7 +156,7 @@ impl<'a> WorldState<'a> {
                 self.music.insert(name.to_string(), music);
             }
             Err(e) => {
-                debug_eprintln!("Music Error: {}", e);
+                LilahError!(Sfx, e);
             }
         }
     }
@@ -168,7 +168,7 @@ impl<'a> WorldState<'a> {
                 self.music.insert(name.to_string(), music);
             }
             Err(e) => {
-                eprintln!("Music Error: {}", e);
+                LilahError!(Sfx, e);
             }
         }
     }
@@ -180,7 +180,7 @@ impl<'a> WorldState<'a> {
                 self.sfx.insert(name.to_string(), sfx);
             }
             Err(e) => {
-                eprintln!("Sfx Error: {}", e);
+                LilahError!(Sfx, e);
             }
         }
     }
@@ -193,7 +193,7 @@ impl<'a> WorldState<'a> {
                 self.sfx.insert(name.to_string(), sfx);
             }
             Err(e) => {
-                eprintln!("Sfx Error: {}", e);
+                LilahError!(Sfx, e);
             }
         }
     }
@@ -242,6 +242,7 @@ impl<'a> World<'a> {
         if self.setup_callback.is_some() {
             self.setup_callback.as_mut().unwrap()(app, &mut self.state, scripting);
         }
+        self.state.insert(GameObject::new("Camera".to_string()).with::<Transform>().build());
 
         for (_, i) in &mut self.state.gameobjects {
             i.load(app, &self.state.textures, &self.state.fonts, &self.state.sfx);   
@@ -296,13 +297,19 @@ impl<'a> World<'a> {
     }
 
     pub fn draw(&self, app: &mut App) {
+        let camera = self.state.wrap("Camera");
+        let mut camera_pos = None;
+        if let Some(cam) = camera {
+            camera_pos = Some(cam.get::<Transform>().position);
+        }
+
         for (_, i) in &self.state.gameobjects {
             if i.has::<Transform>() {
                 if i.has::<Sprite>() {
-                    i.get::<Sprite>().draw(app, &self.state.textures, i.get::<Transform>());
+                    i.get::<Sprite>().draw(app, &self.state.textures, i.get::<Transform>(), &camera_pos);
                 }
                 if i.has::<Text>() {
-                    i.get::<Text>().draw(app, &self.state.textures, i.get::<Transform>());
+                    i.get::<Text>().draw(app, &self.state.textures, i.get::<Transform>(), &camera_pos);
                 }
             }
         }

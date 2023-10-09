@@ -22,7 +22,7 @@ class Player2 is Behaviour {
     
     static update(id) {
         var gameobject = GameObjectRef.new(id)
-        var dir = Input.mouse_pos-gameobject.ref.get_component("Transform").position
+        var dir = State.to_world_space(Input.mouse_pos)-gameobject.ref.get_component("Transform").position
         dir.normalize()
         Rigidbody.set_velocity(gameobject.ref, dir)
     }

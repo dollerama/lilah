@@ -2,6 +2,8 @@ use std::{ops, hash::Hasher, hash::Hash};
 
 use ruwren::{Class, VM, create_module, ModuleLibrary};
 
+use crate::{LilahError, LilahPanic, LilahTypeError};
+
 /// Vector for 2d translations etc.
 /// # Examples
 /// ## Translations
@@ -49,8 +51,7 @@ impl Class for Vec2 {
             }
         }
         else {
-            eprintln!("Vec2 Error: Arg (1) and Arg(2) must be of type Double constructor will be defaulted");
-            Vec2::ZERO
+            LilahPanic!(Vec2, "Arg (1) and Arg(2) must be of type Double");
         }
     }
 }
@@ -145,7 +146,7 @@ impl Vec2 {
             self.x = x;
         }
         else {
-            eprintln!("Vec2 Error: Arg (1) must be of type Double");
+            LilahTypeError!(Vec2, 1, f64);
         }
     }
 
@@ -154,7 +155,7 @@ impl Vec2 {
             self.y = y;
         }
         else {
-            eprintln!("Vec2 Error: Arg (1) must be of type Double");
+            LilahTypeError!(Vec2, 1, f64);
         }
     }
 
@@ -169,7 +170,7 @@ impl Vec2 {
     fn wren_normalized(&self, vm: &VM) {
         let a = self.normalized();
         if let Err(e) = vm.set_slot_new_foreign("math", "Vec2", a, 0) {
-            eprintln!("{}", e);
+            LilahError!(Vec2, e);
         }
     }
 
@@ -184,7 +185,8 @@ impl Vec2 {
             vm.set_slot_double(0, Vec2::cross(*aa, *bb));
         }
         else {
-            eprintln!("Vec2 must take (Vec2, Vec2)");
+            LilahTypeError!(Vec2, 1, Vec2);
+            LilahTypeError!(Vec2, 2, Vec2);
             vm.set_slot_null(0);
         }
     }
@@ -196,7 +198,8 @@ impl Vec2 {
             vm.set_slot_double(0, Vec2::dot(*aa, *bb));
         }
         else {
-            eprintln!("Vec2 must take (Vec2, Vec2)");
+            LilahTypeError!(Vec2, 1, Vec2);
+            LilahTypeError!(Vec2, 2, Vec2);
             vm.set_slot_null(0);
         }
     }
@@ -209,7 +212,9 @@ impl Vec2 {
             let _ = vm.set_slot_new_foreign("math", "Vec2", Vec2::lerp(*aa, *bb, tt), 0);
         }
         else {
-            eprintln!("Vec2 must take (Vec2, Vec2)");
+            LilahTypeError!(Vec2, 1, Vec2);
+            LilahTypeError!(Vec2, 2, Vec2);
+            LilahTypeError!(Vec2, 3, f64);
             vm.set_slot_null(0);
         }
     }

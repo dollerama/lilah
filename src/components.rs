@@ -1,9 +1,10 @@
-use ruwren::{Class, VM, send_foreign, get_slot_checked, create_module, ModuleLibrary};
+use ruwren::{Class, VM, send_foreign, create_module, ModuleLibrary};
 use sdl2::pixels::Color;
 use sdl2::render::TextureQuery;
 use sdl2::rwops::RWops;
 use sdl2::{render::Texture, rect::Rect};
 use uuid::Uuid;
+use crate::{LilahTypeError, LilahNotFoundError, LilahError, LilahTypePanic, LilahPanic};
 use crate::gameobject::GameObjectId;
 use crate::world::StateUpdateContainer;
 use crate::{application::App, gameobject::GameObject};
@@ -159,7 +160,7 @@ impl Sfx {
         self.play_state = true;
     }
 
-    fn wren_set_volume_from_gamobject(vm: &VM) {
+    fn wren_set_volume_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 let name = vm.get_slot_string(2);
@@ -182,7 +183,7 @@ impl Sfx {
         }
     }
 
-    fn wren_play_from_gamobject(vm: &VM) {
+    fn wren_play_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 let name = vm.get_slot_string(2);
@@ -204,7 +205,7 @@ impl Sfx {
         }
     }
 
-    fn wren_get_volume_from_gamobject(vm: &VM) {
+    fn wren_get_volume_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 let name = vm.get_slot_string(2);
@@ -257,195 +258,195 @@ impl Transform {
     fn wren_set_pos(&mut self, vm: &VM) {
         match vm.get_slot_foreign::<Vec2>(1) {
             Some(pos) => self.position = *pos,
-            None => { eprintln!("Transform Error: Arg (1) must be of type Vec2"); }
+            None => { LilahTypeError!(Transform, 1, Vec2); }
         }
     }
 
     fn wren_set_scale(&mut self, vm: &VM) {
         match vm.get_slot_foreign::<Vec2>(1) {
             Some(scale) => self.scale = *scale,
-            None => { eprintln!("Transform Error: Arg (1) must be of type Vec2"); }
+            None => { LilahTypeError!(Transform, 1, Vec2); }
         }
     }
 
     fn wren_set_rotation(&mut self, vm: &VM) {
         match vm.get_slot_double(1) {
             Some(rotation) => self.rotation = rotation,
-            None => { eprintln!("Transform Error: Arg (1) must be of type Double"); }
+            None => { LilahTypeError!(Transform, 1, f64); }
         }
     }
 
-    fn wren_set_pos_from_gamobject(vm: &VM) {
+    fn wren_set_pos_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_foreign::<Vec2>(2) {
                     Some(pos) => comp.get_mut::<Transform>().position = *pos,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Vec2"); }
+                    None => { LilahTypeError!(Transform, 2, Vec2); }
                 }
             }
             None => {
-                eprintln!("Transform Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Transform, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_pos_x_from_gamobject(vm: &VM) {
+    fn wren_set_pos_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(pos_x) => comp.get_mut::<Transform>().position.x = pos_x,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
-    fn wren_set_pos_y_from_gamobject(vm: &VM) {
+    fn wren_set_pos_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(pos_y) => comp.get_mut::<Transform>().position.y = pos_y,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
-    fn wren_update_pos_from_gamobject(vm: &VM) {
+    fn wren_update_pos_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_foreign::<Vec2>(2) {
                     Some(pos) => comp.get_mut::<Transform>().position += *pos,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Vec2"); }
+                    None => { LilahTypeError!(Transform, 2, Vec2);  }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
-    fn wren_update_pos_x_from_gamobject(vm: &VM) {
+    fn wren_update_pos_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(pos_x) => comp.get_mut::<Transform>().position.x += pos_x,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
-    fn wren_update_pos_y_from_gamobject(vm: &VM) {
+    fn wren_update_pos_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(pos_y) => comp.get_mut::<Transform>().position.y += pos_y,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
-    fn wren_set_scale_from_gamobject(vm: &VM) {
+    fn wren_set_scale_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_foreign::<Vec2>(2) {
                     Some(scale) => comp.get_mut::<Transform>().scale = *scale,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Vec2"); }
+                    None => { LilahTypeError!(Transform, 2, Vec2); }
                 }
             }
             None => {
-                eprintln!("Transform Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Transform, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_scale_x_from_gamobject(vm: &VM) {
+    fn wren_set_scale_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(scale_x) => comp.get_mut::<Transform>().scale.x = scale_x,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
-    fn wren_set_scale_y_from_gamobject(vm: &VM) {
+    fn wren_set_scale_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(scale_y) => comp.get_mut::<Transform>().scale.y = scale_y,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Transform, 2, f64);  }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
-    fn wren_update_scale_from_gamobject(vm: &VM) {
+    fn wren_update_scale_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_foreign::<Vec2>(2) {
                     Some(scale) => comp.get_mut::<Transform>().scale += *scale,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Vec2"); }
+                    None => { LilahTypeError!(Transform, 2, Vec2);  }
                 }
             }
             None => {
-                eprintln!("Transform Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Transform, 1, GameObject); 
             }
         }
     }
 
-    fn wren_update_scale_x_from_gamobject(vm: &VM) {
+    fn wren_update_scale_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(scale_x) => comp.get_mut::<Transform>().scale.x += scale_x,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject);  }
         }
     }
 
-    fn wren_update_scale_y_from_gamobject(vm: &VM) {
+    fn wren_update_scale_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(scale_y) => comp.get_mut::<Transform>().scale.y += scale_y,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject);  }
         }
     }
 
-    fn wren_set_rot_from_gamobject(vm: &VM) {
+    fn wren_set_rot_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(rotation) => comp.get_mut::<Transform>().rotation = rotation,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject);  }
         }
     }
 
-    fn wren_update_rot_from_gamobject(vm: &VM) {
+    fn wren_update_rot_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(rotation) => comp.get_mut::<Transform>().rotation += rotation,
-                    None => { eprintln!("Transform Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
-            None => { eprintln!("Transform Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
     //for wren
@@ -523,7 +524,7 @@ impl Rigidbody {
     fn wren_vel_setter(&mut self, vm: &VM) {
         match vm.get_slot_foreign::<Vec2>(1) {
             Some(vel) => self.velocity = *vel,
-            None => { eprintln!("Rigidbody Error: Arg (1) must be of type Vec2"); }
+            None => { LilahTypeError!(Rigidbody, 1, Vec2); }
         }
     }
 
@@ -534,7 +535,7 @@ impl Rigidbody {
     fn wren_solid_setter(&mut self, vm: &VM) {
         match vm.get_slot_bool(1) {
             Some(solid) => self.solid = solid,
-            None => { eprintln!("Rigidbody Error: Arg (1) must be of type bool"); }
+            None => { LilahTypeError!(Rigidbody, 1, bool); }
         }
     }
 
@@ -569,146 +570,146 @@ impl Rigidbody {
                     vm.set_slot_null(0)
                 }
             }
-            None => { eprintln!("Rigidbody Error: Arg (1) must be of type GameObject"); }
+            None => { LilahTypeError!(Rigidbody, 1, GameObject); }
         }
     }
 
-    fn wren_set_vel_from_gamobject(vm: &VM) {
+    fn wren_set_vel_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_foreign::<Vec2>(2) {
                     Some(vel) => comp.get_mut::<Rigidbody>().velocity = *vel,
-                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Vec2"); }
+                    None => { LilahTypeError!(Rigidbody, 2, Vec2); }
                 }
             }
             None => {
-                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_pos_from_gamobject(vm: &VM) {
+    fn wren_set_pos_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_foreign::<Vec2>(2) {
                     Some(pos) => comp.get_mut::<Rigidbody>().position = *pos,
-                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Vec2"); }
+                    None => { LilahTypeError!(Rigidbody, 2, Vec2); }
                 }
             }
             None => {
-                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_pos_x_from_gamobject(vm: &VM) {
+    fn wren_set_pos_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(pos_x) => comp.get_mut::<Rigidbody>().position.x = pos_x,
-                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Rigidbody, 2, f64); }
                 }
             }
             None => {
-                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_pos_y_from_gamobject(vm: &VM) {
+    fn wren_set_pos_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(pos_y) => comp.get_mut::<Rigidbody>().position.y = pos_y,
-                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Rigidbody, 2, f64); }
                 }
             }
             None => {
-                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_vel_x_from_gamobject(vm: &VM) {
+    fn wren_set_vel_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(vel_x) => comp.get_mut::<Rigidbody>().velocity.x = vel_x,
-                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Rigidbody, 2, f64); }
                 }
             }
             None => {
-                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_vel_y_from_gamobject(vm: &VM) {
+    fn wren_set_vel_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(vel_y) => comp.get_mut::<Rigidbody>().velocity.y = vel_y,
-                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Rigidbody, 2, f64); }
                 }
             }
             None => {
-                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_solid_from_gamobject(vm: &VM) {
+    fn wren_set_solid_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_bool(2) {
                     Some(solid) => comp.get_mut::<Rigidbody>().solid = solid,
-                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type bool"); }
+                    None => { LilahTypeError!(Rigidbody, 2, bool); }
                 }
             }
             None => {
-                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
         }
     }
 
-    fn wren_update_vel_from_gamobject(vm: &VM) {
+    fn wren_update_vel_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_foreign::<Vec2>(2) {
                     Some(vel) => comp.get_mut::<Rigidbody>().velocity += *vel,
-                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Vec2"); }
+                    None => { LilahTypeError!(Rigidbody, 2, Vec2); }
                 }
             }
             None => {
-                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
         }
     }
 
-    fn wren_update_vel_x_from_gamobject(vm: &VM) {
+    fn wren_update_vel_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(vel_x) => comp.get_mut::<Rigidbody>().velocity.x += vel_x,
-                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Rigidbody, 2, f64); }
                 }
             }
             None => {
-                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
         }
     }
 
-    fn wren_update_vel_y_from_gamobject(vm: &VM) {
+    fn wren_update_vel_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
                     Some(vel_y) => comp.get_mut::<Rigidbody>().velocity.y += vel_y,
-                    None => { eprintln!("Rigidbody Error: Arg (2) must be of type Double"); }
+                    None => { LilahTypeError!(Rigidbody, 2, f64); }
                 }
             }
             None => {
-                eprintln!("Rigidbody Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
         }
     }
@@ -836,12 +837,12 @@ impl Animator {
                         vm.set_map_value(0, 1, 2);
                     }
                     None => {
-                        eprintln!("Animator Error: State->{} not found", state);
+                        LilahNotFoundError!(Animator, String, state);
                     }
                 }
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type String");
+                LilahTypeError!(Animator, 1, String);
             }
         }
     }
@@ -852,7 +853,7 @@ impl Animator {
                 self.set_state(&state);
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type String");
+                LilahTypeError!(Animator, 1, String);
             }
         }
     }
@@ -865,12 +866,12 @@ impl Animator {
                         self.states.insert(state, (loc.x as i32, loc.y as i32));
                     }
                     None => {
-                        eprintln!("Animator Error: Arg (2) must be of type Vec2");
+                        LilahTypeError!(Animator, 2, Vec2);
                     }
                 }
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type String");
+                LilahTypeError!(Animator, 1, String);
             }
         }
     }
@@ -881,7 +882,7 @@ impl Animator {
                 self.speed = speed;
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type Double");
+                LilahTypeError!(Animator, 1, f64);
             }
         }
     }
@@ -892,34 +893,34 @@ impl Animator {
                 self.current_frame = frame;
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type Double");
+                LilahTypeError!(Animator, 1, f64);
             }
         }
     }
 
-    fn wren_play_from_gamobject(vm: &VM) {
+    fn wren_play_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 comp.get_mut::<Animator>().play();
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Animator, 1, GameObject);
             }
         }
     }
 
-    fn wren_stop_from_gamobject(vm: &VM) {
+    fn wren_stop_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 comp.get_mut::<Animator>().stop();
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Animator, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_state_from_gamobject(vm: &VM) {
+    fn wren_set_state_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_string(2) {
@@ -927,17 +928,17 @@ impl Animator {
                         comp.get_mut::<Animator>().set_state(&state);
                     }
                     None => {
-                        eprintln!("Animator Error: Arg (2) must be of type String");
+                        LilahTypeError!(Animator, 2, String);
                     }
                 }
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Animator, 1, GameObject);
             }
         }
     }
 
-    fn wren_get_state_from_gamobject(vm: &VM) {
+    fn wren_get_state_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_string(2) {
@@ -950,22 +951,22 @@ impl Animator {
                                 vm.set_map_value(0, 1, 2);
                             }
                             None => {
-                                eprintln!("Animator Error: State->{} not found", state);
+                                LilahNotFoundError!(Animator, String, state);
                             }
                         }
                     }
                     None => {
-                        eprintln!("Animator Error: Arg (2) must be of type String");
+                        LilahTypeError!(Animator, 2, String);
                     }
                 }
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Animator, 1, GameObject);
             }
         }
     }
 
-    fn wren_insert_state_from_gamobject(vm: &VM) {
+    fn wren_insert_state_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_string(2) {
@@ -975,22 +976,22 @@ impl Animator {
                                 comp.get_mut::<Animator>().states.insert(state, (loc.x as i32, loc.y as i32));
                             }
                             None => {
-                                eprintln!("Animator Error: Arg (3) must be of type Vec2");
+                                LilahTypeError!(Animator, 3, Vec2);
                             }
                         }
                     }
                     None => {
-                        eprintln!("Animator Error: Arg (2) must be of type String");
+                        LilahTypeError!(Animator, 2, String);
                     }
                 }
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Animator, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_speed_from_gamobject(vm: &VM) {
+    fn wren_set_speed_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
@@ -998,17 +999,17 @@ impl Animator {
                         comp.get_mut::<Animator>().speed = speed;
                     }
                     None => {
-                        eprintln!("Animator Error: Arg (2) must be of type Double");
+                        LilahTypeError!(Animator, 2, f64);
                     }
                 }
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Animator, 1, GameObject);
             }
         }
     }
 
-    fn wren_set_frame_from_gamobject(vm: &VM) {
+    fn wren_set_frame_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
@@ -1016,12 +1017,12 @@ impl Animator {
                         comp.get_mut::<Animator>().current_frame = frame;
                     }
                     None => {
-                        eprintln!("Animator Error: Arg (2) must be of type Double");
+                        LilahTypeError!(Animator, 2, f64);
                     }
                 }
             }
             None => {
-                eprintln!("Animator Error: Arg (1) must be of type GameObject");
+                LilahTypeError!(Animator, 1, GameObject);
             }
         }
     }
@@ -1091,7 +1092,8 @@ impl Text {
                 StateUpdateContainer { textures: Some((self.texture_id.clone(), texture)), sfx: None }
             }
             else {
-                eprintln!("Text Error: Could not find {}", self.font);
+                let f = self.font.clone();
+                LilahNotFoundError!(Text, String, f);
                 StateUpdateContainer { textures: None, sfx: None  }
             }
         }
@@ -1100,13 +1102,20 @@ impl Text {
         }
     }
 
-    pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform) {
+    pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform, camera: &Option<Vec2>) {
+        let mut c_x = 0;
+        let mut c_y = 0;
+        if let Some(cam_pos) = camera {
+            c_x = cam_pos.x as i32;
+            c_y = cam_pos.y as i32;
+        }
+
         if let Err(e) = app.canvas.copy(
         &textures[&self.texture_id], 
         None, 
-        Some(Rect::new(t.position.x as i32, t.position.y as i32, self.size.x as u32, self.size.y as u32))
+        Some(Rect::new(t.position.x as i32-c_x, t.position.y as i32-c_y, self.size.x as u32, self.size.y as u32))
         ) {
-            eprintln!("Text Error: {}", e);
+            LilahError!(Text, e);
         }
     }
 
@@ -1133,7 +1142,7 @@ impl Text {
             self.set_text(&a);
         }
         else {
-            eprintln!("Text Error: Arg (1) must be of type String");
+            LilahTypeError!(Text, 1, String);
         }
     }
 
@@ -1143,7 +1152,7 @@ impl Text {
             self.set_font(&a);
         }
         else {
-            eprintln!("Text Error: Arg (1) must be of type String");
+            LilahTypeError!(Text, 1, String);
         }
     }
 
@@ -1153,79 +1162,79 @@ impl Text {
             self.set_font_size(a as u32);
         }
         else {
-            eprintln!("Text Error: Arg (1) must be of type Double");
+            LilahTypeError!(Text, 1, f64);
         }
     }
 
-    fn wren_get_text_from_gamobject(vm: &VM) {
+    fn wren_get_text_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             vm.set_slot_string(0, comp.get_mut::<Text>().get_text());
         }
         else {
-            eprintln!("Text Error: Arg (1) must be of type GameObject");
+            LilahTypeError!(Text, 1, GameObject);
         }
     }
 
-    fn wren_get_font_from_gamobject(vm: &VM) {
+    fn wren_get_font_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             vm.set_slot_string(0, comp.get_mut::<Text>().get_font());
         }
         else {
-            eprintln!("Text Error: Arg (1) must be of type GameObject");
+            LilahTypeError!(Text, 1, GameObject);
         }
     }
 
-    fn wren_get_font_size_from_gamobject(vm: &VM) {
+    fn wren_get_font_size_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             vm.set_slot_double(0, comp.get_mut::<Text>().get_font_size() as f64);
         }
         else {
-            eprintln!("Text Error: Arg (1) must be of type GameObject");
+            LilahTypeError!(Text, 1, GameObject);
         }
     }
 
-    fn wren_set_text_from_gamobject(vm: &VM) {
+    fn wren_set_text_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             let a = vm.get_slot_string(2);
             if let Some(a) = a {
                 comp.get_mut::<Text>().set_text(&a);
             }
             else {
-                eprintln!("Text Error: Arg (2) must be of type String");
+                LilahTypeError!(Text, 2, String);
             }
         }
         else {
-            eprintln!("Text Error: Arg (1) must be of type GameObject");
+            LilahTypeError!(Text, 1, GameObject);
         }
     }
 
-    fn wren_set_font_from_gamobject(vm: &VM) {
+    fn wren_set_font_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             let a = vm.get_slot_string(2);
             if let Some(a) = a {
                 comp.get_mut::<Text>().set_font(&a);
             }
             else {
-                eprintln!("Text Error: Arg (2) must be of type String");
+                LilahTypeError!(Text, 2, String);
             }
         }
         else {
-            eprintln!("Text Error: Arg (1) must be of type GameObject");
+            LilahTypeError!(Text, 1, GameObject);
         }
     }
 
-    fn wren_set_font_size_from_gamobject(vm: &VM) {
+    fn wren_set_font_size_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             let a = vm.get_slot_double(2);
             if let Some(a) = a {
                 comp.get_mut::<Text>().set_font_size(a as u32);
             }
             else {
-                eprintln!("Text Error: Arg (2) must be of type Double");
+                LilahTypeError!(Text, 2, f64);
             }
         }
         else {
-            eprintln!("Text Error: Arg (1) must be of type GameObject");
+            LilahTypeError!(Text, 1, GameObject);
         }
     }
 }
@@ -1249,7 +1258,8 @@ impl Sprite {
             );
         }
         else {
-            eprintln!("Sprite Error: Unable to Get Texture Id {}", self.texture_id);
+            let id = self.texture_id.clone();
+            LilahNotFoundError!(Sprite, Texture, id);
         }
 
         self.anim_sprite_sheet(self.index_cut.0, self.index_cut.1);
@@ -1272,7 +1282,14 @@ impl Sprite {
         self.index = (ind*self.get_size().0 as i32, ind2*self.get_size().1 as i32);
     }
 
-    pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform) {
+    pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform, camera: &Option<Vec2>) {
+        let mut c_x = 0;
+        let mut c_y = 0;
+        if let Some(cam_pos) = camera {
+            c_x = cam_pos.x as i32;
+            c_y = cam_pos.y as i32;
+        }
+
         if let Err(e) = app.canvas.copy_ex(
             &textures[&self.texture_id], 
             Rect::new(
@@ -1282,7 +1299,7 @@ impl Sprite {
                 self.get_size().1 ,
             ), 
             Rect::new(
-                t.position.x as i32, t.position.y as i32, 
+                t.position.x as i32 - c_x, t.position.y as i32 - c_y, 
                 self.get_size().0*t.scale.x.abs() as u32, 
                 self.get_size().1*t.scale.y.abs() as u32),
             t.rotation,
@@ -1290,7 +1307,7 @@ impl Sprite {
             t.scale.x < 0.0,
             t.scale.y < 0.0
         ) {
-            eprintln!("Sprite Error: {}", e);
+            LilahError!(Sprite, e);
         }
     }
 
@@ -1312,7 +1329,8 @@ impl Sprite {
             self.cut_sprite_sheet(xy.x as i32, xy.y as i32, colrow.x as u32, colrow.y as u32);
         }
         else {
-            eprintln!("Sprite Error: Arg (1) and Arg(2) must be of type Vec2");
+            LilahTypeError!(Sprite, 2, Vec2);
+            LilahTypeError!(Sprite, 3, Vec2);
         }
     }
 
@@ -1321,17 +1339,17 @@ impl Sprite {
         vm.set_slot_string(0, self.texture_id.clone());
     }
 
-    fn _wren_set_size_from_gamobject(vm: &VM) {
+    fn _wren_set_size_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             if let Some(pos) = vm.get_slot_foreign::<Vec2>(2) {
                 comp.get_mut::<Sprite>().base_size = (pos.x as u32, pos.y as u32);
             }
             else {
-                eprintln!("Sprite Error: Arg (2) must be of type Vec2");
+                LilahTypeError!(Sprite, 2, Vec2);
             }
         }
         else {
-            eprintln!("Sprite Error: Arg (1) must be of type GameObject");
+            LilahTypeError!(Sprite, 1, GameObject);
         }
     }
 
@@ -1342,11 +1360,12 @@ impl Sprite {
                 .cut_sprite_sheet(xy.x as i32, xy.y as i32, colrow.x as u32, colrow.y as u32);
             }
             else {
-                eprintln!("Sprite Error: Arg (2) and Arg(3) must be of type Vec2");
+                LilahTypeError!(Sprite, 2, Vec2);
+                LilahTypeError!(Sprite, 3, Vec2);
             }
         }
         else {
-            eprintln!("Sprite Error: Arg (1) must be of type GameObject");
+            LilahTypeError!(Sprite, 1, GameObject);
         }
     }
 }
@@ -1551,7 +1570,7 @@ impl Tickable<Animator> for Sprite {
 //Class impls
 impl Class for Box<dyn Component> {
     fn initialize(_: &VM) -> Self {
-        panic!("Component cannot be initialized!")
+        LilahPanic!(Component, "Cannot instantiate static class");
     }
 }
 
@@ -1561,8 +1580,7 @@ impl Class for Transform {
             Transform::new(*pos)
         }
         else {
-            eprintln!("Transform Error: Arg (1) must be of type Vec2 constructor will be defaulted");
-            Transform::new(Vec2::default())
+            LilahTypePanic!(ComponentBehaviour, 1, Vec2);
         }
     }
 }
@@ -1573,8 +1591,7 @@ impl Class for Sprite {
             Sprite::new(t_id.as_str())
         }
         else {
-            eprintln!("Sprite Error: Arg (1) must be of type String constructor will be defaulted");
-            Sprite::new("")
+            LilahTypePanic!(Sprite, 1, String);
         }
     }
 }
@@ -1591,8 +1608,7 @@ impl Class for ComponentBehaviour {
             ComponentBehaviour::new(c)
         }
         else {
-            eprintln!("ComponentBehaviour Error: Arg (1) must be of type String constructor will be defaulted");
-            ComponentBehaviour::new("".to_string())
+            LilahTypePanic!(ComponentBehaviour, 1, String);
         }
     }
 }
@@ -1609,8 +1625,7 @@ impl Class for Sfx {
             Sfx::new(b, c)
         }
         else {
-            eprintln!("Sfx Error: Arg (1) and Arg(2) must be of type String constructor will be defaulted");
-            Sfx::new("".to_string(), "".to_string())
+            LilahTypePanic!(Sfx, 1, String);
         }
     }
 }
@@ -1621,8 +1636,7 @@ impl Class for Text {
             Text::new(b.as_str(), c.as_str())
         }
         else {
-            eprintln!("Text Error: Arg (1) and Arg(2) must be of type String constructor will be defaulted");
-            Text::new("", "")
+            LilahTypePanic!(Text, 1, String);
         }
     }
 }
@@ -1637,22 +1651,22 @@ create_module! (
         instance(setter "scale") wren_set_scale,
         instance(setter "rotation") wren_set_rotation,
 
-        static(fn "set_position", 2) wren_set_pos_from_gamobject,
-        static(fn "set_position_x", 2) wren_set_pos_x_from_gamobject,
-        static(fn "set_position_y", 2) wren_set_pos_y_from_gamobject,
-        static(fn "update_position", 2) wren_update_pos_from_gamobject,
-        static(fn "update_position_x", 2) wren_update_pos_x_from_gamobject,
-        static(fn "update_position_y", 2) wren_update_pos_y_from_gamobject,
+        static(fn "set_position", 2) wren_set_pos_from_gameobject,
+        static(fn "set_position_x", 2) wren_set_pos_x_from_gameobject,
+        static(fn "set_position_y", 2) wren_set_pos_y_from_gameobject,
+        static(fn "update_position", 2) wren_update_pos_from_gameobject,
+        static(fn "update_position_x", 2) wren_update_pos_x_from_gameobject,
+        static(fn "update_position_y", 2) wren_update_pos_y_from_gameobject,
 
-        static(fn "set_scale", 2) wren_set_scale_from_gamobject,
-        static(fn "set_scale_x", 2) wren_set_scale_x_from_gamobject,
-        static(fn "set_scale_y", 2) wren_set_scale_y_from_gamobject,
-        static(fn "update_scale", 2) wren_update_scale_from_gamobject,
-        static(fn "update_scale_x", 2) wren_update_scale_x_from_gamobject,
-        static(fn "update_scale_y", 2) wren_update_scale_y_from_gamobject,
+        static(fn "set_scale", 2) wren_set_scale_from_gameobject,
+        static(fn "set_scale_x", 2) wren_set_scale_x_from_gameobject,
+        static(fn "set_scale_y", 2) wren_set_scale_y_from_gameobject,
+        static(fn "update_scale", 2) wren_update_scale_from_gameobject,
+        static(fn "update_scale_x", 2) wren_update_scale_x_from_gameobject,
+        static(fn "update_scale_y", 2) wren_update_scale_y_from_gameobject,
 
-        static(fn "set_rotation", 2) wren_set_rot_from_gamobject,
-        static(fn "update_rotation", 2) wren_update_rot_from_gamobject
+        static(fn "set_rotation", 2) wren_set_rot_from_gameobject,
+        static(fn "update_rotation", 2) wren_update_rot_from_gameobject
     }
 
     class("Sprite") crate::components::Sprite => sprite {
@@ -1686,16 +1700,16 @@ create_module! (
         instance(getter "colliding") wren_colliding_getter,
         
         static(fn "colliding", 1) wren_colliding_from_gameobject,
-        static(fn "set_velocity", 2) wren_set_vel_from_gamobject,
-        static(fn "set_velocity_x", 2) wren_set_vel_x_from_gamobject,
-        static(fn "set_velocity_y", 2) wren_set_vel_y_from_gamobject,
-        static(fn "set_position", 2) wren_set_pos_from_gamobject,
-        static(fn "set_position_x", 2) wren_set_pos_x_from_gamobject,
-        static(fn "set_position_y", 2) wren_set_pos_y_from_gamobject,
-        static(fn "update_velocity", 2) wren_update_vel_from_gamobject,
-        static(fn "update_velocity_x", 2) wren_update_vel_x_from_gamobject,
-        static(fn "update_velocity_y", 2) wren_update_vel_y_from_gamobject,
-        static(fn "set_solid", 2) wren_set_solid_from_gamobject
+        static(fn "set_velocity", 2) wren_set_vel_from_gameobject,
+        static(fn "set_velocity_x", 2) wren_set_vel_x_from_gameobject,
+        static(fn "set_velocity_y", 2) wren_set_vel_y_from_gameobject,
+        static(fn "set_position", 2) wren_set_pos_from_gameobject,
+        static(fn "set_position_x", 2) wren_set_pos_x_from_gameobject,
+        static(fn "set_position_y", 2) wren_set_pos_y_from_gameobject,
+        static(fn "update_velocity", 2) wren_update_vel_from_gameobject,
+        static(fn "update_velocity_x", 2) wren_update_vel_x_from_gameobject,
+        static(fn "update_velocity_y", 2) wren_update_vel_y_from_gameobject,
+        static(fn "set_solid", 2) wren_set_solid_from_gameobject
     }
 
     class("Animator") crate::components::Animator => animator {
@@ -1710,13 +1724,13 @@ create_module! (
         instance(fn "play", 0) wren_play,
         instance(fn "stop", 0) wren_stop,
         instance(fn "insert_state", 2) wren_insert_state,
-        static(fn "play", 1) wren_play_from_gamobject,
-        static(fn "stop", 1) wren_stop_from_gamobject,
-        static(fn "set_state", 2) wren_set_state_from_gamobject,
-        static(fn "get_state", 2) wren_get_state_from_gamobject,
-        static(fn "insert_state", 3) wren_insert_state_from_gamobject,
-        static(fn "set_speed", 2) wren_set_speed_from_gamobject,
-        static(fn "set_frame", 2) wren_set_frame_from_gamobject
+        static(fn "play", 1) wren_play_from_gameobject,
+        static(fn "stop", 1) wren_stop_from_gameobject,
+        static(fn "set_state", 2) wren_set_state_from_gameobject,
+        static(fn "get_state", 2) wren_get_state_from_gameobject,
+        static(fn "insert_state", 3) wren_insert_state_from_gameobject,
+        static(fn "set_speed", 2) wren_set_speed_from_gameobject,
+        static(fn "set_frame", 2) wren_set_frame_from_gameobject
     }
 
     class("ComponentBehaviour") crate::components::ComponentBehaviour => component_behaviour {
@@ -1731,12 +1745,12 @@ create_module! (
         instance(setter "text") wren_set_text,
         instance(setter "font") wren_set_font,
         instance(setter "font_size") wren_set_font_size,
-        static(fn "get_text", 1) wren_get_text_from_gamobject,
-        static(fn "get_font", 1) wren_get_font_from_gamobject,
-        static(fn "get_font_size", 1) wren_get_font_size_from_gamobject,
-        static(fn "set_text", 2) wren_set_text_from_gamobject,
-        static(fn "set_font", 2) wren_set_font_from_gamobject,
-        static(fn "set_font_size", 2) wren_set_font_size_from_gamobject
+        static(fn "get_text", 1) wren_get_text_from_gameobject,
+        static(fn "get_font", 1) wren_get_font_from_gameobject,
+        static(fn "get_font_size", 1) wren_get_font_size_from_gameobject,
+        static(fn "set_text", 2) wren_set_text_from_gameobject,
+        static(fn "set_font", 2) wren_set_font_from_gameobject,
+        static(fn "set_font_size", 2) wren_set_font_size_from_gameobject
     }
 
     class("Sfx") crate::components::Sfx => sfx {
@@ -1747,9 +1761,9 @@ create_module! (
         instance(setter "volume") wren_volume_setter,
         instance(getter "file") wren_file_getter,
         instance(fn "play", 0) wren_play,
-        static(fn "get_volume", 2) wren_get_volume_from_gamobject,
-        static(fn "set_volume", 3) wren_set_volume_from_gamobject,
-        static(fn "play", 2) wren_play_from_gamobject
+        static(fn "get_volume", 2) wren_get_volume_from_gameobject,
+        static(fn "set_volume", 3) wren_set_volume_from_gameobject,
+        static(fn "play", 2) wren_play_from_gameobject
     }
 
     module => engine

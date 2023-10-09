@@ -16,8 +16,7 @@ class Player is Behaviour {
         gameobject.add_component(Rigidbody.new().as_component)
         gameobject.add_component(Animator.new().as_component)
         gameobject.add_component(Text.new("Hello Lilah!", "assets/Lora-Regular.ttf").as_component)
-        var s = Sfx.new("sfx", "assets/sfx.wav")
-        gameobject.add_component(s.as_component)
+        gameobject.add_component(Sfx.new("sfx", "assets/sfx.wav").as_component)
         gameobject.add_component(this.behaviour)
 
         gameobject = State.instantiate(gameobject)
@@ -31,8 +30,6 @@ class Player is Behaviour {
         Animator.set_state(gameobject.ref, "Row0")
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
-
-        //Audio.play("assets/test.mp3", 5000)
     }
     
     static update(id) {
@@ -52,9 +49,10 @@ class Player is Behaviour {
             //State.destroy(gameobject.ref.get_component("Rigidbody").colliding["uuid"])
             Sfx.play(gameobject.ref, "sfx")
         }
-
-        if(Input.key_down("P")) {
-            Audio.pause(5000)
+        
+        if(Input.key("Space")) {
+            //State.fullscreen = !State.fullscreen
+            Transform.update_position_x(State.camera.ref, 2)
         }
 
         if(Input.key_down("O")) {
