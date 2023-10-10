@@ -668,6 +668,7 @@ impl Scripting {
 
     pub fn receive_state(&self, app : &mut App, state : &mut WorldState) {
         let state_class = Scripting::get_class_handle(&self.vm, "app", "State");
+        let ui_class = Scripting::get_class_handle(&self.vm, "app", "UI");
 
         Scripting::call_getter(&self.vm, &state_class, "gameobjects");
 
@@ -712,5 +713,7 @@ impl Scripting {
         });
 
         Scripting::call_fn(&self.vm, &state_class, "clear", 0);
+
+        Scripting::call_fn(&self.vm, &ui_class, "tick", 0);
     }
 }

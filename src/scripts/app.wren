@@ -301,3 +301,77 @@ class Input {
         return Vec2.new(x,y)
     }
 }
+
+class UI {
+    static on_click_callbacks { 
+        if(__on_click_callbacks == null) {
+            __on_click_callbacks = []
+        }
+        return __on_click_callbacks 
+    }
+
+    static on_click_down_callbacks { 
+        if(__on_click_down_callbacks == null) {
+            __on_click_down_callbacks = []
+        }
+        return __on_click_down_callbacks 
+    }
+
+    static on_hover_callbacks { 
+        if(__on_hover_callbacks == null) {
+            __on_hover_callbacks = []
+        }
+        return __on_hover_callbacks
+    }
+
+    static on_click(gameobject, callback) {
+        __on_click_callbacks.add({"gameobject":gameobject, "callback":callback})
+    }
+
+    static on_click_down(gameobject, callback) {
+        __on_click_down_callbacks.add({"gameobject":gameobject, "callback":callback})
+    }
+
+    static on_hover(gameobject, callback) {
+        __on_hover_callbacks.add({"gameobject":gameobject, "callback":callback})
+    }
+
+    static tick() {
+        for(i in on_click_callbacks) {
+            var i_pos = i["gameobject"].ref.get_component("Transform").position
+            var i_size = i["gameobject"].ref.get_component("Sprite").size
+            
+            if(Input.mouse_pos.x > i_pos.x && Input.mouse_pos.x < i_pos.x+i_size.x) {
+                if(Input.mouse_pos.y > i_pos.y && Input.mouse_pos.y < i_pos.y+i_size.y) {
+                    if(Input.mouse("Left")) {
+                        i["callback"].call()
+                    }
+                }
+            }
+        }
+
+        for(i in on_click_down_callbacks) {
+            var i_pos = i["gameobject"].ref.get_component("Transform").position
+            var i_size = i["gameobject"].ref.get_component("Sprite").size
+            
+            if(Input.mouse_pos.x > i_pos.x && Input.mouse_pos.x < i_pos.x+i_size.x) {
+                if(Input.mouse_pos.y > i_pos.y && Input.mouse_pos.y < i_pos.y+i_size.y) {
+                    if(Input.mouse_down("Left")) {
+                        i["callback"].call()
+                    }
+                }
+            }
+        }
+
+        for(i in on_hover_callbacks) {
+            var i_pos = i["gameobject"].ref.get_component("Transform").position
+            var i_size = i["gameobject"].ref.get_component("Sprite").size
+            
+            if(Input.mouse_pos.x > i_pos.x && Input.mouse_pos.x < i_pos.x+i_size.x) {
+                if(Input.mouse_pos.y > i_pos.y && Input.mouse_pos.y < i_pos.y+i_size.y) {
+                    i["callback"].call()
+                }
+            }
+        }
+    }
+}

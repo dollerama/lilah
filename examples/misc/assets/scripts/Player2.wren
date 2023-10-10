@@ -1,5 +1,5 @@
 import "math" for Vec2
-import "app" for State, Input, GameObjectRef
+import "app" for State, Input, GameObjectRef, UI
 import "engine" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour
 
 class Player2 is Behaviour {
@@ -18,12 +18,16 @@ class Player2 is Behaviour {
 
     static start(id) {
         var gameobject = GameObjectRef.new(id)
+        UI.on_hover(gameobject, Fn.new { 
+            var pos_x = gameobject.ref.get_component("Transform").position.x
+            Rigidbody.set_position_x(gameobject.ref, pos_x+10)
+        })
     }
     
     static update(id) {
         var gameobject = GameObjectRef.new(id)
-        var dir = State.to_world_space(Input.mouse_pos)-gameobject.ref.get_component("Transform").position
-        dir.normalize()
-        Rigidbody.set_velocity(gameobject.ref, dir)
+        //var dir = State.to_world_space(Input.mouse_pos)-gameobject.ref.get_component("Transform").position
+        //dir.normalize()
+        //Rigidbody.set_velocity(gameobject.ref, dir)
     }
 }
