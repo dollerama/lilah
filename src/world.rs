@@ -333,15 +333,13 @@ impl<'a> World<'a> {
     }
 
     pub fn update(&mut self, mut app: &mut App) {
-        let mut check_1 = false;
-
         self.update_vel_x();
         let mut collisions = Vec::<(GameObjectId, GameObjectId, bool)>::new();
         self.check_collision(&mut collisions);
 
         for coll in &collisions {
             if coll.2 {
-                if self.get(&coll.0.uuid).init && self.get(&coll.1.uuid).init {
+                if self.get(&coll.0.uuid).start && self.get(&coll.1.uuid).start {
                     let g2_is_solid = self.get(&coll.1.uuid).get::<Rigidbody>().solid;
                     if self.get(&coll.0.uuid).has::<Rigidbody>() {
                         let body = self.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
@@ -352,18 +350,8 @@ impl<'a> World<'a> {
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
                         body2.colliding = Some(coll.0.clone());
-
-                        check_1 = true;
                     }  
                 }
-            }
-            else {
-               if self.get(&coll.0.uuid).has::<Rigidbody>() {
-                    let body = self.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
-                    body.colliding = None;
-                    let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
-                    body2.colliding = None;
-               } 
             }
         }   
 
@@ -384,16 +372,6 @@ impl<'a> World<'a> {
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
                         body2.colliding = Some(coll.0.clone());
-                    } 
-                }
-            }
-            else {
-                if !check_1 {
-                    if self.get(&coll.0.uuid).has::<Rigidbody>() {
-                        let body = self.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
-                        body.colliding = None;
-                        let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
-                        body2.colliding = None;
                     } 
                 }
             }
@@ -427,6 +405,7 @@ impl<'a> World<'a> {
         for (_, i) in &mut self.state.gameobjects {
             if i.has::<Rigidbody>() {
                 let body = i.get_mut::<Rigidbody>();
+                body.colliding = None;
                 body.update_vel_x();
             }
         }

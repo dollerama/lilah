@@ -8,8 +8,6 @@ class Game is Behaviour {
     construct new() {
         super(Game)
 
-        //State.fullscreen = true
-
         Input.update_binding("Vertical1", "W", "S")
         Input.update_binding("Vertical2", "Up", "Down")
         

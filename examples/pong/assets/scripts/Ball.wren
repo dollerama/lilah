@@ -56,8 +56,6 @@ class Ball is Behaviour {
         }
 
         if(gameobject.ref.get("Rigidbody").colliding != null) {
-            System.print("Hi")
-            
             var paddle = State.find(gameobject.ref.get("Rigidbody").colliding["uuid"])
             Rigidbody.set_velocity_x(gameobject.ref, gameobject.ref.get("Rigidbody").velocity.x*-1)
 
