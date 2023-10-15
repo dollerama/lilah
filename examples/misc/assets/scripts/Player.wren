@@ -11,13 +11,13 @@ class Player is Behaviour {
         Input.update_binding("Horizontal", "A", "D")
         Input.update_binding("Vertical", "W", "S")
 
-        gameobject.add_component(Transform.new(Vec2.new(500,0))) 
-        gameobject.add_component(Sprite.new("assets/test.png").as_component)  
-        gameobject.add_component(Rigidbody.new().as_component)
-        gameobject.add_component(Animator.new().as_component)
-        gameobject.add_component(Text.new("Hello Lilah!", "assets/Lora-Regular.ttf").as_component)
-        gameobject.add_component(Sfx.new("sfx", "assets/sfx.wav").as_component)
-        gameobject.add_component(this.behaviour)
+        gameobject.add(Transform.new(Vec2.new(500,0))) 
+        gameobject.add(Sprite.new("assets/test.png"))  
+        gameobject.add(Rigidbody.new())
+        gameobject.add(Animator.new())
+        gameobject.add(Text.new("Hello Lilah!", "assets/Lora-Regular.ttf"))
+        gameobject.add(Sfx.new("sfx", "assets/sfx.wav"))
+        gameobject.add(this.as_behaviour)
 
         gameobject = State.instantiate(gameobject)
     }
@@ -37,22 +37,20 @@ class Player is Behaviour {
         
         Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*5)
 
-        if(gameobject.ref.get_component("Rigidbody").velocity.magnitude() > 0.0) {
+        if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
         } else {
             Animator.stop(gameobject.ref)
         }
 
-        Text.set_text(gameobject.ref, "%(gameobject.ref.get_component("Rigidbody").velocity.x) x %(gameobject.ref.get_component("Rigidbody").velocity.y)")
+        Text.set_text(gameobject.ref, "%(gameobject.ref.get("Rigidbody").velocity.x) x %(gameobject.ref.get("Rigidbody").velocity.y)")
 
-        if(gameobject.ref.get_component("Rigidbody").colliding != null) {
-            //State.destroy(gameobject.ref.get_component("Rigidbody").colliding["uuid"])
+        if(gameobject.ref.get("Rigidbody").colliding != null) {
             Sfx.play(gameobject.ref, "sfx")
         }
         
         if(Input.key("Space")) {
             State.fullscreen = !State.fullscreen
-            Transform.update_position_x(State.camera.ref, 2)
         }
 
         if(Input.key_down("O")) {

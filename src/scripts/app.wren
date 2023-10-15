@@ -2,7 +2,19 @@ import "math" for Vec2
 
 class GameObjectRef {
     ref { State.gameobjects[_ref] }
-    data { State.data[_ref] }
+    data {
+        if(_ref == null || State.data == null || !State.data.containsKey(ref.uuid)) {
+            return null
+        } 
+        return State.data[ref.uuid] 
+    }
+
+    [key] {
+        if(!data.containsKey(key)) {
+            return null
+        }
+        return data[key]
+    }
 
     construct new(i) {
         _ref = i
@@ -75,17 +87,41 @@ class State {
     static fullscreen { __fullscreen }
     static fullscreen=(v) { __fullscreen = v }
 
+    static screen_size { __screen_size }
+    static screen_size=(v) { __screen_size = v }
+
+    static tick_fibers() {
+        if(__fibers == null) return
+
+        for(f in __fibers) {
+            f["delay"] = f["delay"]-State.delta_time
+            if(f["delay"] < 0) {
+                f["delay"] = f["fiber"].call()
+            }
+        }
+
+        __fibers = __fibers.where {|i| i["delay"] != null }.toList
+    }
+
+    static start_fiber(f) {
+        if(__fibers == null) {
+            __fibers = []
+        }
+
+        __fibers.add({"fiber": f, "delay": f.call()})
+    }
+
     static instantiate(go, d) {
         if(__gameobjects == null) {
             __gameobjects = []
         }
 
         if(__data == null) {
-            __data = []
+            __data = {}
         }
 
         __gameobjects.add(go)
-        __data.add(d)
+        __data[go.uuid] = d
         return GameObjectRef.new(__gameobjects.count-1)
     }
 
@@ -95,11 +131,11 @@ class State {
         }
 
         if(__data == null) {
-            __data = []
+            __data = {}
         }
 
         __gameobjects.add(go)
-        __data.add({})
+        __data[go.uuid] = {}
         return GameObjectRef.new(__gameobjects.count-1)
     }
 
@@ -141,7 +177,7 @@ class State {
     }
 
     static to_world_space(input) {
-        return Vec2.new(input.x+camera.ref.get_component("Transform").position.x, input.y+camera.ref.get_component("Transform").position.y)
+        return Vec2.new(input.x+camera.ref.get("Transform").position.x, input.y+camera.ref.get("Transform").position.y)
     }
 }
 
@@ -255,23 +291,21 @@ class Input {
     }
 
     static binding(bind) {
-        if(__bindings == null) {
+        if(__bindings == null || __mappings == null) {
             return 0
         }   
 
-        var val = 0
+        var x = 0
 
-        if(!__bindings.containsKey(bind)) {
-            return 0
+        if(__bindings.containsKey(bind)) {
+            if(__mappings.containsKey(__bindings[bind][0]) && __mappings[__bindings[bind][0]]["pressed"]) {
+                x = -1
+            } else if( __mappings.containsKey(__bindings[bind][1]) && __mappings[__bindings[bind][1]]["pressed"]) {
+                x = 1
+            }
         }
 
-        if(__mappings.containsKey(__bindings[bind][0]) && __mappings[__bindings[bind][0]]["pressed"]) {
-            val = -1
-        } else if(__mappings.containsKey(__bindings[bind][1]) && __mappings[__bindings[bind][1]]["pressed"]) {
-            val = 1
-        }
-
-        return val
+        return x
     }
 
     static binding2D(bind1, bind2) {
@@ -338,8 +372,8 @@ class UI {
 
     static tick() {
         for(i in on_click_callbacks) {
-            var i_pos = i["gameobject"].ref.get_component("Transform").position
-            var i_size = i["gameobject"].ref.get_component("Sprite").size
+            var i_pos = i["gameobject"].ref.get("Transform").position
+            var i_size = i["gameobject"].ref.get("Sprite").size
             
             if(Input.mouse_pos.x > i_pos.x && Input.mouse_pos.x < i_pos.x+i_size.x) {
                 if(Input.mouse_pos.y > i_pos.y && Input.mouse_pos.y < i_pos.y+i_size.y) {
@@ -351,8 +385,8 @@ class UI {
         }
 
         for(i in on_click_down_callbacks) {
-            var i_pos = i["gameobject"].ref.get_component("Transform").position
-            var i_size = i["gameobject"].ref.get_component("Sprite").size
+            var i_pos = i["gameobject"].ref.get("Transform").position
+            var i_size = i["gameobject"].ref.get("Sprite").size
             
             if(Input.mouse_pos.x > i_pos.x && Input.mouse_pos.x < i_pos.x+i_size.x) {
                 if(Input.mouse_pos.y > i_pos.y && Input.mouse_pos.y < i_pos.y+i_size.y) {
@@ -364,8 +398,8 @@ class UI {
         }
 
         for(i in on_hover_callbacks) {
-            var i_pos = i["gameobject"].ref.get_component("Transform").position
-            var i_size = i["gameobject"].ref.get_component("Sprite").size
+            var i_pos = i["gameobject"].ref.get("Transform").position
+            var i_size = i["gameobject"].ref.get("Sprite").size
             
             if(Input.mouse_pos.x > i_pos.x && Input.mouse_pos.x < i_pos.x+i_size.x) {
                 if(Input.mouse_pos.y > i_pos.y && Input.mouse_pos.y < i_pos.y+i_size.y) {

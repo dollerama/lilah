@@ -266,6 +266,7 @@ impl<'a> World<'a> {
                 self.update_callback.as_mut().unwrap()(app, &mut self.state, scripting);
             }
             self.update(app);
+            
             scripting.send_state(app, &mut self.state);
 
             self.draw(app);
@@ -345,11 +346,14 @@ impl<'a> World<'a> {
                     if self.get(&coll.0.uuid).has::<Rigidbody>() {
                         let body = self.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
-                        check_1 = true;
-                        
                         if g2_is_solid {
                             body.update_correct_x();
                         }
+
+                        let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
+                        body2.colliding = Some(coll.0.clone());
+
+                        check_1 = true;
                     }  
                 }
             }
@@ -357,9 +361,11 @@ impl<'a> World<'a> {
                if self.get(&coll.0.uuid).has::<Rigidbody>() {
                     let body = self.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                     body.colliding = None;
+                    let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
+                    body2.colliding = None;
                } 
             }
-        }
+        }   
 
         self.update_vel_y();
         collisions = Vec::<(GameObjectId, GameObjectId, bool)>::new();
@@ -375,14 +381,19 @@ impl<'a> World<'a> {
                         if g2_is_solid {
                             body.update_correct_y();
                         }
+
+                        let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
+                        body2.colliding = Some(coll.0.clone());
                     } 
                 }
             }
             else {
                 if !check_1 {
                     if self.get(&coll.0.uuid).has::<Rigidbody>() {
-                        let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
+                        let body = self.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = None;
+                        let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
+                        body2.colliding = None;
                     } 
                 }
             }
@@ -400,7 +411,7 @@ impl<'a> World<'a> {
                     
                     if i.has::<Rigidbody>() {
                         if j.has::<Rigidbody>() {
-                            let check =  i.get::<Rigidbody>().check_collision(&j.get::<Rigidbody>());
+                            let check =  i.get::<Rigidbody>().check_collision_aabb(&j.get::<Rigidbody>());
                             coll.push((i.id.clone(), j.id.clone(), check));
                         }
                     }

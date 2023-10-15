@@ -9,7 +9,7 @@ class Behaviour {
         return _frame
     }
     frame=(v) {_frame=v}
-    behaviour { _behaviour }
+    as_behaviour { _behaviour }
 
     construct new(c) {
         _behaviour = ComponentBehaviour.new("%(c)").as_component
@@ -56,6 +56,7 @@ foreign class Sprite {
 foreign class Rigidbody {
     construct new() {}
     foreign as_component
+    foreign position
     foreign velocity
     foreign velocity=(value)
     foreign solid
@@ -106,10 +107,13 @@ foreign class Transform {
     foreign position
     foreign scale
     foreign rotation
+    foreign pivot
     foreign position=(value)
     foreign scale=(value)
     foreign rotation=(value)
+    foreign pivot=(value)
 
+    foreign static set_pivot(go, new_pivot)
     foreign static set_position(go, new_pos)
     foreign static set_position_x(go, new_x)
     foreign static set_position_y(go, new_y)
@@ -131,9 +135,9 @@ foreign class Transform {
 foreign class GameObject {
     construct new(name) {}
     
-    foreign add_component(x)
-    foreign get_component(x)
-    foreign set_component(x, y)
+    foreign add(x)
+    foreign get(x)
+    foreign set(x, y)
     foreign id
     foreign uuid
     foreign name

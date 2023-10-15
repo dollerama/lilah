@@ -142,6 +142,7 @@ impl GameObject {
 
     pub fn update(&mut self, app: &mut App) {
         tick_component!(Rigidbody, Sprite, self, app);
+        tick_component!(Rigidbody, Transform, self, app);
         tick_component!(Transform, Rigidbody, self, app);
         tick_component!(Animator, Sprite, self, app);
         tick_component!(Sprite, Animator, self, app);
@@ -303,6 +304,21 @@ impl GameObject {
             self.components.push(Box::new(c.clone()));
         }
         else if let Some(c) = vm.get_slot_foreign::<Rigidbody>(1) {
+            self.components.push(Box::new(c.clone()));
+        }
+        else if let Some(c) = vm.get_slot_foreign::<Sprite>(1) {
+            self.components.push(Box::new(c.clone()));
+        }
+        else if let Some(c) = vm.get_slot_foreign::<Text>(1) {
+            self.components.push(Box::new(c.clone()));
+        }
+        else if let Some(c) = vm.get_slot_foreign::<Animator>(1) {
+            self.components.push(Box::new(c.clone()));
+        }
+        else if let Some(c) = vm.get_slot_foreign::<Sfx>(1) {
+            self.components.push(Box::new(c.clone()));
+        }
+        else if let Some(c) = vm.get_slot_foreign::<ComponentBehaviour>(1) {
             self.components.push(Box::new(c.clone()));
         }
         else {

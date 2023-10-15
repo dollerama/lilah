@@ -8,26 +8,21 @@ class Player2 is Behaviour {
         
         var gameobject = GameObject.new("D")
 
-        gameobject.add_component(Transform.new(Vec2.zero)) 
-        gameobject.add_component(Sprite.new("assets/test.png").as_component)  
-        gameobject.add_component(Rigidbody.new().as_component)
-        gameobject.add_component(this.behaviour)
+        gameobject.add(Transform.new(Vec2.new(800/2, 600/2))) 
+        gameobject.add(Sprite.new("assets/test.png"))  
+        gameobject.add(Rigidbody.new())
+        gameobject.add(this.as_behaviour)
 
         gameobject = State.instantiate(gameobject, {"message": "hi2"})
     }
 
     static start(id) {
         var gameobject = GameObjectRef.new(id)
-        UI.on_hover(gameobject, Fn.new { 
-            var pos_x = gameobject.ref.get_component("Transform").position.x
-            Rigidbody.set_position_x(gameobject.ref, pos_x+10)
-        })
+        Transform.set_scale(gameobject.ref, Vec2.new(2,2))
+        Transform.set_pivot(gameobject.ref, gameobject.ref.get("Sprite").size/2)
     }
     
     static update(id) {
         var gameobject = GameObjectRef.new(id)
-        //var dir = State.to_world_space(Input.mouse_pos)-gameobject.ref.get_component("Transform").position
-        //dir.normalize()
-        //Rigidbody.set_velocity(gameobject.ref, dir)
     }
 }

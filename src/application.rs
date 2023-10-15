@@ -122,17 +122,19 @@ impl Scripting {
 
         self.modules.insert(mod_name.clone(), src.clone());
 
-        match self.vm.interpret(format!("{}Main", mod_name), src) {
+        match self.vm.interpret(mod_name.clone(), src) {
             Ok(_) => { debug_println!("Script Loaded: Module->{}", mod_name) }
             Err(e) => { panic!("Script Error: Could not load Module->{}\n{}", mod_name, e) }
         }
     }
     
     pub fn tick(&mut self, app : &mut App, state : &mut WorldState) {
+        let state_class = Scripting::get_class_handle(&self.vm, "app", "State");
+        
         for m in &self.modules {
             let class = Scripting::get_class_handle(
                 &self.vm, 
-                &format!("{}Main", m.0), 
+                &m.0, 
                 &m.0.to_lowercase()
             );
 
@@ -165,9 +167,29 @@ impl Scripting {
                         vm.set_slot_double(1, (frame+1).into());
                     });
 
-                    Scripting::call_handle(&self.vm, &class, &frame_setter);             
+                    Scripting::call_handle(&self.vm, &class, &frame_setter);   
+
+                    for g in &mut state.gameobjects {
+                        if g.1.has::<ComponentBehaviour>() {
+                            if g.1.get::<ComponentBehaviour>().get_component() == m.0 {
+                                let obj = Scripting::get_class_handle(
+                                    &self.vm, 
+                                    &m.0, 
+                                    &m.0
+                                );
+
+                                if g.1.init && !g.1.start {
+                                    self.vm.execute(|vm| {
+                                        vm.set_slot_double(1, g.1.wren_id as f64)
+                                    });
+                                    Scripting::call_fn(&self.vm, &obj, "start", 1);
+                                }
+                            }
+                        }
+                    }           
                 }
                 _ => {
+                    Scripting::call_fn(&self.vm, &state_class, "tick_fibers", 0);
                     Scripting::call_fn(&self.vm, &class, "update", 0); 
 
                     self.vm.execute(|vm| {
@@ -175,33 +197,27 @@ impl Scripting {
                     });
 
                     Scripting::call_handle(&self.vm, &class, &frame_setter);
-                }
-            }
 
-            for g in &mut state.gameobjects {
-                if g.1.has::<ComponentBehaviour>() {
-                    if g.1.get::<ComponentBehaviour>().get_component() == m.0 {
-                        let obj = Scripting::get_class_handle(
-                            &self.vm, 
-                            &format!("{}Main", m.0), 
-                            &m.0
-                        );
+                    for g in &mut state.gameobjects {
+                        if g.1.has::<ComponentBehaviour>() {
+                            if g.1.get::<ComponentBehaviour>().get_component() == m.0 {
+                                let obj = Scripting::get_class_handle(
+                                    &self.vm, 
+                                    &m.0, 
+                                    &m.0
+                                );
 
-                        if g.1.init && !g.1.start {
-                            self.vm.execute(|vm| {
-                                vm.set_slot_double(1, g.1.wren_id as f64)
-                            });
-                            Scripting::call_fn(&self.vm, &obj, "start", 1);
-                        }
-                        if g.1.init && g.1.start {
-                            self.vm.execute(|vm| {
-                                vm.set_slot_double(1, g.1.wren_id as f64)
-                            });
-                            Scripting::call_fn(&self.vm, &obj, "update", 1);
+                                if g.1.init && g.1.start {
+                                    self.vm.execute(|vm| {
+                                        vm.set_slot_double(1, g.1.wren_id as f64)
+                                    });
+                                    Scripting::call_fn(&self.vm, &obj, "update", 1);
+                                }
+                            }
                         }
                     }
                 }
-            } 
+            }
 
             self.receive_audio(app, state);
             self.handle_timer(app, state);
@@ -321,7 +337,7 @@ impl App {
     pub fn toggle_fullscreen(&mut self) {
         match self.canvas.window().fullscreen_state() {
             FullscreenType::Off => {
-                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::Desktop) {
+                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::True) {
                     LilahPanic!(App, e);
                 }
             }
@@ -506,6 +522,12 @@ impl Scripting {
     pub fn send_state(&self, app : &mut App, state : &mut WorldState) {
         let class = Scripting::get_class_handle(&self.vm, "app", "State");
         let input_class = Scripting::get_class_handle(&self.vm, "app", "Input");
+        
+        self.vm.execute(|vm| {
+            let _ = vm.set_slot_new_foreign("Math", "Vec2", Vec2::new(app.canvas.window().size().0 as f64, app.canvas.window().size().1 as f64), 1);
+        });
+
+        Scripting::call_setter(&self.vm, &class, "screen_size");
 
         self.vm.execute(|vm| {
             vm.set_slot_new_list(1);

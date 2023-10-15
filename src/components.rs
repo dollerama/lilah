@@ -37,6 +37,7 @@ pub trait Component {
 #[derive(Debug, PartialEq, Default, Copy, Clone)]
 pub struct Transform {
     pub position: Vec2,
+    pub pivot: Vec2,
     pub scale: Vec2,
     pub rotation: f64,
 }
@@ -55,6 +56,8 @@ pub struct Sfx {
 #[derive(PartialEq, Clone)]
 pub struct Rigidbody {
     pub position: Vec2,
+    pub pivot: Vec2,
+    pub scale: Vec2,
     /// Bounds of Collider
     pub bounds: Vec2,
     pub velocity: Vec2,
@@ -233,9 +236,14 @@ impl Transform {
     pub fn new(pos: Vec2) -> Self {
         Self {
             position: pos,
+            pivot: Vec2::ZERO,
             rotation: 0.0,
             scale: Vec2::ONE
         }
+    }
+
+    pub fn relative_position(&self) -> Vec2 {
+        Vec2::new(self.position.x-(self.pivot.x*2.0), self.position.y-(self.pivot.y*2.0))
     }
 
     //for wren
@@ -245,6 +253,10 @@ impl Transform {
 
     fn wren_get_pos(&self, vm: &VM) {
         send_foreign!(vm, "math", "Vec2", self.position => 0);
+    }
+
+    fn wren_get_pivot(&self, vm: &VM) {
+        send_foreign!(vm, "math", "Vec2", self.pivot => 0);
     }
 
     fn wren_get_scale(&self, vm: &VM) {
@@ -258,6 +270,13 @@ impl Transform {
     fn wren_set_pos(&mut self, vm: &VM) {
         match vm.get_slot_foreign::<Vec2>(1) {
             Some(pos) => self.position = *pos,
+            None => { LilahTypeError!(Transform, 1, Vec2); }
+        }
+    }
+
+    fn wren_set_pivot(&mut self, vm: &VM) {
+        match vm.get_slot_foreign::<Vec2>(1) {
+            Some(pivot) => self.pivot = *pivot,
             None => { LilahTypeError!(Transform, 1, Vec2); }
         }
     }
@@ -281,6 +300,20 @@ impl Transform {
             Some(comp) => {
                 match vm.get_slot_foreign::<Vec2>(2) {
                     Some(pos) => comp.get_mut::<Transform>().position = *pos,
+                    None => { LilahTypeError!(Transform, 2, Vec2); }
+                }
+            }
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
+            }
+        }
+    }
+
+    fn wren_set_pivot_from_gameobject(vm: &VM) {
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_foreign::<Vec2>(2) {
+                    Some(pivot) => comp.get_mut::<Transform>().pivot = *pivot,
                     None => { LilahTypeError!(Transform, 2, Vec2); }
                 }
             }
@@ -456,8 +489,10 @@ impl Rigidbody {
     pub fn new(pos: Vec2) -> Self {
         Self {
             bounds : Vec2::ONE,
+            pivot: Vec2::ZERO,
             velocity : Vec2::ZERO,
             position : pos,
+            scale: Vec2::ONE,
             colliding : None,
             solid : true
         }
@@ -466,7 +501,9 @@ impl Rigidbody {
     pub fn new_without_pos() -> Self {
         Self {
             bounds : Vec2::ONE,
+            pivot: Vec2::ZERO,
             velocity : Vec2::ZERO,
+            scale: Vec2::ONE,
             position : Vec2::ZERO,
             colliding : None,
             solid : true
@@ -489,17 +526,22 @@ impl Rigidbody {
         self.position.x -= self.velocity.x; 
     }
 
+    // pub fn check_collision_SAT(&self, other: &Rigidbody) -> bool {
+    //     let center_a = Vec2::new(self.position.x+(self.bounds.x/2.0), self.position.y+(self.bounds.y/2.0));
+    //     let center_b = Vec2::new(other.position.x+(other.bounds.x/2.0), other.position.y+(other.bounds.y/2.0));
+    // }
+
     /// Simple AABB collision
-    pub fn check_collision(&self, other: &Rigidbody) -> bool {
+    pub fn check_collision_aabb(&self, other: &Rigidbody) -> bool {
         //The sides of the rectangles
-        let left_a = self.position.x;
-        let left_b = other.position.x;
-        let right_a = self.position.x+self.bounds.x;
-        let right_b = other.position.x+other.bounds.x;
-        let top_a = self.position.y;
-        let top_b = other.position.y;
-        let bottom_a = self.position.y+self.bounds.y;
-        let bottom_b = other.position.y+other.bounds.y;
+        let left_a = self.position.x-self.pivot.x;
+        let left_b = other.position.x-other.pivot.x;
+        let right_a = left_a+(self.bounds.x*self.scale.x);
+        let right_b = left_b+(other.bounds.x*other.scale.x);
+        let top_a = self.position.y-self.pivot.y;
+        let top_b = other.position.y-other.pivot.y;
+        let bottom_a = top_a+(self.bounds.y*self.scale.y);
+        let bottom_b = top_b+(other.bounds.y*other.scale.y);
 
         //If any of the sides from A are outside of B
         if  bottom_a >= top_b &&
@@ -519,6 +561,10 @@ impl Rigidbody {
 
     fn wren_vel_getter(&self, vm: &VM) {
         send_foreign!(vm, "math", "Vec2", self.velocity => 0);
+    }
+
+    fn wren_pos_getter(&self, vm: &VM) {
+        send_foreign!(vm, "math", "Vec2", self.position => 0);
     }
 
     fn wren_vel_setter(&mut self, vm: &VM) {
@@ -1113,7 +1159,7 @@ impl Text {
         if let Err(e) = app.canvas.copy(
         &textures[&self.texture_id], 
         None, 
-        Some(Rect::new(t.position.x as i32-c_x, t.position.y as i32-c_y, self.size.x as u32, self.size.y as u32))
+        Some(Rect::new((t.relative_position().x) as i32-c_x, (t.relative_position().y) as i32-c_y, self.size.x as u32, self.size.y as u32))
         ) {
             LilahError!(Text, e);
         }
@@ -1299,7 +1345,7 @@ impl Sprite {
                 self.get_size().1 ,
             ), 
             Rect::new(
-                t.position.x as i32 - c_x, t.position.y as i32 - c_y, 
+                (t.relative_position().x) as i32 - c_x, (t.relative_position().y)  as i32 - c_y, 
                 self.get_size().0*t.scale.x.abs() as u32, 
                 self.get_size().1*t.scale.y.abs() as u32),
             t.rotation,
@@ -1409,6 +1455,8 @@ impl Default for Rigidbody {
     fn default() -> Self {
         Self {
             bounds : Vec2::ONE,
+            pivot: Vec2::ZERO,
+            scale: Vec2::ONE,
             velocity : Vec2::ZERO,
             position : Vec2::ONE,
             colliding : None,
@@ -1551,7 +1599,14 @@ impl Tickable<Sprite> for Rigidbody {
 
 impl Tickable<Rigidbody> for Transform {
     fn tick(&mut self, _: f64, d: &Rigidbody) {
-        self.position = d.position;
+        self.position = d.position + self.pivot;
+    }
+}
+
+impl Tickable<Transform> for Rigidbody {
+    fn tick(&mut self, _: f64, d: &Transform) {
+        self.scale = d.scale;
+        self.pivot = d.pivot;
     }
 }
 
@@ -1647,10 +1702,13 @@ create_module! (
         instance(getter "position") wren_get_pos,
         instance(getter "scale") wren_get_scale,
         instance(getter "rotation") wren_get_rotation,
+        instance(getter "pivot") wren_get_pivot,
         instance(setter "position") wren_set_pos,
         instance(setter "scale") wren_set_scale,
         instance(setter "rotation") wren_set_rotation,
+        instance(setter "pivot") wren_set_pivot,
 
+        static(fn "set_pivot", 2) wren_set_pivot_from_gameobject,
         static(fn "set_position", 2) wren_set_pos_from_gameobject,
         static(fn "set_position_x", 2) wren_set_pos_x_from_gameobject,
         static(fn "set_position_y", 2) wren_set_pos_y_from_gameobject,
@@ -1682,9 +1740,9 @@ create_module! (
     }
 
     class("GameObject") crate::gameobject::GameObject => go {
-        instance(fn "get_component", 1) wren_get_component,
-        instance(fn "add_component", 1) wren_add_component,
-        instance(fn "set_component", 2) wren_set_component,
+        instance(fn "get", 1) wren_get_component,
+        instance(fn "add", 1) wren_add_component,
+        instance(fn "set", 2) wren_set_component,
         instance(getter "id") wren_getter_id,
         instance(getter "name") wren_getter_name,
         instance(setter "name") wren_setter_name,
@@ -1693,6 +1751,7 @@ create_module! (
 
     class("Rigidbody") crate::components::Rigidbody => rigidbody {
         instance(getter "as_component") wren_as_component,
+        instance(getter "position") wren_pos_getter,
         instance(getter "velocity") wren_vel_getter,
         instance(setter "velocity") wren_vel_setter,
         instance(getter "solid") wren_solid_getter,
