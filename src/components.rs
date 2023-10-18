@@ -130,7 +130,7 @@ impl Sfx {
 
     //for wren
     fn wren_as_component(&self, vm: &VM) {
-        send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+        send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
     fn wren_name_getter(&self, vm: &VM) {
@@ -243,12 +243,23 @@ impl Transform {
     }
 
     pub fn relative_position(&self) -> Vec2 {
-        Vec2::new(self.position.x-(self.pivot.x*2.0), self.position.y-(self.pivot.y*2.0))
+        self.position
+    }
+
+    pub fn world_to_screen_position(&self, camera: &Vec2, screen_y: f64) -> Vec2 {
+        Vec2::new(self.position.x-camera.x, (-self.position.y+screen_y)-camera.y)
+    }
+
+    pub fn get_pivot(&self, size: &Vec2) -> Vec2 {
+        Vec2::new(
+            (self.pivot.x/size.x)*self.scale.x,
+            (self.pivot.y/size.y)*self.scale.y
+        )
     }
 
     //for wren
     fn wren_as_component(&self, vm: &VM) {
-        send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+        send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
     fn wren_get_pos(&self, vm: &VM) {
@@ -526,10 +537,12 @@ impl Rigidbody {
         self.position.x -= self.velocity.x; 
     }
 
-    // pub fn check_collision_SAT(&self, other: &Rigidbody) -> bool {
-    //     let center_a = Vec2::new(self.position.x+(self.bounds.x/2.0), self.position.y+(self.bounds.y/2.0));
-    //     let center_b = Vec2::new(other.position.x+(other.bounds.x/2.0), other.position.y+(other.bounds.y/2.0));
-    // }
+    pub fn check_collision_sat(&self, other: &Rigidbody) -> (bool, Vec2) {
+        let r1 = crate::math::Rect::new_from_rigidbody(self);
+        let r2 = crate::math::Rect::new_from_rigidbody(other);
+
+        r1.intersects(&r2)
+    }
 
     /// Simple AABB collision
     pub fn check_collision_aabb(&self, other: &Rigidbody) -> bool {
@@ -556,7 +569,7 @@ impl Rigidbody {
 
     //for wren
     fn wren_as_component(&self, vm: &VM) {
-        send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+        send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
     fn wren_vel_getter(&self, vm: &VM) {
@@ -849,7 +862,7 @@ impl Animator {
 
     //for wren
     fn wren_as_component(&self, vm: &VM) {
-        send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+        send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
     fn wren_playing_getter(&self, vm: &VM) {
@@ -1149,17 +1162,21 @@ impl Text {
     }
 
     pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform, camera: &Option<Vec2>) {
-        let mut c_x = 0;
-        let mut c_y = 0;
+        let mut cam = Vec2::new(0.0,0.0);
         if let Some(cam_pos) = camera {
-            c_x = cam_pos.x as i32;
-            c_y = cam_pos.y as i32;
+            cam = *cam_pos;
         }
 
         if let Err(e) = app.canvas.copy(
         &textures[&self.texture_id], 
         None, 
-        Some(Rect::new((t.relative_position().x) as i32-c_x, (t.relative_position().y) as i32-c_y, self.size.x as u32, self.size.y as u32))
+        Some(Rect::new(
+                t.world_to_screen_position(&cam, app.get_window_size().y).x as i32, 
+                t.world_to_screen_position(&cam, app.get_window_size().y).y as i32, 
+                self.size.x as u32, 
+                self.size.y as u32
+            )
+        )
         ) {
             LilahError!(Text, e);
         }
@@ -1167,7 +1184,7 @@ impl Text {
 
     //wren
     fn wren_as_component(&self, vm: &VM) {
-        send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+        send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
     fn wren_get_text(&self, vm: &VM) {
@@ -1329,11 +1346,9 @@ impl Sprite {
     }
 
     pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform, camera: &Option<Vec2>) {
-        let mut c_x = 0;
-        let mut c_y = 0;
+        let mut cam = Vec2::new(0.0,0.0);
         if let Some(cam_pos) = camera {
-            c_x = cam_pos.x as i32;
-            c_y = cam_pos.y as i32;
+            cam = *cam_pos;
         }
 
         if let Err(e) = app.canvas.copy_ex(
@@ -1345,7 +1360,8 @@ impl Sprite {
                 self.get_size().1 ,
             ), 
             Rect::new(
-                (t.relative_position().x) as i32 - c_x, (t.relative_position().y)  as i32 - c_y, 
+                t.world_to_screen_position(&cam, app.get_window_size().y).x as i32, 
+                t.world_to_screen_position(&cam, app.get_window_size().y).y as i32,
                 self.get_size().0*t.scale.x.abs() as u32, 
                 self.get_size().1*t.scale.y.abs() as u32),
             t.rotation,
@@ -1359,7 +1375,7 @@ impl Sprite {
 
     //for wren
     fn wren_as_component(&self, vm: &VM) {
-        send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+        send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
     fn wren_get_size(&self, vm: &VM) {
@@ -1429,7 +1445,7 @@ impl ComponentBehaviour {
 
     //for wren
     fn wren_as_component(&self, vm: &VM) {
-        send_foreign!(vm, "engine", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+        send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 }
 
@@ -1475,7 +1491,7 @@ impl Component for Transform {
     }
 
     fn send_to_wren(&self, slot : usize, vm : &VM) {
-        send_foreign!(vm, "engine", "Transform", self.clone() => slot);
+        send_foreign!(vm, "game", "Transform", self.clone() => slot);
     }
 
     fn clone_dyn(&self) -> Box<dyn Component> {
@@ -1492,7 +1508,7 @@ impl Component for Sprite {
     }
 
     fn send_to_wren(&self, slot : usize, vm : &VM) {
-        send_foreign!(vm, "engine", "Sprite", self.clone() => slot);
+        send_foreign!(vm, "game", "Sprite", self.clone() => slot);
     }
 
     fn clone_dyn(&self) -> Box<dyn Component> {
@@ -1510,7 +1526,7 @@ impl Component for Rigidbody {
     }
 
     fn send_to_wren(&self, slot : usize, vm : &VM) {
-        send_foreign!(vm, "engine", "Rigidbody", self.clone() => slot);
+        send_foreign!(vm, "game", "Rigidbody", self.clone() => slot);
     }
 
     fn clone_dyn(&self) -> Box<dyn Component> {
@@ -1528,7 +1544,7 @@ impl Component for Animator {
     }
 
     fn send_to_wren(&self, slot : usize, vm : &VM) {
-        send_foreign!(vm, "engine", "Animator", self.clone() => slot);
+        send_foreign!(vm, "game", "Animator", self.clone() => slot);
     }
 
     fn clone_dyn(&self) -> Box<dyn Component> {
@@ -1546,7 +1562,7 @@ impl Component for ComponentBehaviour {
     }
 
     fn send_to_wren(&self, slot : usize, vm : &VM) {
-        send_foreign!(vm, "engine", "ComponentBehaviour", self.clone() => slot);
+        send_foreign!(vm, "game", "ComponentBehaviour", self.clone() => slot);
     }
 
     fn clone_dyn(&self) -> Box<dyn Component> {
@@ -1564,7 +1580,7 @@ impl Component for Text {
     }
 
     fn send_to_wren(&self, slot : usize, vm : &VM) {
-        send_foreign!(vm, "engine", "Text", self.clone() => slot);
+        send_foreign!(vm, "game", "Text", self.clone() => slot);
     }
 
     fn clone_dyn(&self) -> Box<dyn Component> {
@@ -1582,7 +1598,7 @@ impl Component for Sfx {
     }
 
     fn send_to_wren(&self, slot : usize, vm : &VM) {
-        send_foreign!(vm, "engine", "Sfx", self.clone() => slot);
+        send_foreign!(vm, "game", "Sfx", self.clone() => slot);
     }
 
     fn clone_dyn(&self) -> Box<dyn Component> {
@@ -1599,7 +1615,7 @@ impl Tickable<Sprite> for Rigidbody {
 
 impl Tickable<Rigidbody> for Transform {
     fn tick(&mut self, _: f64, d: &Rigidbody) {
-        self.position = d.position + self.pivot;
+        self.position = d.position;
     }
 }
 
@@ -1825,9 +1841,9 @@ create_module! (
         static(fn "play", 2) wren_play_from_gameobject
     }
 
-    module => engine
+    module => game
 );
 
 pub fn publish_modules(lib : &mut ModuleLibrary) {
-    engine::publish_module(lib);
+    game::publish_module(lib);
 }

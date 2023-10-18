@@ -1,12 +1,12 @@
 import "math" for Vec2
 
 class GameObjectRef {
-    ref { State.gameobjects[_ref] }
+    ref { Lilah.gameobjects[_ref] }
     data {
-        if(_ref == null || State.data == null || !State.data.containsKey(ref.uuid)) {
+        if(_ref == null || Lilah.data == null || !Lilah.data.containsKey(ref.uuid)) {
             return null
         } 
-        return State.data[ref.uuid] 
+        return Lilah.data[ref.uuid] 
     }
 
     [key] {
@@ -66,10 +66,10 @@ class Audio {
     }
 }
 
-class State {
+class Lilah {
     static camera { 
         if(__camera == null) {
-            __camera = State.find("Camera")
+            __camera = Lilah.find("Camera")
         }
         return __camera 
     }
@@ -94,7 +94,7 @@ class State {
         if(__fibers == null) return
 
         for(f in __fibers) {
-            f["delay"] = f["delay"]-State.delta_time
+            f["delay"] = f["delay"]-Lilah.delta_time
             if(f["delay"] < 0) {
                 f["delay"] = f["fiber"].call()
             }
@@ -167,6 +167,7 @@ class State {
     }
 
     static find(key) {
+        if(__gameobjects == null) return null 
         for(i in (0..__gameobjects.count)) {
             var id = __gameobjects[i].id
             if(id["uuid"] == key || id["name"] == key) {
@@ -176,8 +177,12 @@ class State {
         return null
     }
 
+    static to_screen_space(input) {
+        return Vec2.new(input.x+camera.ref.get("Transform").position.x, (-input.y-screen_size.y)+camera.ref.get("Transform").position.y)
+    }
+
     static to_world_space(input) {
-        return Vec2.new(input.x+camera.ref.get("Transform").position.x, input.y+camera.ref.get("Transform").position.y)
+        return Vec2.new(input.x-camera.ref.get("Transform").position.x, (-input.y+screen_size.y)-camera.ref.get("Transform").position.y)
     }
 }
 
@@ -371,12 +376,15 @@ class UI {
     }
 
     static tick() {
+        if(!Input.mouse_pos) return 
+        var mouse = Lilah.to_world_space(Input.mouse_pos)
+
         for(i in on_click_callbacks) {
             var i_pos = i["gameobject"].ref.get("Transform").position
             var i_size = i["gameobject"].ref.get("Sprite").size
             
-            if(Input.mouse_pos.x > i_pos.x && Input.mouse_pos.x < i_pos.x+i_size.x) {
-                if(Input.mouse_pos.y > i_pos.y && Input.mouse_pos.y < i_pos.y+i_size.y) {
+            if(mouse.x > i_pos.x && mouse.x < i_pos.x+i_size.x) {
+                if(mouse.y > i_pos.y && mouse.y < i_pos.y-i_size.y) {
                     if(Input.mouse("Left")) {
                         i["callback"].call()
                     }
@@ -388,8 +396,8 @@ class UI {
             var i_pos = i["gameobject"].ref.get("Transform").position
             var i_size = i["gameobject"].ref.get("Sprite").size
             
-            if(Input.mouse_pos.x > i_pos.x && Input.mouse_pos.x < i_pos.x+i_size.x) {
-                if(Input.mouse_pos.y > i_pos.y && Input.mouse_pos.y < i_pos.y+i_size.y) {
+            if(mouse.x > i_pos.x && mouse.x < i_pos.x+i_size.x) {
+                if(mouse.y > i_pos.y && mouse.y < i_pos.y-i_size.y) {
                     if(Input.mouse_down("Left")) {
                         i["callback"].call()
                     }
@@ -401,8 +409,8 @@ class UI {
             var i_pos = i["gameobject"].ref.get("Transform").position
             var i_size = i["gameobject"].ref.get("Sprite").size
             
-            if(Input.mouse_pos.x > i_pos.x && Input.mouse_pos.x < i_pos.x+i_size.x) {
-                if(Input.mouse_pos.y > i_pos.y && Input.mouse_pos.y < i_pos.y+i_size.y) {
+            if(mouse.x > i_pos.x && mouse.x < i_pos.x+i_size.x) {
+                if(mouse.y > i_pos.y && mouse.y < i_pos.y-i_size.y) {
                     i["callback"].call()
                 }
             }

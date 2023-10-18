@@ -1,6 +1,6 @@
 import "math" for Vec2
 import "app" for State, Input, GameObjectRef, Audio
-import "engine" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
+import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
 
 class Player is Behaviour {
     construct new() {
@@ -9,9 +9,9 @@ class Player is Behaviour {
         var gameobject = GameObject.new("C")
 
         Input.update_binding("Horizontal", "A", "D")
-        Input.update_binding("Vertical", "W", "S")
+        Input.update_binding("Vertical", "S", "W")
 
-        gameobject.add(Transform.new(Vec2.new(500,0))) 
+        gameobject.add(Transform.new(Vec2.new(0,0))) 
         gameobject.add(Sprite.new("assets/test.png"))  
         gameobject.add(Rigidbody.new())
         gameobject.add(Animator.new())

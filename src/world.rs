@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::Path};
 use data2sound::decode_bytes;
 use debug_print::debug_println;
-use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId, LilahError, LilahPanic};
+use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId, LilahError, LilahPanic, math::Vec2};
 use crate::gameobject::GameObject;
 use sdl2::{render::Texture, image::LoadTexture};
 
@@ -238,11 +238,14 @@ impl<'a> World<'a> {
         self
     }
 
-    pub fn run(mut self, app : &mut App, scripting : &mut Scripting) -> World<'a> {
+    pub fn run(mut self, app : &mut App, scripting : &mut Scripting) -> World<'a> {  
+        self.state.insert(GameObject::new("Camera".to_string()).with::<Transform>().build());
+
         if self.setup_callback.is_some() {
             self.setup_callback.as_mut().unwrap()(app, &mut self.state, scripting);
         }
-        self.state.insert(GameObject::new("Camera".to_string()).with::<Transform>().build());
+
+        scripting.send_state(app, &mut self.state);
 
         for (_, i) in &mut self.state.gameobjects {
             i.load(app, &self.state.textures, &self.state.fonts, &self.state.sfx);   
@@ -334,11 +337,11 @@ impl<'a> World<'a> {
 
     pub fn update(&mut self, mut app: &mut App) {
         self.update_vel_x();
-        let mut collisions = Vec::<(GameObjectId, GameObjectId, bool)>::new();
+        let mut collisions = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
         self.check_collision(&mut collisions);
 
         for coll in &collisions {
-            if coll.2 {
+            if coll.2.0 {
                 if self.get(&coll.0.uuid).start && self.get(&coll.1.uuid).start {
                     let g2_is_solid = self.get(&coll.1.uuid).get::<Rigidbody>().solid;
                     if self.get(&coll.0.uuid).has::<Rigidbody>() {
@@ -356,11 +359,11 @@ impl<'a> World<'a> {
         }   
 
         self.update_vel_y();
-        collisions = Vec::<(GameObjectId, GameObjectId, bool)>::new();
+        collisions = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
         self.check_collision(&mut collisions);
 
         for coll in &collisions {
-            if coll.2 {
+            if coll.2.0 {
                 if self.get(&coll.0.uuid).init && self.get(&coll.1.uuid).init {
                     let g2_is_solid = self.get(&coll.1.uuid).get::<Rigidbody>().solid;
                     if self.get(&coll.0.uuid).has::<Rigidbody>() {
@@ -380,7 +383,7 @@ impl<'a> World<'a> {
         self.update_go(&mut app);
     }
 
-    fn check_collision(&self, coll: &mut Vec<(GameObjectId, GameObjectId, bool)>) {
+    fn check_collision(&self, coll: &mut Vec<(GameObjectId, GameObjectId, (bool, Vec2))>) {
         let mut others = false;
         for (k, i) in &self.state.gameobjects {
             for (k2, j) in &self.state.gameobjects {
@@ -389,14 +392,14 @@ impl<'a> World<'a> {
                     
                     if i.has::<Rigidbody>() {
                         if j.has::<Rigidbody>() {
-                            let check =  i.get::<Rigidbody>().check_collision_aabb(&j.get::<Rigidbody>());
+                            let check =  i.get::<Rigidbody>().check_collision_sat(&j.get::<Rigidbody>());
                             coll.push((i.id.clone(), j.id.clone(), check));
                         }
                     }
                 }
             }
             if !others {
-                coll.push((i.id.clone(), i.id.clone(), false));
+                coll.push((i.id.clone(), i.id.clone(), (false, Vec2::ZERO)));
             }
         }
     }

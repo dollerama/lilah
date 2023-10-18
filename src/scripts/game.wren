@@ -1,5 +1,5 @@
 import "math" for Vec2
-import "app" for State
+import "app" for Lilah
 
 class Behaviour {
     frame {

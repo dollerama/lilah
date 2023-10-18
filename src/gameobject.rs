@@ -293,7 +293,7 @@ impl GameObject {
     }
 
     pub fn send_to_wren(&self, slot : usize, vm : &VM) {
-        send_foreign!(vm, "engine", "GameObject", self.clone() => slot);
+        send_foreign!(vm, "game", "GameObject", self.clone() => slot);
     }
 
     pub fn wren_add_component(&mut self, vm : &VM) {

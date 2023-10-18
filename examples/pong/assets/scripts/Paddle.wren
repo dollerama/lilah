@@ -1,15 +1,13 @@
 import "math" for Vec2
-import "app" for State, Input, GameObjectRef, Audio
-import "engine" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
+import "app" for Lilah, Input, GameObjectRef, Audio
+import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
 
 class Paddle is Behaviour {
     construct new() {
         super(Paddle)
     }
 
-    static start(id) {
-        var gameobject = GameObjectRef.new(id)
-    }
+    static start(id) { }
     
     static update(id) {
         var gameobject = GameObjectRef.new(id)

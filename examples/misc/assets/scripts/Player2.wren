@@ -1,6 +1,6 @@
 import "math" for Vec2
 import "app" for State, Input, GameObjectRef, UI
-import "engine" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour
+import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour
 
 class Player2 is Behaviour {
     construct new() {
@@ -18,8 +18,8 @@ class Player2 is Behaviour {
 
     static start(id) {
         var gameobject = GameObjectRef.new(id)
-        Transform.set_scale(gameobject.ref, Vec2.new(2,2))
-        Transform.set_pivot(gameobject.ref, gameobject.ref.get("Sprite").size/2)
+        //Transform.set_scale(gameobject.ref, Vec2.new(2,2))
+        //Transform.set_pivot(gameobject.ref, gameobject.ref.get("Sprite").size/2)
     }
     
     static update(id) {

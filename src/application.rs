@@ -108,7 +108,7 @@ impl Scripting {
         //std engine modules
         vm.interpret("math", include_str!("scripts/math.wren")).unwrap();
         vm.interpret("app", include_str!("scripts/app.wren")).unwrap();
-        vm.interpret("engine", include_str!("scripts/engine.wren")).unwrap();
+        vm.interpret("game", include_str!("scripts/game.wren")).unwrap();
 
         Self {
             vm : vm,
@@ -129,7 +129,7 @@ impl Scripting {
     }
     
     pub fn tick(&mut self, app : &mut App, state : &mut WorldState) {
-        let state_class = Scripting::get_class_handle(&self.vm, "app", "State");
+        let state_class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
         
         for m in &self.modules {
             let class = Scripting::get_class_handle(
@@ -325,6 +325,10 @@ impl App {
         }
     }
 
+    pub fn get_window_size(&self) -> Vec2 {
+       Vec2::new(self.canvas.window().size().0 as f64, self.canvas.window().size().1 as f64)
+    }
+
     fn find_sdl_gl_driver() -> Option<u32> {
         for (index, item) in sdl2::render::drivers().enumerate() {
             if item.name == "opengl" {
@@ -511,7 +515,7 @@ impl Scripting {
     }
 
     pub fn handle_timer(&self, app : &mut App, _state : &mut WorldState) {
-        let state_class = Scripting::get_class_handle(&self.vm, "app", "State");
+        let state_class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
         let val = app.time.delta_time as f64;
         self.vm.execute(|vm| {
             vm.set_slot_double(1, val);
@@ -520,20 +524,26 @@ impl Scripting {
     }
 
     pub fn send_state(&self, app : &mut App, state : &mut WorldState) {
-        let class = Scripting::get_class_handle(&self.vm, "app", "State");
+        let class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
         let input_class = Scripting::get_class_handle(&self.vm, "app", "Input");
         
         self.vm.execute(|vm| {
-            let _ = vm.set_slot_new_foreign("Math", "Vec2", Vec2::new(app.canvas.window().size().0 as f64, app.canvas.window().size().1 as f64), 1);
+            let _ = vm.set_slot_new_foreign("math", "Vec2", Vec2::new(app.canvas.window().size().0 as f64, app.canvas.window().size().1 as f64), 1);
         });
 
         Scripting::call_setter(&self.vm, &class, "screen_size");
 
         self.vm.execute(|vm| {
             vm.set_slot_new_list(1);
+
+            for i in 0..state.gameobjects.len() {
+                vm.set_slot_null(2);
+                vm.insert_in_list(1, i as i32, 2);
+            }
+
             for i in state.gameobjects.iter().enumerate() {
                 i.1.1.clone().send_to_wren(2, vm);
-                vm.insert_in_list(1, i.0 as i32, 2);
+                vm.set_list_element(1, i.1.1.wren_id as i32, 2);
             }
         });
         Scripting::call_setter(&self.vm, &class, "gameobjects");
@@ -689,7 +699,7 @@ impl Scripting {
     }
 
     pub fn receive_state(&self, app : &mut App, state : &mut WorldState) {
-        let state_class = Scripting::get_class_handle(&self.vm, "app", "State");
+        let state_class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
         let ui_class = Scripting::get_class_handle(&self.vm, "app", "UI");
 
         Scripting::call_getter(&self.vm, &state_class, "gameobjects");

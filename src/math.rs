@@ -2,7 +2,7 @@ use std::{ops, hash::Hasher, hash::Hash};
 
 use ruwren::{Class, VM, create_module, ModuleLibrary};
 
-use crate::{LilahError, LilahPanic, LilahTypeError};
+use crate::{LilahError, LilahPanic, LilahTypeError, components::Rigidbody};
 
 /// Vector for 2d translations etc.
 /// # Examples
@@ -346,6 +346,75 @@ impl ops::Neg for Vec2 {
 impl std::fmt::Display for Vec2 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "(x={}, y={})", self.x, self.y)
+    }
+}
+
+pub struct Rect {
+    pub points : Vec<Vec2>
+}
+
+impl Rect {
+    pub fn new_from_rigidbody(body: &Rigidbody) -> Self {
+        Self {
+            points: vec![
+                Vec2::new(body.position.x, body.position.y),
+                Vec2::new(body.position.x+body.bounds.x, body.position.y),
+                Vec2::new(body.position.x+body.bounds.x, body.position.y-body.bounds.y),
+                Vec2::new(body.position.x, body.position.y-body.bounds.y),
+            ]
+        }
+    }
+
+    fn get_edges(r: &Rect) -> Vec<Vec2> {
+        let mut edges = vec!();
+
+        for i in 0..r.points.len() {
+            edges.push(r.points[(i+1).rem_euclid(r.points.len())]-r.points[i]);
+        }
+
+        edges
+    }
+
+    fn get_projection(r: &Rect, axis: &Vec2) -> (f64, f64) {
+        let mut projections = vec!();
+
+        for point in &r.points {
+            projections.push(Vec2::dot(*point, *axis));
+        }
+
+        (*projections.iter().min_by(|a, b| a.total_cmp(b)).unwrap(), *projections.iter().max_by(|a, b| a.total_cmp(b)).unwrap())
+    }
+
+    fn process_edges(edges : &mut Vec<Vec2>) {
+        for e in edges {
+            let new_e = e.clone();
+            *e = Vec2::new(new_e.x, new_e.y).normalized();
+        }
+    }
+
+    pub fn intersects(&self, other: &Rect) -> (bool, Vec2) {
+        let mut edges = Rect::get_edges(self);
+        edges.append(&mut Rect::get_edges(&other));
+        Rect::process_edges(&mut edges);
+        let mut intersecting_axis = vec!();
+
+        for e in &edges {
+            let proj_a = Rect::get_projection(self, e);
+            let proj_b = Rect::get_projection(other, e);
+
+            if !(proj_a.0.min(proj_a.1) <= proj_b.0.max(proj_b.1) &&
+                proj_b.0.min(proj_b.1) <= proj_a.0.max(proj_a.1)) {
+                return (false, Vec2::ZERO);
+            }
+            
+            if (proj_a.0.max(proj_a.1) - proj_b.0.min(proj_b.1)) != 0.0 {
+                intersecting_axis.push((e, (proj_a.0.max(proj_a.1) - proj_b.0.min(proj_b.1))));
+            }
+        }  
+
+        intersecting_axis.sort_by(|a, b| a.1.total_cmp(&b.1));
+
+        (true, *intersecting_axis[0].0*intersecting_axis[0].1)
     }
 }
 
