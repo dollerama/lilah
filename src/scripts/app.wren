@@ -1,6 +1,10 @@
 import "math" for Vec2
 
 class GameObjectRef {
+    static create_ref(id) {
+        return GameObjectRef.new(id)
+    }
+
     ref { Lilah.gameobjects[_ref] }
     data {
         if(_ref == null || Lilah.data == null || !Lilah.data.containsKey(ref.uuid)) {
@@ -186,8 +190,27 @@ class Lilah {
     }
 }
 
+class KeycodeLookup {
+    construct new() {}
+
+    W { "W" }
+    A { "A" }
+    S { "S" }
+    D { "D" }
+    Up { "Up" }
+    Right { "Right" }
+    Down { "Down" }
+    Left { "Left" }
+}
+
 class Input {
     static mouse_pos { __mouse_pos }
+    static Keycode {
+        if(__keycodelookup == null) {
+            __keycodelookup = KeycodeLookup.new()
+        }
+        return __keycodelookup
+    }
 
     //private
     static is_pressed(key) {

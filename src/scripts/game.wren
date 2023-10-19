@@ -15,8 +15,8 @@ class Behaviour {
         _behaviour = ComponentBehaviour.new("%(c)").as_component
     }
 
-    static start(id) {}
-    static update(id) {}
+    static start() {}
+    static update() {}
 
     setup() {}
     start() {}

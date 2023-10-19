@@ -1,11 +1,16 @@
 import "math" for Vec2
-import "app" for State, Input, GameObjectRef, Audio
+import "app" for Lilah, Input, GameObjectRef, Audio
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
 
 class Player is Behaviour {
+    static gameobject { __gameobject }
+    static gameobject=(v) { __gameobject = GameObjectRef.new(v) }
+
     construct new() {
         super(Player)
-        
+    }
+
+    setup() {
         var gameobject = GameObject.new("C")
 
         Input.update_binding("Horizontal", "A", "D")
@@ -19,11 +24,10 @@ class Player is Behaviour {
         gameobject.add(Sfx.new("sfx", "assets/sfx.wav"))
         gameobject.add(this.as_behaviour)
 
-        gameobject = State.instantiate(gameobject)
+        gameobject = Lilah.instantiate(gameobject)
     }
 
-    static start(id) {
-        var gameobject = GameObjectRef.new(id)
+    static start() {
         Animator.insert_state(gameobject.ref, "Row0", Vec2.new(3, 0))
         Animator.insert_state(gameobject.ref, "Row1", Vec2.new(3, 1))
         Animator.set_speed(gameobject.ref, 2)
@@ -32,9 +36,7 @@ class Player is Behaviour {
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
     }
     
-    static update(id) {
-        var gameobject = GameObjectRef.new(id)
-        
+    static update() {
         Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*5)
 
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
@@ -50,7 +52,7 @@ class Player is Behaviour {
         }
         
         if(Input.key("Space")) {
-            State.fullscreen = !State.fullscreen
+            Lilah.fullscreen = !Lilah.fullscreen
         }
 
         if(Input.key_down("O")) {

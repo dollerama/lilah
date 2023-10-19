@@ -10,8 +10,8 @@ class Game is Behaviour {
     }
 
     setup() {
-        Input.update_binding("Vertical1", "S", "W")
-        Input.update_binding("Vertical2", "Down", "Up")
+        Input.update_binding("Vertical1", Input.Keycode.S, Input.Keycode.W)
+        Input.update_binding("Vertical2", Input.Keycode.Down, Input.Keycode.Up)
         
         var player1 = GameObject.new("P1")
         player1.add(Transform.new(Lilah.to_world_space(Vec2.new(0,300-16)))) 

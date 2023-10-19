@@ -138,6 +138,12 @@ impl Scripting {
                 &m.0.to_lowercase()
             );
 
+            let gameobjref_class = Scripting::get_class_handle(
+                &self.vm, 
+                "app",
+                "GameObjectRef"
+            );
+
             let frame_getter = Scripting::get_getter_handle(&self.vm, "frame");
             let frame_setter = Scripting::get_setter_handle(&self.vm, "frame");
 
@@ -180,9 +186,10 @@ impl Scripting {
 
                                 if g.1.init && !g.1.start {
                                     self.vm.execute(|vm| {
-                                        vm.set_slot_double(1, g.1.wren_id as f64)
+                                        vm.set_slot_double(1, g.1.wren_id as f64);
                                     });
-                                    Scripting::call_fn(&self.vm, &obj, "start", 1);
+                                    Scripting::call_setter(&self.vm, &obj, "gameobject");
+                                    Scripting::call_fn(&self.vm, &obj, "start", 0);
                                 }
                             }
                         }
@@ -211,7 +218,8 @@ impl Scripting {
                                     self.vm.execute(|vm| {
                                         vm.set_slot_double(1, g.1.wren_id as f64)
                                     });
-                                    Scripting::call_fn(&self.vm, &obj, "update", 1);
+                                    Scripting::call_setter(&self.vm, &obj, "gameobject");
+                                    Scripting::call_fn(&self.vm, &obj, "update", 0);
                                 }
                             }
                         }

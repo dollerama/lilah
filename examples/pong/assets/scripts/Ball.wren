@@ -3,19 +3,18 @@ import "app" for Lilah, Input, GameObjectRef, Audio
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
 
 class Ball is Behaviour {
+    static gameobject { __gameobject }
+    static gameobject=(v) { __gameobject = GameObjectRef.new(v) }
+
     construct new() {
         super(Ball)
     }
 
-    static start(id) {
-        var gameobject = GameObjectRef.new(id)
-        System.print(gameobject.ref.name)
+    static start() {
         Rigidbody.set_velocity_x(gameobject.ref, -5)
     }
     
-    static update(id) {
-        var gameobject = GameObjectRef.new(id)
-
+    static update() {
         if(gameobject.ref.get("Transform").position.y > 600-10 || gameobject.ref.get("Transform").position.y < 0) {
             Rigidbody.set_velocity_y(gameobject.ref, gameobject.ref.get("Rigidbody").velocity.y*-1)
         }
