@@ -126,27 +126,27 @@ impl<'a> WorldState<'a> {
     }
 
     pub fn load_texture(&mut self, file : &str, app : &App) {
-        match app.tex_creator.load_texture(file) {
-            Ok(v) => {
-                debug_println!("Texture loaded: {}", file);
-                self.textures.insert(file.to_string(), v);
-            }
-            Err(e) => {
-                LilahError!(Texture, e);
-            }
-        };
+        // match app.tex_creator.load_texture(file) {
+        //     Ok(v) => {
+        //         debug_println!("Texture loaded: {}", file);
+        //         self.textures.insert(file.to_string(), v);
+        //     }
+        //     Err(e) => {
+        //         LilahError!(Texture, e);
+        //     }
+        // };
     }
 
     pub fn load_texture_bytes(&mut self, name: &str, source : &[u8], app : &App) {
-        match app.tex_creator.load_texture_bytes(source) {
-            Ok(v) => {
-                debug_println!("Texture loaded: {}", name);
-                self.textures.insert(name.to_string(), v);
-            }
-            Err(e) => {
-                LilahError!(Texture, e);
-            }
-        };
+        // match app.tex_creator.load_texture_bytes(source) {
+        //     Ok(v) => {
+        //         debug_println!("Texture loaded: {}", name);
+        //         self.textures.insert(name.to_string(), v);
+        //     }
+        //     Err(e) => {
+        //         LilahError!(Texture, e);
+        //     }
+        // };
     }
 
     pub fn load_music(&mut self, name: &str, source : &str) {

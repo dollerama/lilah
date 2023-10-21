@@ -12,7 +12,7 @@ use sdl2::ttf::Sdl2TtfContext;
 use sdl2::{Sdl, EventPump, AudioSubsystem};
 use sdl2::pixels::Color;
 use sdl2::event::Event;
-use sdl2::video::{Window, WindowContext, FullscreenType};
+use sdl2::video::{Window, WindowContext, FullscreenType, GLProfile, GLContext};
 use sdl2::render::{Canvas, TextureCreator};
 use crate::components::ComponentBehaviour;
 use crate::gameobject::GameObject;
@@ -283,13 +283,13 @@ impl Scripting {
 
 /// App wrapper
 pub struct App {
-    pub canvas: Canvas<Window>,
+    pub gl_context: GLContext,
     pub font_context: Sdl2TtfContext,
     pub input: Input,
     pub time: Timer, 
-    pub tex_creator : TextureCreator<WindowContext>,
     event_pump : EventPump,
     _audio_context : AudioSubsystem,
+    window: Window
 }
 
 impl App {
@@ -298,6 +298,12 @@ impl App {
         let font_context = sdl2::ttf::init().map_err(|e| e.to_string()).unwrap();
         let _image_context = sdl2::image::init(sdl2::image::InitFlag::PNG | sdl2::image::InitFlag::JPG).unwrap();
         let audio_context = sdl_ctx.audio().unwrap();
+
+        let video_subsystem = sdl_ctx.video().unwrap();
+
+        let gl_attr = video_subsystem.gl_attr();
+        gl_attr.set_context_profile(GLProfile::Core);
+        gl_attr.set_context_version(3, 3);
 
         let frequency = 44_100;
         let format = AUDIO_S16LSB; // signed 16 bit samples, in little-endian byte order
@@ -313,20 +319,17 @@ impl App {
             .opengl()
             .build()
             .unwrap();
-        let canv: Canvas<Window> = win.into_canvas()
-        .index(App::find_sdl_gl_driver().unwrap())
-        .present_vsync()
-        .build()
-        .unwrap();
+
+        let gl_ctx = win.gl_create_context().unwrap();
+        gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
         
         let event_pump = sdl_ctx.event_pump().unwrap();
-        let tc = canv.texture_creator();
 
         Self {
-            canvas: canv, 
+            gl_context: gl_ctx,
+            window: win,
             event_pump, 
             input: Input::new(),
-            tex_creator : tc,
             time: Timer::new(),
             font_context,
             _audio_context: audio_context,
@@ -334,7 +337,8 @@ impl App {
     }
 
     pub fn get_window_size(&self) -> Vec2 {
-       Vec2::new(self.canvas.window().size().0 as f64, self.canvas.window().size().1 as f64)
+       //Vec2::new(self.canvas.window().size().0 as f64, self.canvas.window().size().1 as f64)
+       Vec2::ZERO
     }
 
     fn find_sdl_gl_driver() -> Option<u32> {
@@ -347,19 +351,19 @@ impl App {
     }
 
     pub fn toggle_fullscreen(&mut self) {
-        match self.canvas.window().fullscreen_state() {
+        match self.window.fullscreen_state() {
             FullscreenType::Off => {
-                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::True) {
+                if let Err(e) = self.window.set_fullscreen(FullscreenType::True) {
                     LilahPanic!(App, e);
                 }
             }
             FullscreenType::True => {
-                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::Off) {
+                if let Err(e) = self.window.set_fullscreen(FullscreenType::Off) {
                     LilahPanic!(App, e);
                 }
             }
             FullscreenType::Desktop => {
-                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::Off) {
+                if let Err(e) = self.window.set_fullscreen(FullscreenType::Off) {
                     LilahPanic!(App, e);
                 }
             }
@@ -367,7 +371,7 @@ impl App {
     }
 
     pub fn get_fullscreen(&self) -> bool {
-        match self.canvas.window().fullscreen_state() {
+        match self.window.fullscreen_state() {
             FullscreenType::Off => {
                 false
             }
@@ -383,12 +387,12 @@ impl App {
     pub fn set_fullscreen(&mut self, set: bool) {
         match set {
             true => {
-                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::Desktop) {
+                if let Err(e) = self.window.set_fullscreen(FullscreenType::Desktop) {
                     LilahPanic!(App, e);
                 }
             }
             false => {
-                if let Err(e) = self.canvas.window_mut().set_fullscreen(FullscreenType::Off) {
+                if let Err(e) = self.window.set_fullscreen(FullscreenType::Off) {
                     LilahPanic!(App, e);
                 }
             }
@@ -445,19 +449,22 @@ impl App {
     }
 
     pub fn set_draw_color(&mut self, color: Color) {
-        self.canvas.set_draw_color(color);
+        //self.canvas.set_draw_color(color);
     }
 
     /// Performs time update, canvas clear, and handles input.
     pub fn pre_frame(&mut self) -> bool {
         self.time.update();
-        self.canvas.clear();
+        unsafe {
+            gl::ClearColor(0.6, 0.0, 0.8, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
         self.handle_input()
     }
 
     /// Draws canvas and sleeps until next frame
     pub fn present_frame(&mut self) {
-        self.canvas.present();
+        self.window.gl_swap_window();
         //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
         ::std::thread::sleep(Duration::new(0, ((60.0-self.time.fps())/1000.0) as u32));
     }
@@ -536,7 +543,7 @@ impl Scripting {
         let input_class = Scripting::get_class_handle(&self.vm, "app", "Input");
         
         self.vm.execute(|vm| {
-            let _ = vm.set_slot_new_foreign("math", "Vec2", Vec2::new(app.canvas.window().size().0 as f64, app.canvas.window().size().1 as f64), 1);
+            let _ = vm.set_slot_new_foreign("math", "Vec2", Vec2::new(app.window.size().0 as f64, app.window.size().1 as f64), 1);
         });
 
         Scripting::call_setter(&self.vm, &class, "screen_size");

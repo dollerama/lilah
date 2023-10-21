@@ -1141,9 +1141,9 @@ impl Text {
                     .render(&self.text)
                     .blended(Color::RGBA(255, 255, 255, 255))
                     .map_err(|e| e.to_string()).unwrap();
-                let texture = app.tex_creator
-                    .create_texture_from_surface(&surface)
-                    .map_err(|e| e.to_string()).unwrap();
+                // let texture = app.tex_creator
+                //     .create_texture_from_surface(&surface)
+                //     .map_err(|e| e.to_string()).unwrap();
 
                 let TextureQuery { width, height, .. } = texture.query();
                 self.size = Vec2::new(width as f64, height as f64);
@@ -1167,19 +1167,19 @@ impl Text {
             cam = *cam_pos;
         }
 
-        if let Err(e) = app.canvas.copy(
-        &textures[&self.texture_id], 
-        None, 
-        Some(Rect::new(
-                t.world_to_screen_position(&cam, app.get_window_size().y).x as i32, 
-                t.world_to_screen_position(&cam, app.get_window_size().y).y as i32, 
-                self.size.x as u32, 
-                self.size.y as u32
-            )
-        )
-        ) {
-            LilahError!(Text, e);
-        }
+        // if let Err(e) = app.canvas.copy(
+        // &textures[&self.texture_id], 
+        // None, 
+        // Some(Rect::new(
+        //         t.world_to_screen_position(&cam, app.get_window_size().y).x as i32, 
+        //         t.world_to_screen_position(&cam, app.get_window_size().y).y as i32, 
+        //         self.size.x as u32, 
+        //         self.size.y as u32
+        //     )
+        // )
+        // ) {
+        //     LilahError!(Text, e);
+        // }
     }
 
     //wren
@@ -1351,26 +1351,26 @@ impl Sprite {
             cam = *cam_pos;
         }
 
-        if let Err(e) = app.canvas.copy_ex(
-            &textures[&self.texture_id], 
-            Rect::new(
-                self.index.0,
-                self.index.1,
-                self.get_size().0,
-                self.get_size().1 ,
-            ), 
-            Rect::new(
-                t.world_to_screen_position(&cam, app.get_window_size().y).x as i32, 
-                t.world_to_screen_position(&cam, app.get_window_size().y).y as i32,
-                self.get_size().0*t.scale.x.abs() as u32, 
-                self.get_size().1*t.scale.y.abs() as u32),
-            t.rotation,
-            None,
-            t.scale.x < 0.0,
-            t.scale.y < 0.0
-        ) {
-            LilahError!(Sprite, e);
-        }
+        // if let Err(e) = app.canvas.copy_ex(
+        //     &textures[&self.texture_id], 
+        //     Rect::new(
+        //         self.index.0,
+        //         self.index.1,
+        //         self.get_size().0,
+        //         self.get_size().1 ,
+        //     ), 
+        //     Rect::new(
+        //         t.world_to_screen_position(&cam, app.get_window_size().y).x as i32, 
+        //         t.world_to_screen_position(&cam, app.get_window_size().y).y as i32,
+        //         self.get_size().0*t.scale.x.abs() as u32, 
+        //         self.get_size().1*t.scale.y.abs() as u32),
+        //     t.rotation,
+        //     None,
+        //     t.scale.x < 0.0,
+        //     t.scale.y < 0.0
+        // ) {
+        //     LilahError!(Sprite, e);
+        // }
     }
 
     //for wren
