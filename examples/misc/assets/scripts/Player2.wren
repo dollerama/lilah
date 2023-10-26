@@ -13,7 +13,7 @@ class Player2 is Behaviour {
     setup() {      
         var gameobject = GameObject.new("D")
 
-        gameobject.add(Transform.new(Lilah.to_world_space(Vec2.new(800/2, 600/2)))) 
+        gameobject.add(Transform.new(Vec2.new(0.5, 0.5))) 
         gameobject.add(Sprite.new("assets/test.png"))  
         gameobject.add(Rigidbody.new())
         gameobject.add(this.as_behaviour)
@@ -26,5 +26,7 @@ class Player2 is Behaviour {
         //Transform.set_pivot(gameobject.ref, gameobject.ref.get("Sprite").size/2)
     }
     
-    static update() {}
+    static update() {
+        
+    }
 }

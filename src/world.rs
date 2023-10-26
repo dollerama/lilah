@@ -1,9 +1,10 @@
 use std::{collections::HashMap, path::Path};
 use data2sound::decode_bytes;
 use debug_print::debug_println;
-use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId, LilahError, LilahPanic, math::Vec2};
+use crate::{application::{App, Scripting, LilahTexture}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId, LilahError, LilahPanic, math::Vec2};
 use crate::gameobject::GameObject;
 use sdl2::{render::Texture, image::LoadTexture};
+use image::{GenericImageView, DynamicImage};
 
 #[macro_export]
 macro_rules! embed_texture {
@@ -63,13 +64,13 @@ macro_rules! load_sfx {
 pub use load_sfx;
 
 pub struct StateUpdateContainer {
-    pub textures: Option<(String, Texture)>,
+    pub textures: Option<(String, LilahTexture)>,
     pub sfx: Option<Vec<(String, i32)>>
 }
 
 pub struct WorldState<'a> {
     pub gameobjects: HashMap<String, GameObject>,
-    pub textures : HashMap<String, Texture>,
+    pub textures : HashMap<String, LilahTexture>,
     pub fonts : HashMap<String, Vec<u8>>,
     pub music : HashMap<String, sdl2::mixer::Music<'a>>,
     pub sfx : HashMap<String, sdl2::mixer::Chunk>
@@ -126,27 +127,38 @@ impl<'a> WorldState<'a> {
     }
 
     pub fn load_texture(&mut self, file : &str, app : &App) {
-        // match app.tex_creator.load_texture(file) {
-        //     Ok(v) => {
-        //         debug_println!("Texture loaded: {}", file);
-        //         self.textures.insert(file.to_string(), v);
-        //     }
-        //     Err(e) => {
-        //         LilahError!(Texture, e);
-        //     }
-        // };
+        let new_texture = unsafe { 
+            LilahTexture::new() 
+        };
+
+        unsafe {
+            new_texture.set_wrapping(gl::REPEAT);
+            new_texture.set_filtering(gl::LINEAR);
+        }
+
+        unsafe {
+            if let Err(e) = new_texture.load(&Path::new(file)) {
+                LilahPanic!(LilahTexture, format!("Tried to load texture ->{}", e))
+            }
+        }
+
+        self.textures.insert(file.to_string(), new_texture);
+        debug_println!("Texture loaded: {}", file);
     }
 
     pub fn load_texture_bytes(&mut self, name: &str, source : &[u8], app : &App) {
-        // match app.tex_creator.load_texture_bytes(source) {
-        //     Ok(v) => {
-        //         debug_println!("Texture loaded: {}", name);
-        //         self.textures.insert(name.to_string(), v);
-        //     }
-        //     Err(e) => {
-        //         LilahError!(Texture, e);
-        //     }
-        // };
+        let new_texture = unsafe { LilahTexture::new() };
+        unsafe {
+            new_texture.load_as_bytes(source);
+        }
+
+        unsafe {
+            new_texture.set_wrapping(gl::REPEAT);
+            new_texture.set_filtering(gl::LINEAR);
+        }
+
+        self.textures.insert(name.to_string(), new_texture);
+        debug_println!("Texture loaded: {}", name);
     }
 
     pub fn load_music(&mut self, name: &str, source : &str) {
@@ -280,7 +292,7 @@ impl<'a> World<'a> {
     }
 
     fn update_go(&mut self, mut app: &mut App) {
-        let mut state_updates = Vec::new();
+        let mut state_updates: Vec<StateUpdateContainer> = Vec::new();
         for (_, i) in &mut self.state.gameobjects {
             state_updates.push(i.load(app,&self.state.textures, &self.state.fonts, &self.state.sfx));   
             i.update(&mut app);

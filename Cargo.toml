@@ -11,9 +11,12 @@ ruwren = "0.4"
 glob = "0.3.1"
 debug_print = "1.0.0"
 data2sound = "0.2.0"
+glam = "*"
+image = "*"
+thiserror = "1.0"
 
 [dependencies.gl]
-git = "https://github.com/bjz/gl-rs"
+gl = "0.14.0"
 
 [dependencies.uuid]
 version = "1.4.1"

@@ -16,7 +16,7 @@ class Player is Behaviour {
         Input.update_binding("Horizontal", "A", "D")
         Input.update_binding("Vertical", "S", "W")
 
-        gameobject.add(Transform.new(Vec2.new(0,0))) 
+        gameobject.add(Transform.new(Vec2.new(-0.5,0))) 
         gameobject.add(Sprite.new("assets/test.png"))  
         gameobject.add(Rigidbody.new())
         gameobject.add(Animator.new())
@@ -37,7 +37,7 @@ class Player is Behaviour {
     }
     
     static update() {
-        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*5)
+        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*0.01)
 
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
@@ -58,5 +58,7 @@ class Player is Behaviour {
         if(Input.key_down("O")) {
             Audio.play("assets/test.mp3", 5000)
         }
+
+        //System.print("%(gameobject.ref.get("Rigidbody").position.x), %(gameobject.ref.get("Rigidbody").position.y)")
     }
 }

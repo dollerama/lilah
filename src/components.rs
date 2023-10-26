@@ -1,15 +1,21 @@
+use glam::{Mat4, Vec3};
+use image::DynamicImage;
 use ruwren::{Class, VM, send_foreign, create_module, ModuleLibrary};
 use sdl2::pixels::Color;
 use sdl2::render::TextureQuery;
 use sdl2::rwops::RWops;
 use sdl2::{render::Texture, rect::Rect};
 use uuid::Uuid;
-use crate::{LilahTypeError, LilahNotFoundError, LilahError, LilahTypePanic, LilahPanic};
+use crate::application::{LilahTexture, Buffer, VertexArray, Vertex};
+use crate::{LilahTypeError, LilahNotFoundError, LilahError, LilahTypePanic, LilahPanic, set_attribute};
 use crate::gameobject::GameObjectId;
 use crate::world::StateUpdateContainer;
 use crate::{application::App, gameobject::GameObject};
 use crate::math::Vec2;
+use std::ffi::CString;
+use std::{mem, ptr};
 use std::{any::Any, collections::HashMap};
+use gl::types::{GLenum, GLuint, GLfloat, GLint, GLchar, GLsizeiptr, GLboolean};
 
 /// Tick/Update Component 
 pub trait Tickable<T: Component> {
@@ -79,7 +85,11 @@ pub struct Sprite {
     /// Current position on sprite sheet
     index: (i32, i32),
     /// Texture file name
-    pub texture_id: String
+    pub texture_id: String,
+    
+    vertex_buffer: Option<Buffer>,
+    index_buffer: Option<Buffer>,
+    vertex_array: Option<VertexArray>
 }
 
 /// Animator Component for GameObjects
@@ -1131,24 +1141,25 @@ impl Text {
             self.changed = false;
 
             if let Some(font_bytes) = fonts.get(&self.font) {
-                let font = 
-                app.font_context.load_font_from_rwops(
-                    RWops::from_bytes(&font_bytes).unwrap(), 
-                    self.font_size.try_into().unwrap()
-                ).unwrap();
+                // let font = 
+                // app.font_context.load_font_from_rwops(
+                //     RWops::from_bytes(&font_bytes).unwrap(), 
+                //     self.font_size.try_into().unwrap()
+                // ).unwrap();
 
-                let surface = font
-                    .render(&self.text)
-                    .blended(Color::RGBA(255, 255, 255, 255))
-                    .map_err(|e| e.to_string()).unwrap();
+                // let surface = font
+                //     .render(&self.text)
+                //     .blended(Color::RGBA(255, 255, 255, 255))
+                //     .map_err(|e| e.to_string()).unwrap();
                 // let texture = app.tex_creator
                 //     .create_texture_from_surface(&surface)
                 //     .map_err(|e| e.to_string()).unwrap();
 
-                let TextureQuery { width, height, .. } = texture.query();
-                self.size = Vec2::new(width as f64, height as f64);
+                //let TextureQuery { width, height, .. } = texture.query();
+                //self.size = Vec2::new(width as f64, height as f64);
 
-                StateUpdateContainer { textures: Some((self.texture_id.clone(), texture)), sfx: None }
+                //StateUpdateContainer { textures: Some((self.texture_id.clone(), texture)), sfx: None }
+                StateUpdateContainer { textures: None, sfx: None  }
             }
             else {
                 let f = self.font.clone();
@@ -1161,7 +1172,7 @@ impl Text {
         }
     }
 
-    pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform, camera: &Option<Vec2>) {
+    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform, camera: &Option<Vec2>) {
         let mut cam = Vec2::new(0.0,0.0);
         if let Some(cam_pos) = camera {
             cam = *cam_pos;
@@ -1303,29 +1314,64 @@ impl Text {
 }
 
 impl Sprite {
+    #[rustfmt::skip]
+    const DEF_VERTICES: [Vertex; 4] = [
+        Vertex([-0.5, -0.5],  [0.0, 1.0]),
+        Vertex([ 0.5, -0.5],  [1.0, 1.0]),
+        Vertex([ 0.5,  0.5],  [1.0, 0.0]),
+        Vertex([-0.5,  0.5],  [0.0, 0.0]),
+    ];
+
+    #[rustfmt::skip]
+    const DEF_INDICES: [i32; 6] = [
+        0, 1, 2,
+        2, 3, 0
+    ];
+
     pub fn new(t_id: &str) -> Self {
         Self {
             size: (1, 1),
             base_size: (1, 1),
             index_cut: (0, 0),
             index: (0,0),
-            texture_id: t_id.to_string()
+            texture_id: t_id.to_string(),
+            vertex_array: None,
+            index_buffer: None,
+            vertex_buffer: None
         }
     }
 
-    pub fn load(&mut self, textures: &HashMap<String, Texture>) {
-        if let Some(t) = textures.get(&self.texture_id) {
-            self.base_size = (
-                t.query().width,
-                t.query().height,
-            );
-        }
-        else {
-            let id = self.texture_id.clone();
-            LilahNotFoundError!(Sprite, Texture, id);
+    pub fn load(&mut self, app: &mut App, textures: &HashMap<String, LilahTexture>) {
+        unsafe {
+            self.vertex_array = Some(VertexArray::new());
+            self.vertex_array.as_ref().unwrap().bind();
+
+            self.vertex_buffer = Some(Buffer::new(gl::ARRAY_BUFFER));
+            self.vertex_buffer.as_mut().unwrap().set_data(&Sprite::DEF_VERTICES, gl::STATIC_DRAW);
+
+            self.index_buffer = Some(Buffer::new(gl::ELEMENT_ARRAY_BUFFER));
+            self.index_buffer.as_mut().unwrap().set_data(&Sprite::DEF_INDICES, gl::STATIC_DRAW);
+
+            let pos_attrib = app.default_program.get_attrib_location("position").unwrap();
+            set_attribute!(self.vertex_array.as_mut().unwrap(), pos_attrib, Vertex::0);
+            let color_attrib = app.default_program.get_attrib_location("vertexTexCoord").unwrap();
+            set_attribute!(self.vertex_array.as_mut().unwrap(), color_attrib, Vertex::1);
+
+            app.default_program.set_int_uniform("texture0", 0).unwrap();
         }
 
-        self.anim_sprite_sheet(self.index_cut.0, self.index_cut.1);
+        // if let Some(t) = textures.get(&self.texture_id) {
+        //     self.base_size = (
+        //         t.query().width,
+        //         t.query().height,
+        //     );
+        // }
+        // else {
+        //     let id = self.texture_id.clone();
+        //     LilahNotFoundError!(Sprite, Texture, id);
+        // }
+
+        // self.anim_sprite_sheet(self.index_cut.0, self.index_cut.1);
     }
 
     pub fn get_size(&self) -> (u32, u32) {
@@ -1345,32 +1391,35 @@ impl Sprite {
         self.index = (ind*self.get_size().0 as i32, ind2*self.get_size().1 as i32);
     }
 
-    pub fn draw(&self, app: &mut App, textures: &HashMap<String, Texture>, t: &Transform, camera: &Option<Vec2>) {
+    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform, camera: &Option<Vec2>) {
         let mut cam = Vec2::new(0.0,0.0);
         if let Some(cam_pos) = camera {
             cam = *cam_pos;
         }
 
-        // if let Err(e) = app.canvas.copy_ex(
-        //     &textures[&self.texture_id], 
-        //     Rect::new(
-        //         self.index.0,
-        //         self.index.1,
-        //         self.get_size().0,
-        //         self.get_size().1 ,
-        //     ), 
-        //     Rect::new(
-        //         t.world_to_screen_position(&cam, app.get_window_size().y).x as i32, 
-        //         t.world_to_screen_position(&cam, app.get_window_size().y).y as i32,
-        //         self.get_size().0*t.scale.x.abs() as u32, 
-        //         self.get_size().1*t.scale.y.abs() as u32),
-        //     t.rotation,
-        //     None,
-        //     t.scale.x < 0.0,
-        //     t.scale.y < 0.0
-        // ) {
-        //     LilahError!(Sprite, e);
-        // }
+        let mut aspect = (app.get_window_size().x/app.get_window_size().y) as f32;
+        aspect *= 0.01;
+
+        let model = Mat4::IDENTITY * Mat4::from_translation(Vec3::new(t.position.x as f32, t.position.y as f32, 0.0));
+
+        let view = Mat4::from_translation(Vec3::new(cam.x as f32, cam.y as f32, 0.0));
+
+        let proj =  Mat4::orthographic_rh_gl(0.0, aspect*app.get_window_size().x as f32, 0.0, aspect*app.get_window_size().y as f32, 0.0, 1.0);
+
+        let mvp = proj * view * model;
+
+        unsafe {
+            textures[&self.texture_id].activate(gl::TEXTURE0);
+            self.vertex_array.as_ref().unwrap().bind();
+
+            app.default_program.apply();
+            gl::BindFragDataLocation(app.default_program.id, 0, CString::new("FragColor").unwrap().as_ptr());
+
+            let mat_attr = gl::GetUniformLocation(app.default_program.id, CString::new("mvp").unwrap().as_ptr());
+            gl::UniformMatrix4fv(mat_attr, 1, gl::FALSE as GLboolean, &mvp.to_cols_array()[0]);
+
+            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+        }
     }
 
     //for wren
@@ -1457,13 +1506,7 @@ impl PartialEq for Sprite {
 
 impl Default for Sprite {
     fn default() -> Self {
-        Self {
-            size: (u32::default(), u32::default()),
-            index: (i32::default(), i32::default()),
-            texture_id: "".to_string(),
-            base_size: (u32::default(), u32::default()),
-            index_cut: (i32::default(), i32::default())
-        }
+        Sprite::new("")
     }
 }
 
