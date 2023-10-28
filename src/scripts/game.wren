@@ -51,6 +51,7 @@ foreign class Sprite {
     foreign cut_sprite_sheet(i, j)
 
     foreign static cut_sprite_sheet(go, i, j)
+    foreign static set_sort(go, i)
 }
 
 foreign class Rigidbody {

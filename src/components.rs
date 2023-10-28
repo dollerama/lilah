@@ -1,21 +1,15 @@
-use glam::{Mat4, Vec3};
-use image::DynamicImage;
+use glam::{Mat4, Vec3, Quat};
 use ruwren::{Class, VM, send_foreign, create_module, ModuleLibrary};
-use sdl2::pixels::Color;
-use sdl2::render::TextureQuery;
-use sdl2::rwops::RWops;
-use sdl2::{render::Texture, rect::Rect};
 use uuid::Uuid;
-use crate::application::{LilahTexture, Buffer, VertexArray, Vertex};
-use crate::{LilahTypeError, LilahNotFoundError, LilahError, LilahTypePanic, LilahPanic, set_attribute};
+use crate::renderer::{LilahTexture, Buffer, VertexArray, Vertex, Color};
+use crate::{LilahTypeError, LilahNotFoundError, LilahTypePanic, LilahPanic, set_attribute};
 use crate::gameobject::GameObjectId;
 use crate::world::StateUpdateContainer;
 use crate::{application::App, gameobject::GameObject};
 use crate::math::Vec2;
 use std::ffi::CString;
-use std::{mem, ptr};
 use std::{any::Any, collections::HashMap};
-use gl::types::{GLenum, GLuint, GLfloat, GLint, GLchar, GLsizeiptr, GLboolean};
+use gl::types::*;
 
 /// Tick/Update Component 
 pub trait Tickable<T: Component> {
@@ -86,9 +80,12 @@ pub struct Sprite {
     index: (i32, i32),
     /// Texture file name
     pub texture_id: String,
+
+    pub tint: Color,
+
+    pub sort: u32,
     
     vertex_buffer: Option<Buffer>,
-    index_buffer: Option<Buffer>,
     vertex_array: Option<VertexArray>
 }
 
@@ -1315,7 +1312,7 @@ impl Text {
 
 impl Sprite {
     #[rustfmt::skip]
-    const DEF_VERTICES: [Vertex; 4] = [
+    const DEF_VERTICES: [Vertex; 4] =  [
         Vertex([-0.5, -0.5],  [0.0, 1.0]),
         Vertex([ 0.5, -0.5],  [1.0, 1.0]),
         Vertex([ 0.5,  0.5],  [1.0, 0.0]),
@@ -1336,42 +1333,47 @@ impl Sprite {
             index: (0,0),
             texture_id: t_id.to_string(),
             vertex_array: None,
-            index_buffer: None,
-            vertex_buffer: None
+            vertex_buffer: None,
+            tint: Color::WHITE,
+            sort: 0
         }
     }
 
     pub fn load(&mut self, app: &mut App, textures: &HashMap<String, LilahTexture>) {
         unsafe {
-            self.vertex_array = Some(VertexArray::new());
-            self.vertex_array.as_ref().unwrap().bind();
+            let vao = VertexArray::new();
+            vao.bind();
 
-            self.vertex_buffer = Some(Buffer::new(gl::ARRAY_BUFFER));
-            self.vertex_buffer.as_mut().unwrap().set_data(&Sprite::DEF_VERTICES, gl::STATIC_DRAW);
+            let vbo = Buffer::new(gl::ARRAY_BUFFER);
+            vbo.set_data(&Sprite::DEF_VERTICES, gl::DYNAMIC_DRAW);
 
-            self.index_buffer = Some(Buffer::new(gl::ELEMENT_ARRAY_BUFFER));
-            self.index_buffer.as_mut().unwrap().set_data(&Sprite::DEF_INDICES, gl::STATIC_DRAW);
+            let ibo = Buffer::new(gl::ELEMENT_ARRAY_BUFFER);
+            ibo.set_data(&Sprite::DEF_INDICES, gl::STATIC_DRAW);
 
             let pos_attrib = app.default_program.get_attrib_location("position").unwrap();
-            set_attribute!(self.vertex_array.as_mut().unwrap(), pos_attrib, Vertex::0);
+            set_attribute!(vao, pos_attrib, Vertex::0, gl::FLOAT);
             let color_attrib = app.default_program.get_attrib_location("vertexTexCoord").unwrap();
-            set_attribute!(self.vertex_array.as_mut().unwrap(), color_attrib, Vertex::1);
+            set_attribute!(vao, color_attrib, Vertex::1, gl::FLOAT);
 
+            textures[&self.texture_id].bind();
             app.default_program.set_int_uniform("texture0", 0).unwrap();
+
+            self.vertex_array = Some(vao);
+            self.vertex_buffer = Some(vbo);
         }
 
-        // if let Some(t) = textures.get(&self.texture_id) {
-        //     self.base_size = (
-        //         t.query().width,
-        //         t.query().height,
-        //     );
-        // }
-        // else {
-        //     let id = self.texture_id.clone();
-        //     LilahNotFoundError!(Sprite, Texture, id);
-        // }
+        if let Some(t) = textures.get(&self.texture_id) {
+            self.base_size = (
+                t.size.x as u32,
+                t.size.y as u32,
+            );
+        }
+        else {
+            let id = self.texture_id.clone();
+            LilahNotFoundError!(Sprite, Texture, id);
+        }
 
-        // self.anim_sprite_sheet(self.index_cut.0, self.index_cut.1);
+        //self.anim_sprite_sheet(self.index_cut.0, self.index_cut.1);
     }
 
     pub fn get_size(&self) -> (u32, u32) {
@@ -1389,6 +1391,20 @@ impl Sprite {
 
     pub fn anim_sprite_sheet(&mut self, ind: i32, ind2: i32) {
         self.index = (ind*self.get_size().0 as i32, ind2*self.get_size().1 as i32);
+
+        let zero = ((ind as f32 + 0.5) /self.size.0 as f32, (ind2 as f32 + 0.5)/self.size.1 as f32);
+        let one = (zero.0+(self.size.0 as f32/self.base_size.0 as f32), zero.1+(self.size.1 as f32/self.base_size.1 as f32));
+
+        let mut new_verts = Sprite::DEF_VERTICES;
+        new_verts[0].1 = [zero.0, one.1];
+        new_verts[1].1 = [one.0, one.1];
+        new_verts[2].1 = [one.0, zero.1];
+        new_verts[3].1 = [zero.0, zero.1];
+
+        unsafe { 
+            self.vertex_array.as_ref().unwrap().bind();
+            self.vertex_buffer.as_mut().unwrap().set_data(&new_verts, gl::DYNAMIC_DRAW);
+        }
     }
 
     pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform, camera: &Option<Vec2>) {
@@ -1397,28 +1413,35 @@ impl Sprite {
             cam = *cam_pos;
         }
 
-        let mut aspect = (app.get_window_size().x/app.get_window_size().y) as f32;
-        aspect *= 0.01;
-
-        let model = Mat4::IDENTITY * Mat4::from_translation(Vec3::new(t.position.x as f32, t.position.y as f32, 0.0));
+        let model = 
+        Mat4::IDENTITY * 
+        Mat4::from_scale_rotation_translation( 
+            Vec3::new(self.get_size().0 as f32, self.get_size().1 as f32, 1.0) * Vec3::new(t.scale.x as f32, t.scale.y as f32, 1.0),
+            Quat::from_rotation_z(t.rotation as f32), 
+            Vec3::new(t.position.x as f32 + (self.get_size().0/2) as f32, t.position.y as f32 - (self.get_size().1/2) as f32, 0.0)
+        );
 
         let view = Mat4::from_translation(Vec3::new(cam.x as f32, cam.y as f32, 0.0));
 
-        let proj =  Mat4::orthographic_rh_gl(0.0, aspect*app.get_window_size().x as f32, 0.0, aspect*app.get_window_size().y as f32, 0.0, 1.0);
-
-        let mvp = proj * view * model;
+        let mvp = app.projection * view * model;
 
         unsafe {
             textures[&self.texture_id].activate(gl::TEXTURE0);
-            self.vertex_array.as_ref().unwrap().bind();
 
             app.default_program.apply();
-            gl::BindFragDataLocation(app.default_program.id, 0, CString::new("FragColor").unwrap().as_ptr());
-
+            
+            self.vertex_array.as_ref().unwrap().bind();
+            
             let mat_attr = gl::GetUniformLocation(app.default_program.id, CString::new("mvp").unwrap().as_ptr());
             gl::UniformMatrix4fv(mat_attr, 1, gl::FALSE as GLboolean, &mvp.to_cols_array()[0]);
 
-            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+            let tint_attr = gl::GetUniformLocation(app.default_program.id, CString::new("tint").unwrap().as_ptr());
+            gl::Uniform4f(tint_attr, self.tint.r, self.tint.g, self.tint.b, self.tint.a);
+
+            let sort_attr = gl::GetUniformLocation(app.default_program.id, CString::new("sort").unwrap().as_ptr());
+            gl::Uniform1f(sort_attr, self.sort as f32);
+            
+            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
         }
     }
 
@@ -1457,6 +1480,20 @@ impl Sprite {
             }
             else {
                 LilahTypeError!(Sprite, 2, Vec2);
+            }
+        }
+        else {
+            LilahTypeError!(Sprite, 1, GameObject);
+        }
+    }
+
+    fn wren_set_sort_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            if let Some(sort) = vm.get_slot_double(2) {
+                comp.get_mut::<Sprite>().sort = sort as u32;
+            }
+            else {
+                LilahTypeError!(Sprite, 2, float);
             }
         }
         else {
@@ -1792,7 +1829,8 @@ create_module! (
         instance(getter "texture_id") wren_get_texture_id,
         instance(getter "current_index") wren_get_index,
         instance(fn "cut_sprite_sheet", 2) wren_cut_sprite_sheet,
-        static(fn "cut_sprite_sheet", 3) wren_cut_sprite_sheet_from_gameobject
+        static(fn "cut_sprite_sheet", 3) wren_cut_sprite_sheet_from_gameobject,
+        static(fn "set_sort", 2) wren_set_sort_from_gameobject
     }
 
     class("Component") Box<dyn crate::components::Component> => component {

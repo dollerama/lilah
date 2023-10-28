@@ -13,6 +13,6 @@ class Paddle is Behaviour {
     static start() { }
     
     static update() {
-        Rigidbody.set_velocity_y(gameobject.ref, Input.binding(gameobject["controls"])*5)
+        Rigidbody.set_velocity_y(gameobject.ref, Input.binding(gameobject["controls"]))
     }
 }

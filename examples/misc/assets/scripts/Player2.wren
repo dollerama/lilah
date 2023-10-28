@@ -13,7 +13,7 @@ class Player2 is Behaviour {
     setup() {      
         var gameobject = GameObject.new("D")
 
-        gameobject.add(Transform.new(Vec2.new(0.5, 0.5))) 
+        gameobject.add(Transform.new(Vec2.new(400, 200))) 
         gameobject.add(Sprite.new("assets/test.png"))  
         gameobject.add(Rigidbody.new())
         gameobject.add(this.as_behaviour)
@@ -24,6 +24,8 @@ class Player2 is Behaviour {
     static start() {
         //Transform.set_scale(gameobject.ref, Vec2.new(2,2))
         //Transform.set_pivot(gameobject.ref, gameobject.ref.get("Sprite").size/2)
+        Rigidbody.set_solid(gameobject.ref, false)
+        Sprite.set_sort(gameobject.ref, 0)
     }
     
     static update() {

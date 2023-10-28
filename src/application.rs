@@ -1,19 +1,11 @@
 extern crate sdl2;
 use std::collections::HashMap;
-use std::error;
-use std::ffi::CString;
-use std::ffi::NulError;
-use std::path::Path;
-use std::ptr;
 use std::str;
 use std::rc::Rc;
 use std::time::Duration;
 
 use debug_print::debug_println;
-use gl::types::GLsizeiptr;
-use gl::types::{GLenum, GLuint, GLint, GLchar};
-use image::EncodableLayout;
-use image::ImageError;
+use glam::Mat4;
 use ruwren::{ModuleLibrary, VMConfig, VMWrapper, BasicFileLoader, FunctionSignature, Handle, FunctionHandle};
 use sdl2::keyboard::Keycode;
 use sdl2::mixer::{AUDIO_S16LSB, DEFAULT_CHANNELS};
@@ -22,15 +14,14 @@ use sdl2::ttf::Sdl2TtfContext;
 use sdl2::{Sdl, EventPump, AudioSubsystem};
 use sdl2::pixels::Color;
 use sdl2::event::Event;
-use sdl2::video::{Window, WindowContext, FullscreenType, GLProfile, GLContext};
+use sdl2::video::{Window, FullscreenType, GLProfile, GLContext};
 use crate::components::ComponentBehaviour;
 use crate::gameobject::GameObject;
 use crate::input::{Input, InputInfo};
 use crate::math::Vec2;
+use crate::renderer::{ShaderProgram, Shader};
 use crate::time::Timer;
 use crate::world::WorldState;
-use std::string::FromUtf8Error;
-use thiserror::Error;
 
 #[macro_export]
 macro_rules! embed_script {
@@ -147,12 +138,6 @@ impl Scripting {
                 &self.vm, 
                 &m.0, 
                 &m.0.to_lowercase()
-            );
-
-            let gameobjref_class = Scripting::get_class_handle(
-                &self.vm, 
-                "app",
-                "GameObjectRef"
             );
 
             let frame_getter = Scripting::get_getter_handle(&self.vm, "frame");
@@ -301,48 +286,47 @@ pub struct App {
     event_pump : EventPump,
     _audio_context : AudioSubsystem,
     window: Window,
-    pub default_program: ShaderProgram
+    pub default_program: ShaderProgram,
+    pub projection: Mat4
 }
 
 impl App {
-    pub const default_vert: &'static str = r#"
+    pub const DEFAULT_VERT: &'static str = r#"
     #version 330
+    out vec2 texCoord;
+
     in vec2 position;
     in vec2 vertexTexCoord;
 
-    out vec2 texCoord;
-
     uniform mat4 mvp;
+    uniform float sort;
 
     void main() {
-        gl_Position = mvp * vec4(position, 0.0, 1.0);
+        gl_Position = mvp * vec4(position, sort, 1.0);
         texCoord = vertexTexCoord;
-    }"#;
+    }
+    "#;
 
-    pub const default_frag: &'static str = r#"
+    pub const DEFAULT_FRAG: &'static str = r#"
     #version 330
     out vec4 FragColor;
 
     in vec2 texCoord;
 
     uniform sampler2D texture0;
+    uniform vec4 tint;
 
     void main() {
-        FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-        //texture(texture0, texCoord);
-    }"#;
+        vec4 tex = texture(texture0, texCoord) * tint;
+        FragColor = vec4(tex.x, tex.y, tex.z, min(tex.w, tint.w));
+    }
+    "#;
 
     pub fn new(window_title : &str, window_size: Vec2) -> Self {
         let sdl_ctx: Sdl = sdl2::init().unwrap();
         let font_context = sdl2::ttf::init().map_err(|e| e.to_string()).unwrap();
         let _image_context = sdl2::image::init(sdl2::image::InitFlag::PNG | sdl2::image::InitFlag::JPG).unwrap();
         let audio_context = sdl_ctx.audio().unwrap();
-
-        let video_subsystem = sdl_ctx.video().unwrap();
-
-        let gl_attr = video_subsystem.gl_attr();
-        gl_attr.set_context_profile(GLProfile::Core);
-        gl_attr.set_context_version(3, 3);
 
         let frequency = 44_100;
         let format = AUDIO_S16LSB; // signed 16 bit samples, in little-endian byte order
@@ -359,21 +343,25 @@ impl App {
             .build()
             .unwrap();
 
+        let gl_attr = video_subsystem.gl_attr();
+        gl_attr.set_context_profile(GLProfile::Core);
+        gl_attr.set_context_version(3, 3);
+
         let gl_ctx = win.gl_create_context().unwrap();
         gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
         
         let event_pump = sdl_ctx.event_pump().unwrap();
 
         let program = unsafe {
-            let vs = Shader::new(App::default_vert, gl::VERTEX_SHADER).unwrap();
-            let fs = Shader::new(App::default_frag, gl::FRAGMENT_SHADER).unwrap();
-            ShaderProgram::new(&[vs, fs]).unwrap()
+            let vs = Shader::new(App::DEFAULT_VERT, gl::VERTEX_SHADER).unwrap();
+            let fs = Shader::new(App::DEFAULT_FRAG, gl::FRAGMENT_SHADER).unwrap();
+            ShaderProgram::new(&[fs, vs]).unwrap()
         };
         
-        // unsafe {
-        //     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        //     gl::Enable(gl::BLEND);
-        // }
+        unsafe {
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            gl::Enable(gl::BLEND);
+        }
 
         Self {
             gl_context: gl_ctx,
@@ -384,6 +372,7 @@ impl App {
             font_context,
             _audio_context: audio_context,
             default_program: program,
+            projection: Mat4::orthographic_rh_gl(0.0, window_size.x as f32, 0.0,  window_size.y as f32, 1000.0, -1000.0)
         }
     }
 
@@ -497,7 +486,7 @@ impl App {
     pub fn pre_frame(&mut self) -> bool {
         self.time.update();
         unsafe {
-            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+            gl::ClearColor(0.0, 0.0, 1.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
         self.handle_input()
@@ -805,305 +794,3 @@ impl Scripting {
         Scripting::call_fn(&self.vm, &ui_class, "tick", 0);
     }
 }
-
-pub struct LilahTexture {
-    pub id: GLuint
-}
-
-impl LilahTexture {
-    pub unsafe fn new() -> Self {
-        let mut id: GLuint = 0;
-        gl::GenTextures(1, &mut id);
-        Self { id }
-    }
-
-    pub unsafe fn load(&self, path: &Path) -> Result<(), ImageError> {
-        self.bind();
-
-        let img = image::open(path)?.into_rgba8();
-        gl::TexImage2D(
-            gl::TEXTURE_2D,
-            0,
-            gl::RGBA as i32,
-            img.width() as i32,
-            img.height() as i32,
-            0,
-            gl::RGBA,
-            gl::UNSIGNED_BYTE,
-            img.as_bytes().as_ptr() as *const _,
-        );
-        //gl::GenerateMipmap(gl::TEXTURE_2D);
-        Ok(())
-    }
-
-    pub unsafe fn set_wrapping(&self, mode: GLuint) {
-        self.bind();
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, mode as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, mode as GLint);
-    }
-
-    pub unsafe fn set_filtering(&self, mode: GLuint) {
-        self.bind();
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, mode as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, mode as GLint);
-    }
-
-    pub unsafe fn bind(&self) {
-        gl::BindTexture(gl::TEXTURE_2D, self.id)
-    }
-
-    pub unsafe fn activate(&self, unit: GLuint) {
-        gl::ActiveTexture(unit);
-        self.bind();
-    }
-
-    pub unsafe fn load_as_bytes(&self, source : &[u8]) -> Result<(), ImageError> {
-        self.bind();
-
-        let img = image::load_from_memory(source)?.into_rgba8();
-        gl::TexImage2D(
-            gl::TEXTURE_2D,
-            0,
-            gl::RGBA as i32,
-            img.width() as i32,
-            img.height() as i32,
-            0,
-            gl::RGBA,
-            gl::UNSIGNED_BYTE,
-            img.as_bytes().as_ptr() as *const _,
-        );
-        //gl::GenerateMipmap(gl::TEXTURE_2D);
-        Ok(())
-    }
-}
-
-impl Drop for LilahTexture {
-    fn drop(&mut self) {
-        unsafe {
-            gl::DeleteTextures(1, [self.id].as_ptr());
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct Buffer {
-    pub id: GLuint,
-    target: GLuint,
-}
-
-impl Drop for Buffer {
-    fn drop(&mut self) {
-        unsafe {
-            gl::DeleteBuffers(1, [self.id].as_ptr());
-        }
-    }
-}
-
-impl Buffer {
-    pub unsafe fn new(target: GLuint) -> Self {
-        let mut id: GLuint = 0;
-        gl::GenBuffers(1, &mut id);
-        Self { id, target }
-    }
-
-    pub unsafe fn set_data<D>(&self, data: &[D], usage: GLuint) {
-        self.bind();
-        let (_, data_bytes, _) = data.align_to::<u8>();
-        gl::BufferData(
-            self.target,
-            data_bytes.len() as GLsizeiptr,
-            data_bytes.as_ptr() as *const _,
-            usage,
-        );
-    }
-
-    pub unsafe fn bind(&self) {
-        gl::BindBuffer(self.target, self.id);
-    }
-}
-
-pub struct ShaderProgram {
-    pub id: GLuint,
-}
-
-impl Drop for ShaderProgram {
-    fn drop(&mut self) {
-        unsafe {
-            gl::DeleteProgram(self.id);
-        }
-    }
-}
-
-impl ShaderProgram {
-    pub unsafe fn new(shaders: &[Shader]) -> Result<Self, ShaderError> {
-        let program = Self {
-            id: gl::CreateProgram(),
-        };
-
-        for shader in shaders {
-            gl::AttachShader(program.id, shader.id);
-        }
-
-        gl::LinkProgram(program.id);
-
-        let mut success: GLint = 0;
-        gl::GetProgramiv(program.id, gl::LINK_STATUS, &mut success);
-
-        if success == 1 {
-            Ok(program)
-        } else {
-            let mut error_log_size: GLint = 0;
-            gl::GetProgramiv(program.id, gl::INFO_LOG_LENGTH, &mut error_log_size);
-            let mut error_log: Vec<u8> = Vec::with_capacity(error_log_size as usize);
-            gl::GetProgramInfoLog(
-                program.id,
-                error_log_size,
-                &mut error_log_size,
-                error_log.as_mut_ptr() as *mut _,
-            );
-
-            error_log.set_len(error_log_size as usize);
-            let log = String::from_utf8(error_log)?;
-            Err(ShaderError::LinkingError(log))
-        }
-    }
-
-    pub unsafe fn apply(&self) {
-        gl::UseProgram(self.id);
-    }
-
-    pub unsafe fn get_attrib_location(&self, attrib: &str) -> Result<GLuint, ShaderError> {
-        let attrib = CString::new(attrib)?;
-        Ok(gl::GetAttribLocation(self.id, attrib.as_ptr()) as GLuint)
-    }
-
-    pub unsafe fn set_int_uniform(&self, name: &str, value: i32) -> Result<(), ShaderError> {
-        self.apply();
-        let uniform = CString::new(name)?;
-        gl::Uniform1i(gl::GetUniformLocation(self.id, uniform.as_ptr()), value);
-        Ok(())
-    }
-}
-
-#[derive(Debug, Error)]
-pub enum ShaderError {
-    #[error("Error while compiling shader: {0}")]
-    CompilationError(String),
-    #[error("Error while linking shaders: {0}")]
-    LinkingError(String),
-    #[error{"{0}"}]
-    Utf8Error(#[from] FromUtf8Error),
-    #[error{"{0}"}]
-    NulError(#[from] NulError),
-}
-
-pub struct Shader {
-    pub id: GLuint,
-}
-
-impl Drop for Shader {
-    fn drop(&mut self) {
-        unsafe {
-            gl::DeleteShader(self.id);
-        }
-    }
-}
-
-impl Shader {
-    pub unsafe fn new(source_code: &str, shader_type: GLenum) -> Result<Self, ShaderError> {
-        let source_code = CString::new(source_code)?;
-        let shader = Self {
-            id: gl::CreateShader(shader_type),
-        };
-        gl::ShaderSource(shader.id, 1, &source_code.as_ptr(), ptr::null());
-        gl::CompileShader(shader.id);
-
-        // check for shader compilation errors
-        let mut success: GLint = 0;
-        gl::GetShaderiv(shader.id, gl::COMPILE_STATUS, &mut success);
-
-        if success == 1 {
-            Ok(shader)
-        } else {
-            let mut error_log_size: GLint = 0;
-            gl::GetShaderiv(shader.id, gl::INFO_LOG_LENGTH, &mut error_log_size);
-            let mut error_log: Vec<u8> = Vec::with_capacity(error_log_size as usize);
-            gl::GetShaderInfoLog(
-                shader.id,
-                error_log_size,
-                &mut error_log_size,
-                error_log.as_mut_ptr() as *mut _,
-            );
-
-            error_log.set_len(error_log_size as usize);
-            let log = String::from_utf8(error_log)?;
-            Err(ShaderError::CompilationError(log))
-        }
-    }
-}
-
-#[derive(Clone)]pub struct VertexArray {
-    pub id: GLuint,
-}
-
-impl Drop for VertexArray {
-    fn drop(&mut self) {
-        unsafe {
-            gl::DeleteVertexArrays(1, [self.id].as_ptr());
-        }
-    }
-}
-
-impl VertexArray {
-    pub unsafe fn new() -> Self {
-        let mut id: GLuint = 0;
-        gl::GenVertexArrays(1, &mut id);
-        Self { id }
-    }
-
-    pub unsafe fn set_attribute<V: Sized>(
-        &self,
-        attrib_pos: GLuint,
-        components: GLint,
-        offset: GLint,
-    ) {
-        self.bind();
-        gl::VertexAttribPointer(
-            attrib_pos,
-            components,
-            gl::FLOAT,
-            gl::FALSE,
-            std::mem::size_of::<V>() as GLint,
-            offset as *const _,
-        );
-        gl::EnableVertexAttribArray(attrib_pos);
-    }
-
-    pub unsafe fn bind(&self) {
-        gl::BindVertexArray(self.id);
-    }
-}
-
-#[macro_export]
-macro_rules! set_attribute {
-    ($vbo:expr, $pos:tt, $t:ident :: $field:tt) => {{
-        let dummy = core::mem::MaybeUninit::<$t>::uninit();
-        let dummy_ptr = dummy.as_ptr();
-        let member_ptr = core::ptr::addr_of!((*dummy_ptr).$field);
-        const fn size_of_raw<T>(_: *const T) -> usize {
-            core::mem::size_of::<T>()
-        }
-        let member_offset = member_ptr as i32 - dummy_ptr as i32;
-        ($vbo).set_attribute::<$t>(
-            $pos,
-            (size_of_raw(member_ptr) / core::mem::size_of::<f32>()) as i32,
-            member_offset,
-        )
-    }};
-}
-
-pub type Pos = [f32; 2];
-pub type TextureCoords = [f32; 2];
-
-#[repr(C, packed)]
-pub struct Vertex(pub Pos, pub TextureCoords);

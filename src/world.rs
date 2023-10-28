@@ -1,10 +1,8 @@
 use std::{collections::HashMap, path::Path};
 use data2sound::decode_bytes;
 use debug_print::debug_println;
-use crate::{application::{App, Scripting, LilahTexture}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId, LilahError, LilahPanic, math::Vec2};
+use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId, LilahError, LilahPanic, math::Vec2, renderer::LilahTexture};
 use crate::gameobject::GameObject;
-use sdl2::{render::Texture, image::LoadTexture};
-use image::{GenericImageView, DynamicImage};
 
 #[macro_export]
 macro_rules! embed_texture {
@@ -126,8 +124,8 @@ impl<'a> WorldState<'a> {
         self.gameobjects.insert(g2.id.uuid.clone(), g2);
     }
 
-    pub fn load_texture(&mut self, file : &str, app : &App) {
-        let new_texture = unsafe { 
+    pub fn load_texture(&mut self, file : &str, _app : &App) {
+        let mut new_texture = unsafe { 
             LilahTexture::new() 
         };
 
@@ -138,7 +136,7 @@ impl<'a> WorldState<'a> {
 
         unsafe {
             if let Err(e) = new_texture.load(&Path::new(file)) {
-                LilahPanic!(LilahTexture, format!("Tried to load texture ->{}", e))
+                LilahPanic!(LilahTexture, format!("Tried to load texture->{}", e))
             }
         }
 
@@ -146,8 +144,8 @@ impl<'a> WorldState<'a> {
         debug_println!("Texture loaded: {}", file);
     }
 
-    pub fn load_texture_bytes(&mut self, name: &str, source : &[u8], app : &App) {
-        let new_texture = unsafe { LilahTexture::new() };
+    pub fn load_texture_bytes(&mut self, name: &str, source : &[u8], _app : &App) {
+        let mut new_texture = unsafe { LilahTexture::new() };
         unsafe {
             new_texture.load_as_bytes(source);
         }

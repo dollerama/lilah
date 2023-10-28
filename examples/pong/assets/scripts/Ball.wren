@@ -11,7 +11,7 @@ class Ball is Behaviour {
     }
 
     static start() {
-        Rigidbody.set_velocity_x(gameobject.ref, -5)
+        Rigidbody.set_velocity_x(gameobject.ref, -1)
     }
     
     static update() {
@@ -33,7 +33,7 @@ class Ball is Behaviour {
 
                 Fiber.yield(1)
 
-                Rigidbody.set_velocity(gameobject.ref, Vec2.new(-5, 0))
+                Rigidbody.set_velocity(gameobject.ref, Vec2.new(-1, 0))
             })
         }
 
@@ -50,7 +50,7 @@ class Ball is Behaviour {
                 Rigidbody.set_velocity(gameobject.ref, Vec2.new(0, 0))
 
                 Fiber.yield(1)
-                Rigidbody.set_velocity(gameobject.ref, Vec2.new(5, 0))
+                Rigidbody.set_velocity(gameobject.ref, Vec2.new(1, 0))
             })
         }
 
@@ -63,7 +63,7 @@ class Ball is Behaviour {
             var dist = (ball_pos-paddle_pos).normalized()
 
             var dot = Vec2.dot(Vec2.up, dist)
-            Rigidbody.set_velocity_y(gameobject.ref, dot*5)
+            Rigidbody.set_velocity_y(gameobject.ref, dot)
         }
     }
 }

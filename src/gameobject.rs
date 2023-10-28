@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use ruwren::{send_foreign, VM, Class};
 use sdl2::mixer::Chunk;
-use crate::{components::{Component, Transform, Sprite, Rigidbody, Animator, Tickable, ComponentBehaviour, Text, Sfx}, math::Vec2, application::{App, LilahTexture}, world::StateUpdateContainer, LilahTypeError, LilahNotFoundError, LilahTypePanic};
+use crate::{components::{Component, Transform, Sprite, Rigidbody, Animator, Tickable, ComponentBehaviour, Text, Sfx}, math::Vec2, application::App, world::StateUpdateContainer, LilahTypeError, LilahNotFoundError, LilahTypePanic, renderer::LilahTexture};
 use uuid::Uuid;
 
 #[macro_export]

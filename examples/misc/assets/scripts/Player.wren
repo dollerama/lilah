@@ -34,10 +34,11 @@ class Player is Behaviour {
         Animator.set_state(gameobject.ref, "Row0")
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
+        Sprite.set_sort(gameobject.ref, -1)
     }
     
     static update() {
-        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*0.01)
+        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical"))
 
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
@@ -48,7 +49,7 @@ class Player is Behaviour {
         Text.set_text(gameobject.ref, "%(gameobject.ref.get("Rigidbody").velocity.x) x %(gameobject.ref.get("Rigidbody").velocity.y)")
 
         if(gameobject.ref.get("Rigidbody").colliding != null) {
-            Sfx.play(gameobject.ref, "sfx")
+            //Sfx.play(gameobject.ref, "sfx")
         }
         
         if(Input.key("Space")) {
