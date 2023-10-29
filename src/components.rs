@@ -39,7 +39,7 @@ pub struct Transform {
     pub position: Vec2,
     pub pivot: Vec2,
     pub scale: Vec2,
-    pub rotation: f64,
+    pub rotation: f32,
 }
 
 /// Sfx Component for GameObjects
@@ -58,6 +58,7 @@ pub struct Rigidbody {
     pub position: Vec2,
     pub pivot: Vec2,
     pub scale: Vec2,
+    pub rotation: f32,
     /// Bounds of Collider
     pub bounds: Vec2,
     pub velocity: Vec2,
@@ -282,7 +283,7 @@ impl Transform {
     }
 
     fn wren_get_rotation(&self, vm: &VM) {
-        vm.set_slot_double(0, self.rotation);
+        vm.set_slot_double(0, self.rotation as f64);
     }
 
     fn wren_set_pos(&mut self, vm: &VM) {
@@ -308,7 +309,7 @@ impl Transform {
 
     fn wren_set_rotation(&mut self, vm: &VM) {
         match vm.get_slot_double(1) {
-            Some(rotation) => self.rotation = rotation,
+            Some(rotation) => self.rotation = rotation as f32,
             None => { LilahTypeError!(Transform, 1, f64); }
         }
     }
@@ -481,7 +482,7 @@ impl Transform {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
-                    Some(rotation) => comp.get_mut::<Transform>().rotation = rotation,
+                    Some(rotation) => comp.get_mut::<Transform>().rotation = rotation as f32,
                     None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
@@ -493,7 +494,7 @@ impl Transform {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
             Some(comp) => {
                 match vm.get_slot_double(2) {
-                    Some(rotation) => comp.get_mut::<Transform>().rotation += rotation,
+                    Some(rotation) => comp.get_mut::<Transform>().rotation += rotation as f32,
                     None => { LilahTypeError!(Transform, 2, f64); }
                 }
             }
@@ -509,6 +510,7 @@ impl Rigidbody {
             bounds : Vec2::ONE,
             pivot: Vec2::ZERO,
             velocity : Vec2::ZERO,
+            rotation: 0.0,
             position : pos,
             scale: Vec2::ONE,
             colliding : None,
@@ -522,6 +524,7 @@ impl Rigidbody {
             pivot: Vec2::ZERO,
             velocity : Vec2::ZERO,
             scale: Vec2::ONE,
+            rotation: 0.0,
             position : Vec2::ZERO,
             colliding : None,
             solid : true
@@ -544,9 +547,9 @@ impl Rigidbody {
         self.position.x -= self.velocity.x; 
     }
 
-    pub fn check_collision_sat(&self, other: &Rigidbody) -> (bool, Vec2) {
-        let r1 = crate::math::Rect::new_from_rigidbody(self);
-        let r2 = crate::math::Rect::new_from_rigidbody(other);
+    pub fn check_collision_sat(&self, other: &Rigidbody, app: &App, camera: &Option<Vec2>) -> (bool, Vec2) {
+        let r1 = crate::math::Rect::new_from_rigidbody(self, app, camera);
+        let r2 = crate::math::Rect::new_from_rigidbody(other, app, camera);
 
         r1.intersects(&r2)
     }
@@ -777,6 +780,18 @@ impl Rigidbody {
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
+        }
+    }
+
+    fn wren_set_rot_from_gameobject(vm: &VM) {
+        match vm.get_slot_foreign_mut::<GameObject>(1) {
+            Some(comp) => {
+                match vm.get_slot_double(2) {
+                    Some(rotation) => comp.get_mut::<Rigidbody>().rotation = rotation as f32,
+                    None => { LilahTypeError!(Rigidbody, 2, f32); }
+                }
+            }
+            None => { LilahTypeError!(Rigidbody, 1, GameObject);  }
         }
     }
 }
@@ -1417,7 +1432,7 @@ impl Sprite {
         Mat4::IDENTITY * 
         Mat4::from_scale_rotation_translation( 
             Vec3::new(self.get_size().0 as f32, self.get_size().1 as f32, 1.0) * Vec3::new(t.scale.x as f32, t.scale.y as f32, 1.0),
-            Quat::from_rotation_z(t.rotation as f32), 
+            Quat::from_rotation_z(t.rotation), 
             Vec3::new(t.position.x as f32 + (self.get_size().0/2) as f32, t.position.y as f32 - (self.get_size().1/2) as f32, 0.0)
         );
 
@@ -1553,6 +1568,7 @@ impl Default for Rigidbody {
             bounds : Vec2::ONE,
             pivot: Vec2::ZERO,
             scale: Vec2::ONE,
+            rotation: 0.0,
             velocity : Vec2::ZERO,
             position : Vec2::ONE,
             colliding : None,
@@ -1696,6 +1712,7 @@ impl Tickable<Sprite> for Rigidbody {
 impl Tickable<Rigidbody> for Transform {
     fn tick(&mut self, _: f64, d: &Rigidbody) {
         self.position = d.position;
+        self.rotation = d.rotation;
     }
 }
 
@@ -1865,7 +1882,8 @@ create_module! (
         static(fn "update_velocity", 2) wren_update_vel_from_gameobject,
         static(fn "update_velocity_x", 2) wren_update_vel_x_from_gameobject,
         static(fn "update_velocity_y", 2) wren_update_vel_y_from_gameobject,
-        static(fn "set_solid", 2) wren_set_solid_from_gameobject
+        static(fn "set_solid", 2) wren_set_solid_from_gameobject,
+        static(fn "set_rotation", 2) wren_set_rot_from_gameobject
     }
 
     class("Animator") crate::components::Animator => animator {

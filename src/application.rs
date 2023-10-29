@@ -372,7 +372,7 @@ impl App {
             font_context,
             _audio_context: audio_context,
             default_program: program,
-            projection: Mat4::orthographic_rh_gl(0.0, window_size.x as f32, 0.0,  window_size.y as f32, 1000.0, -1000.0)
+            projection: Mat4::orthographic_rh_gl(0.0, window_size.x as f32*2.0, 0.0,  window_size.y as f32*2.0, 1000.0, -1000.0)
         }
     }
 

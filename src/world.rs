@@ -346,9 +346,15 @@ impl<'a> World<'a> {
     }
 
     pub fn update(&mut self, mut app: &mut App) {
+        let camera = self.state.wrap("Camera");
+        let mut camera_pos = None;
+        if let Some(cam) = camera {
+            camera_pos = Some(cam.get::<Transform>().position);
+        }
+
         self.update_vel_x();
         let mut collisions = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
-        self.check_collision(&mut collisions);
+        self.check_collision(&mut collisions, &app, &camera_pos);
 
         for coll in &collisions {
             if coll.2.0 {
@@ -370,7 +376,7 @@ impl<'a> World<'a> {
 
         self.update_vel_y();
         collisions = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
-        self.check_collision(&mut collisions);
+        self.check_collision(&mut collisions, &app, &camera_pos);
 
         for coll in &collisions {
             if coll.2.0 {
@@ -393,7 +399,7 @@ impl<'a> World<'a> {
         self.update_go(&mut app);
     }
 
-    fn check_collision(&self, coll: &mut Vec<(GameObjectId, GameObjectId, (bool, Vec2))>) {
+    fn check_collision(&self, coll: &mut Vec<(GameObjectId, GameObjectId, (bool, Vec2))>, app: &App, camera: &Option<Vec2>) {
         let mut others = false;
         for (k, i) in &self.state.gameobjects {
             for (k2, j) in &self.state.gameobjects {
@@ -402,7 +408,7 @@ impl<'a> World<'a> {
                     
                     if i.has::<Rigidbody>() {
                         if j.has::<Rigidbody>() {
-                            let check =  i.get::<Rigidbody>().check_collision_sat(&j.get::<Rigidbody>());
+                            let check =  i.get::<Rigidbody>().check_collision_sat(&j.get::<Rigidbody>(), app, camera);
                             coll.push((i.id.clone(), j.id.clone(), check));
                         }
                     }

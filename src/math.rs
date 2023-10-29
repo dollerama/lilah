@@ -1,8 +1,9 @@
 use std::{ops, hash::Hasher, hash::Hash};
 
+use glam::{Mat4, Quat, Vec3};
 use ruwren::{Class, VM, create_module, ModuleLibrary};
 
-use crate::{LilahError, LilahPanic, LilahTypeError, components::Rigidbody};
+use crate::{LilahError, LilahPanic, LilahTypeError, components::Rigidbody, application::App};
 
 /// Vector for 2d translations etc.
 /// # Examples
@@ -354,13 +355,29 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub fn new_from_rigidbody(body: &Rigidbody) -> Self {
+    pub fn new_from_rigidbody(body: &Rigidbody, app: &App, camera: &Option<Vec2>) -> Self {
+        let model = 
+        Mat4::IDENTITY * 
+        Mat4::from_rotation_translation(
+            Quat::from_rotation_z(0.0),
+            Vec3::new(body.position.x as f32, body.position.y as f32, 0.0)
+        );
+
+        let view = Mat4::from_translation(Vec3::new(camera.unwrap().x as f32, camera.unwrap().y as f32, 0.0));
+
+        let mvp = app.projection * view * model;
+
+        let a = mvp * glam::Vec4::new(0.0, 0.0, 0.0, 1.0);
+        let b = mvp * glam::Vec4::new(body.bounds.x as f32, 0.0, 0.0, 1.0);
+        let c = mvp * glam::Vec4::new(body.bounds.x as f32, -body.bounds.y as f32, 0.0, 1.0);
+        let d = mvp * glam::Vec4::new(0.0, -body.bounds.y as f32, 0.0, 1.0);
+
         Self {
             points: vec![
-                Vec2::new(body.position.x, body.position.y),
-                Vec2::new(body.position.x+body.bounds.x, body.position.y),
-                Vec2::new(body.position.x+body.bounds.x, body.position.y-body.bounds.y),
-                Vec2::new(body.position.x, body.position.y-body.bounds.y),
+                Vec2::new(a.x as f64, a.y as f64),
+                Vec2::new(b.x as f64, b.y as f64),
+                Vec2::new(c.x as f64, c.y as f64),
+                Vec2::new(d.x as f64, d.y as f64),
             ]
         }
     }

@@ -75,6 +75,7 @@ foreign class Rigidbody {
     foreign static update_velocity(go, vel)
     foreign static update_velocity_x(go, new_x)
     foreign static update_velocity_y(go, new_y)
+    foreign static set_rotation(go, new_rot)
 }
 
 foreign class Animator {

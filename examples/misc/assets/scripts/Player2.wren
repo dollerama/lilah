@@ -18,17 +18,18 @@ class Player2 is Behaviour {
         gameobject.add(Rigidbody.new())
         gameobject.add(this.as_behaviour)
 
-        gameobject = Lilah.instantiate(gameobject, {"message": "hi2"})
+        gameobject = Lilah.instantiate(gameobject, {"time": 0})
     }
 
     static start() {
         //Transform.set_scale(gameobject.ref, Vec2.new(2,2))
         //Transform.set_pivot(gameobject.ref, gameobject.ref.get("Sprite").size/2)
-        Rigidbody.set_solid(gameobject.ref, false)
+        //Rigidbody.set_solid(gameobject.ref, false)
         Sprite.set_sort(gameobject.ref, 0)
     }
     
     static update() {
-        
+        gameobject.data["time"] = gameobject.data["time"] + Lilah.delta_time
+        Rigidbody.set_rotation(gameobject.ref, gameobject.data["time"])
     }
 }
