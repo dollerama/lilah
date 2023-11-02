@@ -283,11 +283,11 @@ pub struct App {
     pub font_context: Sdl2TtfContext,
     pub input: Input,
     pub time: Timer, 
+    pub default_program: ShaderProgram,
+    pub text_program: ShaderProgram,
     event_pump : EventPump,
     _audio_context : AudioSubsystem,
     window: Window,
-    pub default_program: ShaderProgram,
-    pub projection: Mat4
 }
 
 impl App {
@@ -319,6 +319,21 @@ impl App {
     void main() {
         vec4 tex = texture(texture0, texCoord) * tint;
         FragColor = vec4(tex.x, tex.y, tex.z, min(tex.w, tint.w));
+    }
+    "#;
+
+    pub const TEXT_FRAG: &'static str = r#"
+    #version 330
+    out vec4 FragColor;
+
+    in vec2 texCoord;
+
+    uniform sampler2D texture0;
+    uniform vec4 tint;
+
+    void main() {
+        vec4 tex = texture(texture0, texCoord);
+        FragColor = vec4(tint.x, tint.y, tint.z, min(tex.a, tint.w));
     }
     "#;
 
@@ -357,10 +372,18 @@ impl App {
             let fs = Shader::new(App::DEFAULT_FRAG, gl::FRAGMENT_SHADER).unwrap();
             ShaderProgram::new(&[fs, vs]).unwrap()
         };
+
+        let text_program = unsafe {
+            let vs = Shader::new(App::DEFAULT_VERT, gl::VERTEX_SHADER).unwrap();
+            let fs = Shader::new(App::TEXT_FRAG, gl::FRAGMENT_SHADER).unwrap();
+            ShaderProgram::new(&[fs, vs]).unwrap()
+        };
         
         unsafe {
-            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
             gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            
+            *crate::math::PROJECTION_MATRIX = Mat4::orthographic_rh_gl(0.0, window_size.x as f32, 0.0,  window_size.y as f32, 1000.0, -1000.0);
         }
 
         Self {
@@ -372,7 +395,7 @@ impl App {
             font_context,
             _audio_context: audio_context,
             default_program: program,
-            projection: Mat4::orthographic_rh_gl(0.0, window_size.x as f32*2.0, 0.0,  window_size.y as f32*2.0, 1000.0, -1000.0)
+            text_program: text_program
         }
     }
 
@@ -495,8 +518,8 @@ impl App {
     /// Draws canvas and sleeps until next frame
     pub fn present_frame(&mut self) {
         self.window.gl_swap_window();
-        //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-        ::std::thread::sleep(Duration::new(0, ((60.0-self.time.fps())/1000.0) as u32));
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        //::std::thread::sleep(Duration::new(0, ((60.0-self.time.fps())/1000.0) as u32));
     }
 }
 

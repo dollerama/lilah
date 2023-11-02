@@ -18,7 +18,7 @@ class Player2 is Behaviour {
         gameobject.add(Rigidbody.new())
         gameobject.add(this.as_behaviour)
 
-        gameobject = Lilah.instantiate(gameobject, {"time": 0})
+        gameobject = Lilah.instantiate(gameobject, {})
     }
 
     static start() {
@@ -29,7 +29,6 @@ class Player2 is Behaviour {
     }
     
     static update() {
-        gameobject.data["time"] = gameobject.data["time"] + Lilah.delta_time
-        Rigidbody.set_rotation(gameobject.ref, gameobject.data["time"])
+        
     }
 }

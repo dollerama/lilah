@@ -26,7 +26,7 @@ class Game is Behaviour {
         player2.add(Paddle.new().as_behaviour)
 
         var ball = GameObject.new("Ball")
-        ball.add(Transform.new(Lilah.to_world_space(Vec2.new(800/2, 600/2)))) 
+        ball.add(Transform.new(Vec2.new(800/2, 600/2)))
         ball.add(Sprite.new("assets/ball.png"))  
         ball.add(Rigidbody.new())
         ball.add(Ball.new().as_behaviour)
@@ -36,11 +36,11 @@ class Game is Behaviour {
         line.add(Sprite.new("assets/line.png"))  
 
         var score_1 = GameObject.new("Score1")
-        score_1.add(Transform.new(Lilah.to_world_space(Vec2.new((800/4), 10)))) 
+        score_1.add(Transform.new(Vec2.new((800/4), 100)))
         score_1.add(Text.new("0", "assets/Lora-Regular.ttf"))
 
         var score_2 = GameObject.new("Score2")
-        score_2.add(Transform.new(Lilah.to_world_space(Vec2.new(800-(800/4), 10))))
+        score_2.add(Transform.new(Vec2.new(800-(800/4), 100)))
         score_2.add(Text.new("0", "assets/Lora-Regular.ttf"))
 
         Lilah.instantiate(player1, {"controls": "Vertical1", "score": 0})

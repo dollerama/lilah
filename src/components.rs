@@ -1,4 +1,6 @@
 use glam::{Mat4, Vec3, Quat};
+use image::{DynamicImage, Rgba, EncodableLayout};
+use rusttype::{Font, Scale, point};
 use ruwren::{Class, VM, send_foreign, create_module, ModuleLibrary};
 use uuid::Uuid;
 use crate::renderer::{LilahTexture, Buffer, VertexArray, Vertex, Color};
@@ -117,7 +119,13 @@ pub struct Text {
     font: String,
     texture_id: String,
     changed: bool,
-    size: Vec2
+
+    pub color: Color,
+
+    pub sort: u32,
+    
+    vertex_buffer: Option<Buffer>,
+    vertex_array: Option<VertexArray>
 }
 
 //component impls
@@ -547,9 +555,9 @@ impl Rigidbody {
         self.position.x -= self.velocity.x; 
     }
 
-    pub fn check_collision_sat(&self, other: &Rigidbody, app: &App, camera: &Option<Vec2>) -> (bool, Vec2) {
-        let r1 = crate::math::Rect::new_from_rigidbody(self, app, camera);
-        let r2 = crate::math::Rect::new_from_rigidbody(other, app, camera);
+    pub fn check_collision_sat(&self, other: &Rigidbody, app: &App) -> (bool, Vec2) {
+        let r1 = crate::math::Rect::new_from_rigidbody(self, app);
+        let r2 = crate::math::Rect::new_from_rigidbody(other, app);
 
         r1.intersects(&r2)
     }
@@ -1110,14 +1118,31 @@ impl Animator {
 }
 
 impl Text {
+    #[rustfmt::skip]
+    const DEF_VERTICES: [Vertex; 4] =  [
+        Vertex([-0.5, -0.5],  [0.0, 1.0]),
+        Vertex([ 0.5, -0.5],  [1.0, 1.0]),
+        Vertex([ 0.5,  0.5],  [1.0, 0.0]),
+        Vertex([-0.5,  0.5],  [0.0, 0.0]),
+    ];
+
+    #[rustfmt::skip]
+    const DEF_INDICES: [i32; 6] = [
+        0, 1, 2,
+        2, 3, 0
+    ];
+
     pub fn new(t: &str, font: &str) -> Self {
         Self {
             text: t.to_string(),
             font_size: 24,
             font: font.to_string(),
             texture_id: Uuid::new_v4().to_string(),
-            changed: true,
-            size: Vec2::ZERO
+            changed: true, 
+            vertex_array: None,
+            vertex_buffer: None,
+            color: Color::new(1.0, 1.0, 1.0, 1.0),
+            sort: 0
         }
     }
 
@@ -1148,30 +1173,75 @@ impl Text {
         self.changed = true;
     }
 
-    pub fn load(&mut self, app: &mut App, fonts: &HashMap<String, Vec<u8>>) -> StateUpdateContainer {
+    pub fn load(&mut self, app: &mut App, fonts: &HashMap<String, Font>) -> StateUpdateContainer {
+        if self.vertex_array.is_none() {
+            unsafe {
+                let vao = VertexArray::new();
+                vao.bind();
+
+                let vbo = Buffer::new(gl::ARRAY_BUFFER);
+                vbo.set_data(&Text::DEF_VERTICES, gl::STATIC_DRAW);
+
+                let ibo = Buffer::new(gl::ELEMENT_ARRAY_BUFFER);
+                ibo.set_data(&Text::DEF_INDICES, gl::STATIC_DRAW);
+
+                let pos_attrib = app.text_program.get_attrib_location("position").unwrap();
+                set_attribute!(vao, pos_attrib, Vertex::0, gl::FLOAT);
+                let color_attrib = app.text_program.get_attrib_location("vertexTexCoord").unwrap();
+                set_attribute!(vao, color_attrib, Vertex::1, gl::FLOAT);
+
+                self.vertex_array = Some(vao);
+                self.vertex_buffer = Some(vbo);
+            }
+        }
+        
         if self.changed {
             self.changed = false;
 
-            if let Some(font_bytes) = fonts.get(&self.font) {
-                // let font = 
-                // app.font_context.load_font_from_rwops(
-                //     RWops::from_bytes(&font_bytes).unwrap(), 
-                //     self.font_size.try_into().unwrap()
-                // ).unwrap();
+            if let Some(font) = fonts.get(&self.font) {
+                let scale = Scale::uniform(self.font_size as f32);
+                let colour = (255, 255, 255);
+                let v_metrics = font.v_metrics(scale);
 
-                // let surface = font
-                //     .render(&self.text)
-                //     .blended(Color::RGBA(255, 255, 255, 255))
-                //     .map_err(|e| e.to_string()).unwrap();
-                // let texture = app.tex_creator
-                //     .create_texture_from_surface(&surface)
-                //     .map_err(|e| e.to_string()).unwrap();
+                // layout the glyphs in a line with 20 pixels padding
+                let glyphs: Vec<_> = font
+                    .layout(&self.text, scale, point(20.0, 20.0 + v_metrics.ascent))
+                    .collect();
 
-                //let TextureQuery { width, height, .. } = texture.query();
-                //self.size = Vec2::new(width as f64, height as f64);
+                // work out the layout size
+                let glyphs_height = (v_metrics.ascent - v_metrics.descent).ceil() as u32;
+                let glyphs_width = {
+                    let min_x = glyphs
+                        .first()
+                        .map(|g| g.pixel_bounding_box().unwrap().min.x)
+                        .unwrap();
+                    let max_x = glyphs
+                        .last()
+                        .map(|g| g.pixel_bounding_box().unwrap().max.x)
+                        .unwrap();
+                    (max_x - min_x) as u32
+                };
 
-                //StateUpdateContainer { textures: Some((self.texture_id.clone(), texture)), sfx: None }
-                StateUpdateContainer { textures: None, sfx: None  }
+                // Create a new rgba image with some padding
+                let mut image: image::ImageBuffer<Rgba<u8>, Vec<u8>> = DynamicImage::new_rgba8(glyphs_width + 40, glyphs_height + 40).to_rgba8();
+
+                // Loop through the glyphs in the text, positing each one on a line
+                for glyph in glyphs {
+                    if let Some(bounding_box) = glyph.pixel_bounding_box() {
+                        // Draw the glyph into the image per-pixel by using the draw closure
+                        glyph.draw(|x, y, v| {
+                            image.put_pixel(
+                                // Offset the position by the glyph bounding box
+                                x + bounding_box.min.x as u32,
+                                y + bounding_box.min.y as u32,
+                                // Turn the coverage into an alpha value
+                                Rgba([255, 255, 255, (v * 255.0) as u8]),
+                            )
+                        });
+                    }
+                }
+
+                StateUpdateContainer { textures: Some((self.texture_id.clone(), image)), sfx: None  }
             }
             else {
                 let f = self.font.clone();
@@ -1184,25 +1254,38 @@ impl Text {
         }
     }
 
-    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform, camera: &Option<Vec2>) {
-        let mut cam = Vec2::new(0.0,0.0);
-        if let Some(cam_pos) = camera {
-            cam = *cam_pos;
-        }
+    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
+        let model = 
+        Mat4::IDENTITY * 
+        Mat4::from_scale_rotation_translation( 
+            Vec3::new(textures[&self.texture_id].size.x as f32, textures[&self.texture_id].size.y as f32, 1.0) * Vec3::new(t.scale.x as f32, t.scale.y as f32, 1.0),
+            Quat::from_rotation_z(t.rotation), 
+            Vec3::new(t.position.x as f32 + (textures[&self.texture_id].size.x/2.0) as f32, t.position.y as f32 - (textures[&self.texture_id].size.y/2.0) as f32, 0.0)
+        );
 
-        // if let Err(e) = app.canvas.copy(
-        // &textures[&self.texture_id], 
-        // None, 
-        // Some(Rect::new(
-        //         t.world_to_screen_position(&cam, app.get_window_size().y).x as i32, 
-        //         t.world_to_screen_position(&cam, app.get_window_size().y).y as i32, 
-        //         self.size.x as u32, 
-        //         self.size.y as u32
-        //     )
-        // )
-        // ) {
-        //     LilahError!(Text, e);
-        // }
+        let view = unsafe { *crate::math::VIEW_MATRIX };
+        let projection = unsafe { *crate::math::PROJECTION_MATRIX };
+
+        let mvp = projection * view * model;
+
+        unsafe {
+            textures[&self.texture_id].bind();
+
+            app.text_program.apply();
+            
+            self.vertex_array.as_ref().unwrap().bind();
+            
+            let mat_attr = gl::GetUniformLocation(app.text_program.id, CString::new("mvp").unwrap().as_ptr());
+            gl::UniformMatrix4fv(mat_attr, 1, gl::FALSE as GLboolean, &mvp.to_cols_array()[0]);
+
+            let tint_attr = gl::GetUniformLocation(app.text_program.id, CString::new("tint").unwrap().as_ptr());
+            gl::Uniform4f(tint_attr, self.color.r, self.color.g, self.color.b, self.color.a);
+
+            let sort_attr = gl::GetUniformLocation(app.text_program.id, CString::new("sort").unwrap().as_ptr());
+            gl::Uniform1f(sort_attr, self.sort as f32);
+            
+            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
+        }
     }
 
     //wren
@@ -1422,12 +1505,7 @@ impl Sprite {
         }
     }
 
-    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform, camera: &Option<Vec2>) {
-        let mut cam = Vec2::new(0.0,0.0);
-        if let Some(cam_pos) = camera {
-            cam = *cam_pos;
-        }
-
+    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
         let model = 
         Mat4::IDENTITY * 
         Mat4::from_scale_rotation_translation( 
@@ -1436,9 +1514,10 @@ impl Sprite {
             Vec3::new(t.position.x as f32 + (self.get_size().0/2) as f32, t.position.y as f32 - (self.get_size().1/2) as f32, 0.0)
         );
 
-        let view = Mat4::from_translation(Vec3::new(cam.x as f32, cam.y as f32, 0.0));
+        let view = unsafe { *crate::math::VIEW_MATRIX };
+        let projection = unsafe { *crate::math::PROJECTION_MATRIX };
 
-        let mvp = app.projection * view * model;
+        let mvp = projection * view * model;
 
         unsafe {
             textures[&self.texture_id].activate(gl::TEXTURE0);

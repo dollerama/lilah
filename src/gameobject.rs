@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use rusttype::Font;
 use ruwren::{send_foreign, VM, Class};
 use sdl2::mixer::Chunk;
 use crate::{components::{Component, Transform, Sprite, Rigidbody, Animator, Tickable, ComponentBehaviour, Text, Sfx}, math::Vec2, application::App, world::StateUpdateContainer, LilahTypeError, LilahNotFoundError, LilahTypePanic, renderer::LilahTexture};
@@ -88,7 +89,7 @@ impl GameObject {
         }
     }
 
-    pub fn load(&mut self, app: &mut App, tex: &HashMap<String, LilahTexture>, fonts: &HashMap<String, Vec<u8>>, sfx: &HashMap<String, Chunk>) -> StateUpdateContainer {
+    pub fn load(&mut self, app: &mut App, tex: &HashMap<String, LilahTexture>, fonts: &HashMap<String, Font>, sfx: &HashMap<String, Chunk>) -> StateUpdateContainer {
         let mut state_updates = StateUpdateContainer { textures:None, sfx:None };
         if self.has::<Text>() {
             state_updates.textures = self.get_mut::<Text>().load(app, fonts).textures;

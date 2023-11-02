@@ -1,8 +1,11 @@
 use std::{collections::HashMap, path::Path};
 use data2sound::decode_bytes;
 use debug_print::debug_println;
+use glam::{Vec3, Mat4};
+use image::Rgba;
 use crate::{application::{App, Scripting}, components::{Rigidbody, Sprite, Transform, Text}, gameobject::GameObjectId, LilahError, LilahPanic, math::Vec2, renderer::LilahTexture};
 use crate::gameobject::GameObject;
+use rusttype::{point, Font, Scale};
 
 #[macro_export]
 macro_rules! embed_texture {
@@ -15,7 +18,7 @@ pub use embed_texture;
 #[macro_export]
 macro_rules! embed_font {
     ($path: expr, $state:ident) => {
-        $state.fonts.insert($path.to_string(), include_bytes!($path).to_vec());
+        $state.fonts.insert($path.to_string(), rusttype::Font::try_from_bytes(include_bytes!($path)).unwrap());
     };
 }
 pub use embed_font;
@@ -62,14 +65,14 @@ macro_rules! load_sfx {
 pub use load_sfx;
 
 pub struct StateUpdateContainer {
-    pub textures: Option<(String, LilahTexture)>,
+    pub textures: Option<(String, image::ImageBuffer<Rgba<u8>, Vec<u8>>)>,
     pub sfx: Option<Vec<(String, i32)>>
 }
 
 pub struct WorldState<'a> {
     pub gameobjects: HashMap<String, GameObject>,
     pub textures : HashMap<String, LilahTexture>,
-    pub fonts : HashMap<String, Vec<u8>>,
+    pub fonts : HashMap<String, Font<'a>>,
     pub music : HashMap<String, sdl2::mixer::Music<'a>>,
     pub sfx : HashMap<String, sdl2::mixer::Chunk>
 }
@@ -250,6 +253,7 @@ impl<'a> World<'a> {
 
     pub fn run(mut self, app : &mut App, scripting : &mut Scripting) -> World<'a> {  
         self.state.insert(GameObject::new("Camera".to_string()).with::<Transform>().build());
+        let camera_id = self.state.wrap("Camera").unwrap().id.clone();
 
         if self.setup_callback.is_some() {
             self.setup_callback.as_mut().unwrap()(app, &mut self.state, scripting);
@@ -273,6 +277,11 @@ impl<'a> World<'a> {
                 break 'running;
             }
             scripting.handle_input(app, &mut self.state);
+
+            let camera_pos = self.state.gameobjects[&camera_id.uuid].get::<Transform>().position;
+            unsafe {
+                *crate::math::VIEW_MATRIX = Mat4::from_translation(Vec3::new(-camera_pos.x as f32, -camera_pos.y as f32, 0.0));
+            }
 
             scripting.tick(app, &mut self.state);
             if self.update_callback.is_some() {
@@ -298,7 +307,21 @@ impl<'a> World<'a> {
 
         for su in state_updates {
             if let Some(ftu) = su.textures {
-                self.state.textures.insert(ftu.0, ftu.1);
+                if let Some(t) = self.state.textures.get_mut(&ftu.0) {
+                    unsafe { let _ = t.load_as_dyn(ftu.1); }
+                }
+                else {
+                    let t = unsafe {
+                        let mut nt = LilahTexture::new();
+
+                        nt.set_wrapping(gl::REPEAT);
+                        nt.set_filtering(gl::LINEAR);
+
+                        let _ = nt.load_as_dyn(ftu.1);
+                        nt
+                    };
+                    self.state.textures.insert(ftu.0, t);
+                }
             }
             if let Some(stu) = su.sfx {
                 for i in stu {
@@ -311,19 +334,13 @@ impl<'a> World<'a> {
     }
 
     pub fn draw(&self, app: &mut App) {
-        let camera = self.state.wrap("Camera");
-        let mut camera_pos = None;
-        if let Some(cam) = camera {
-            camera_pos = Some(cam.get::<Transform>().position);
-        }
-
         for (_, i) in &self.state.gameobjects {
             if i.has::<Transform>() {
                 if i.has::<Sprite>() {
-                    i.get::<Sprite>().draw(app, &self.state.textures, i.get::<Transform>(), &camera_pos);
+                    i.get::<Sprite>().draw(app, &self.state.textures, i.get::<Transform>());
                 }
                 if i.has::<Text>() {
-                    i.get::<Text>().draw(app, &self.state.textures, i.get::<Transform>(), &camera_pos);
+                    i.get::<Text>().draw(app, &self.state.textures, i.get::<Transform>());
                 }
             }
         }
@@ -346,15 +363,9 @@ impl<'a> World<'a> {
     }
 
     pub fn update(&mut self, mut app: &mut App) {
-        let camera = self.state.wrap("Camera");
-        let mut camera_pos = None;
-        if let Some(cam) = camera {
-            camera_pos = Some(cam.get::<Transform>().position);
-        }
-
         self.update_vel_x();
-        let mut collisions = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
-        self.check_collision(&mut collisions, &app, &camera_pos);
+        let mut collisions: Vec<(GameObjectId, GameObjectId, (bool, Vec2))> = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
+        self.check_collision(&mut collisions, &app);
 
         for coll in &collisions {
             if coll.2.0 {
@@ -376,7 +387,7 @@ impl<'a> World<'a> {
 
         self.update_vel_y();
         collisions = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
-        self.check_collision(&mut collisions, &app, &camera_pos);
+        self.check_collision(&mut collisions, &app);
 
         for coll in &collisions {
             if coll.2.0 {
@@ -399,7 +410,7 @@ impl<'a> World<'a> {
         self.update_go(&mut app);
     }
 
-    fn check_collision(&self, coll: &mut Vec<(GameObjectId, GameObjectId, (bool, Vec2))>, app: &App, camera: &Option<Vec2>) {
+    fn check_collision(&self, coll: &mut Vec<(GameObjectId, GameObjectId, (bool, Vec2))>, app: &App) {
         let mut others = false;
         for (k, i) in &self.state.gameobjects {
             for (k2, j) in &self.state.gameobjects {
@@ -408,7 +419,7 @@ impl<'a> World<'a> {
                     
                     if i.has::<Rigidbody>() {
                         if j.has::<Rigidbody>() {
-                            let check =  i.get::<Rigidbody>().check_collision_sat(&j.get::<Rigidbody>(), app, camera);
+                            let check =  i.get::<Rigidbody>().check_collision_sat(&j.get::<Rigidbody>(), app);
                             coll.push((i.id.clone(), j.id.clone(), check));
                         }
                     }

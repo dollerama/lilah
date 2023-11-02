@@ -1,9 +1,13 @@
 use std::{ops, hash::Hasher, hash::Hash};
-
 use glam::{Mat4, Quat, Vec3};
 use ruwren::{Class, VM, create_module, ModuleLibrary};
 
 use crate::{LilahError, LilahPanic, LilahTypeError, components::Rigidbody, application::App};
+
+lazy_mut! {
+    pub static mut VIEW_MATRIX: Mat4 = Mat4::IDENTITY;
+    pub static mut PROJECTION_MATRIX: Mat4 = Mat4::IDENTITY;
+}
 
 /// Vector for 2d translations etc.
 /// # Examples
@@ -243,6 +247,50 @@ impl Vec2 {
     fn wren_right(vm: &VM) {
         let _ = vm.set_slot_new_foreign("math", "Vec2", Vec2::RIGHT, 0);
     }
+
+    fn wren_to_screen_space(vm: &VM) {
+        if let Some(coord) = vm.get_slot_foreign::<Vec2>(1) {
+            let model = 
+            Mat4::IDENTITY * 
+            Mat4::from_translation( 
+                Vec3::new(coord.x as f32, coord.y as f32, 0.0)
+            );
+
+            let view = unsafe { *crate::math::VIEW_MATRIX };
+            let projection = unsafe { *crate::math::PROJECTION_MATRIX };
+
+            let mvp = (projection * view * model);
+
+            let new_point = mvp.to_scale_rotation_translation().2;
+            let _ =
+            vm.set_slot_new_foreign("math", "Vec2", Vec2::new(new_point.x as f64, new_point.y as f64), 0);
+        }
+        else {
+            LilahTypeError!(Vec2, 1, Vec2);
+        }
+    }
+
+    fn wren_to_world_space(vm: &VM) {
+        if let Some(coord) = vm.get_slot_foreign::<Vec2>(1) {
+            let model = 
+            Mat4::IDENTITY * 
+            Mat4::from_translation( 
+                Vec3::new(coord.x as f32, coord.y as f32, 0.0)
+            );
+
+            let view = unsafe { *crate::math::VIEW_MATRIX };
+            let projection = unsafe { *crate::math::PROJECTION_MATRIX };
+
+            let mvp = (model * view * projection);
+
+            let new_point = mvp.to_scale_rotation_translation().2;
+            let _ =
+            vm.set_slot_new_foreign("math", "Vec2", Vec2::new(new_point.x as f64, new_point.y as f64), 0);
+        }
+        else {
+            LilahTypeError!(Vec2, 1, Vec2);
+        }
+    }
 }
 
 impl PartialEq for Vec2 {
@@ -355,7 +403,7 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub fn new_from_rigidbody(body: &Rigidbody, app: &App, camera: &Option<Vec2>) -> Self {
+    pub fn new_from_rigidbody(body: &Rigidbody, app: &App) -> Self {
         let model = 
         Mat4::IDENTITY * 
         Mat4::from_rotation_translation(
@@ -363,9 +411,10 @@ impl Rect {
             Vec3::new(body.position.x as f32, body.position.y as f32, 0.0)
         );
 
-        let view = Mat4::from_translation(Vec3::new(camera.unwrap().x as f32, camera.unwrap().y as f32, 0.0));
+        let view = unsafe { *crate::math::VIEW_MATRIX };
+        let projection = unsafe { *crate::math::PROJECTION_MATRIX };
 
-        let mvp = app.projection * view * model;
+        let mvp = projection * view * model;
 
         let a = mvp * glam::Vec4::new(0.0, 0.0, 0.0, 1.0);
         let b = mvp * glam::Vec4::new(body.bounds.x as f32, 0.0, 0.0, 1.0);
@@ -456,9 +505,11 @@ create_module! (
 
         static(fn "cross", 2) wren_cross,
         static(fn "dot", 2) wren_dot,
-        static(fn "lerp", 3) wren_lerp
+        static(fn "lerp", 3) wren_lerp,
+        static(fn "to_world_space", 1) wren_to_world_space,
+        static(fn "to_screen_space", 1) wren_to_screen_space
     }
-    
+
     module => math
 );
 

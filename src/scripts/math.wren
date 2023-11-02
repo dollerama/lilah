@@ -21,6 +21,8 @@ foreign class Vec2 {
     foreign static cross(a, b)
     foreign static dot(a, b)
     foreign static lerp(a, b, t)
+    foreign static to_world_space(pos)
+    foreign static to_screen_space(pos)
 
     +(other) {
         other.x = x+other.x

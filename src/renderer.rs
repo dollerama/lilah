@@ -1,11 +1,12 @@
 use std::{path::Path, ffi::{CString, NulError}, ptr, string::FromUtf8Error};
 
 use gl::types::*;
-use image::{ImageError, EncodableLayout};
+use image::{ImageError, EncodableLayout, DynamicImage, Rgba};
 use thiserror::Error;
 
 use crate::math::Vec2;
 
+#[derive(Clone)]
 pub struct LilahTexture {
     pub id: GLuint,
     pub size: Vec2
@@ -30,7 +31,7 @@ impl LilahTexture {
     pub unsafe fn load(&mut self, path: &Path) -> Result<(), ImageError> {
         self.bind();
 
-        let img = image::open(path)?.into_rgba8();
+        let img: image::ImageBuffer<Rgba<u8>, Vec<u8>> = image::open(path)?.into_rgba8();
         gl::TexImage2D(
             gl::TEXTURE_2D,
             0,
@@ -43,6 +44,28 @@ impl LilahTexture {
             img.as_bytes().as_ptr() as *const _,
         );
         self.size = Vec2::new(img.width() as f64, img.height() as f64);
+        //gl::GenerateMipmap(gl::TEXTURE_2D);
+        Ok(())
+    }
+
+    pub unsafe fn load_as_dyn(&mut self, img : image::ImageBuffer<Rgba<u8>, Vec<u8>>) -> Result<(), ImageError> {
+        self.bind();
+
+        //let new_img = DynamicImage::ImageRgba8(img);
+        let new_img = img;
+
+        gl::TexImage2D(
+            gl::TEXTURE_2D,
+            0,
+            gl::RGBA as i32,
+            new_img.width() as i32,
+            new_img.height() as i32,
+            0,
+            gl::RGBA,
+            gl::UNSIGNED_BYTE,
+            new_img.as_raw().as_ptr() as *const _,
+        );
+        self.size = Vec2::new(new_img.width() as f64, new_img.height() as f64);
         //gl::GenerateMipmap(gl::TEXTURE_2D);
         Ok(())
     }
@@ -166,13 +189,13 @@ pub struct Shader {
     pub id: GLuint,
 }
 
-impl Drop for Shader {
-    fn drop(&mut self) {
-        unsafe {
-            gl::DeleteShader(self.id);
-        }
-    }
-}
+// impl Drop for Shader {
+//     fn drop(&mut self) {
+//         unsafe {
+//             gl::DeleteShader(self.id);
+//         }
+//     }
+// }
 
 impl Shader {
     pub unsafe fn new(source_code: &str, shader_type: GLenum) -> Result<Self, ShaderError> {
@@ -211,13 +234,13 @@ pub struct ShaderProgram {
     pub id: GLuint,
 }
 
-impl Drop for ShaderProgram {
-    fn drop(&mut self) {
-        unsafe {
-            gl::DeleteProgram(self.id);
-        }
-    }
-}
+// impl Drop for ShaderProgram {
+//     fn drop(&mut self) {
+//         unsafe {
+//             gl::DeleteProgram(self.id);
+//         }
+//     }
+// }
 
 impl ShaderProgram {
     pub unsafe fn new(shaders: &[Shader]) -> Result<Self, ShaderError> {

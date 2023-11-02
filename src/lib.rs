@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_mut;
+
 pub mod application;
 #[macro_use] pub mod input;
 pub mod time;

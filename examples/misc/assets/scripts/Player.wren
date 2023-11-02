@@ -38,7 +38,7 @@ class Player is Behaviour {
     }
     
     static update() {
-        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical"))
+        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*3)
 
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
@@ -52,14 +52,27 @@ class Player is Behaviour {
             //Sfx.play(gameobject.ref, "sfx")
         }
         
-        if(Input.key("Space")) {
-            Lilah.fullscreen = !Lilah.fullscreen
-        }
+        // if(Input.key("Space")) {
+        //     Lilah.fullscreen = !Lilah.fullscreen
+        // }
 
-        if(Input.key_down("O")) {
-            Audio.play("assets/test.mp3", 5000)
+        if(Input.key("Right")) {
+            Transform.update_position_x(Lilah.camera.ref, 1)
         }
-
-        //System.print("%(gameobject.ref.get("Rigidbody").position.x), %(gameobject.ref.get("Rigidbody").position.y)")
+        if(Input.key("Up")) {
+            Transform.update_position_y(Lilah.camera.ref, 1)
+        }
+        if(Input.key("Left")) {
+            Transform.update_position_x(Lilah.camera.ref, -1)
+        }
+        if(Input.key("Down")) {
+            Transform.update_position_y(Lilah.camera.ref, -1)
+        }
+        
+        if(Input.key_down("Space")) {
+            var center = Vec2.to_world_space(Vec2.new(400, 300))
+            System.print("%(center.x), %(center.y)")
+            Rigidbody.set_position(gameobject.ref, center)
+        }
     }
 }
