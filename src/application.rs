@@ -340,7 +340,6 @@ impl App {
     pub fn new(window_title : &str, window_size: Vec2) -> Self {
         let sdl_ctx: Sdl = sdl2::init().unwrap();
         let font_context = sdl2::ttf::init().map_err(|e| e.to_string()).unwrap();
-        let _image_context = sdl2::image::init(sdl2::image::InitFlag::PNG | sdl2::image::InitFlag::JPG).unwrap();
         let audio_context = sdl_ctx.audio().unwrap();
 
         let frequency = 44_100;
