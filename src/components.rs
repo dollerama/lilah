@@ -539,20 +539,20 @@ impl Rigidbody {
         }
     }
 
-    pub fn update_vel_y(&mut self) {
-        self.position.y += self.velocity.y; 
+    pub fn update_vel_y(&mut self, dt: f64) {
+        self.position.y += self.velocity.y*dt; 
     }
 
-    pub fn update_vel_x(&mut self) {
-        self.position.x += self.velocity.x; 
+    pub fn update_vel_x(&mut self, dt: f64) {
+        self.position.x += self.velocity.x*dt; 
     }
 
-    pub fn update_correct_y(&mut self) {
-        self.position.y -= self.velocity.y; 
+    pub fn update_correct_y(&mut self, dt: f64) {
+        self.position.y -= self.velocity.y*dt; 
     }
 
-    pub fn update_correct_x(&mut self) {
-        self.position.x -= self.velocity.x; 
+    pub fn update_correct_x(&mut self, dt: f64) {
+        self.position.x -= self.velocity.x*dt; 
     }
 
     pub fn check_collision_sat(&self, other: &Rigidbody, app: &App) -> (bool, Vec2) {

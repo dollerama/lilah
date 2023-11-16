@@ -14,13 +14,13 @@ class Game is Behaviour {
         Input.update_binding("Vertical2", Input.Keycode.Down, Input.Keycode.Up)
         
         var player1 = GameObject.new("P1")
-        player1.add(Transform.new(Lilah.to_world_space(Vec2.new(0,300-16)))) 
+        player1.add(Transform.new(Vec2.new(0,300-16))) 
         player1.add(Sprite.new("assets/paddle.png"))  
         player1.add(Rigidbody.new())
         player1.add(Paddle.new().as_behaviour)
 
         var player2 = GameObject.new("P2")
-        player2.add(Transform.new(Lilah.to_world_space(Vec2.new(800-16,300-16)))) 
+        player2.add(Transform.new(Vec2.new(800-16,300-16)))
         player2.add(Sprite.new("assets/paddle.png"))  
         player2.add(Rigidbody.new())
         player2.add(Paddle.new().as_behaviour)
@@ -32,7 +32,7 @@ class Game is Behaviour {
         ball.add(Ball.new().as_behaviour)
 
         var line = GameObject.new("line")
-        line.add(Transform.new(Lilah.to_world_space(Vec2.new((800/2)-4, 0))))
+        line.add(Transform.new(Vec2.new((800/2)-4, 600)))
         line.add(Sprite.new("assets/line.png"))  
 
         var score_1 = GameObject.new("Score1")

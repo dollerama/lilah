@@ -9,6 +9,10 @@ lazy_mut! {
     pub static mut PROJECTION_MATRIX: Mat4 = Mat4::IDENTITY;
 }
 
+pub fn remap (value : f32, from1: f32, to1: f32, from2: f32, to2: f32) -> f32 {
+    (value - from1) / (to1 - from1) * (to2 - from2) + from2
+}
+
 /// Vector for 2d translations etc.
 /// # Examples
 /// ## Translations
@@ -248,7 +252,7 @@ impl Vec2 {
         let _ = vm.set_slot_new_foreign("math", "Vec2", Vec2::RIGHT, 0);
     }
 
-    fn wren_to_screen_space(vm: &VM) {
+    fn wren_screen_to_world(vm: &VM) {
         if let Some(coord) = vm.get_slot_foreign::<Vec2>(1) {
             let model = 
             Mat4::IDENTITY * 
@@ -259,7 +263,7 @@ impl Vec2 {
             let view = unsafe { *crate::math::VIEW_MATRIX };
             let projection = unsafe { *crate::math::PROJECTION_MATRIX };
 
-            let mvp = (projection * view * model);
+            let mvp = (model * view.inverse() * projection);
 
             let new_point = mvp.to_scale_rotation_translation().2;
             let _ =
@@ -270,7 +274,7 @@ impl Vec2 {
         }
     }
 
-    fn wren_to_world_space(vm: &VM) {
+    fn wren_world_to_screen(vm: &VM) {
         if let Some(coord) = vm.get_slot_foreign::<Vec2>(1) {
             let model = 
             Mat4::IDENTITY * 
@@ -281,11 +285,17 @@ impl Vec2 {
             let view = unsafe { *crate::math::VIEW_MATRIX };
             let projection = unsafe { *crate::math::PROJECTION_MATRIX };
 
-            let mvp = (model * view * projection);
+            let mvp = (projection * view.inverse() * model);
 
             let new_point = mvp.to_scale_rotation_translation().2;
+            let point_to_screen = Vec2::new(
+                new_point.x as f64,
+                new_point.y as f64
+                //remap(new_point.x, -1.0, 0.0, 1.0, 800.0) as f64/2.0, 
+                //remap(new_point.y, -1.0, 0.0, 1.0, 600.0) as f64/2.0
+            );
             let _ =
-            vm.set_slot_new_foreign("math", "Vec2", Vec2::new(new_point.x as f64, new_point.y as f64), 0);
+            vm.set_slot_new_foreign("math", "Vec2", point_to_screen, 0);
         }
         else {
             LilahTypeError!(Vec2, 1, Vec2);
@@ -506,8 +516,8 @@ create_module! (
         static(fn "cross", 2) wren_cross,
         static(fn "dot", 2) wren_dot,
         static(fn "lerp", 3) wren_lerp,
-        static(fn "to_world_space", 1) wren_to_world_space,
-        static(fn "to_screen_space", 1) wren_to_screen_space
+        static(fn "screen_to_world_space", 1) wren_screen_to_world,
+        static(fn "world_to_screen_space", 1) wren_world_to_screen
     }
 
     module => math

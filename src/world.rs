@@ -252,6 +252,7 @@ impl<'a> World<'a> {
     }
 
     pub fn run(mut self, app : &mut App, scripting : &mut Scripting) -> World<'a> {  
+        let mut camera_pos = Vec2::new(-1.0, -1000.0);
         self.state.insert(GameObject::new("Camera".to_string()).with::<Transform>().build());
         let camera_id = self.state.wrap("Camera").unwrap().id.clone();
 
@@ -278,9 +279,12 @@ impl<'a> World<'a> {
             }
             scripting.handle_input(app, &mut self.state);
 
-            let camera_pos = self.state.gameobjects[&camera_id.uuid].get::<Transform>().position;
-            unsafe {
-                *crate::math::VIEW_MATRIX = Mat4::from_translation(Vec3::new(-camera_pos.x as f32, -camera_pos.y as f32, 0.0));
+            let camera_pos_temp = self.state.gameobjects[&camera_id.uuid].get::<Transform>().position;
+            if camera_pos != camera_pos_temp {
+                camera_pos = camera_pos_temp;
+                unsafe {
+                    *crate::math::VIEW_MATRIX = Mat4::from_translation(Vec3::new(-camera_pos.x as f32, -camera_pos.y as f32, 0.0));
+                }
             }
 
             scripting.tick(app, &mut self.state);
@@ -363,7 +367,7 @@ impl<'a> World<'a> {
     }
 
     pub fn update(&mut self, mut app: &mut App) {
-        self.update_vel_x();
+        self.update_vel_x(app.delta_time());
         let mut collisions: Vec<(GameObjectId, GameObjectId, (bool, Vec2))> = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
         self.check_collision(&mut collisions, &app);
 
@@ -375,7 +379,7 @@ impl<'a> World<'a> {
                         let body = self.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.update_correct_x();
+                            body.update_correct_x(app.delta_time());
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
@@ -385,7 +389,7 @@ impl<'a> World<'a> {
             }
         }   
 
-        self.update_vel_y();
+        self.update_vel_y(app.delta_time());
         collisions = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
         self.check_collision(&mut collisions, &app);
 
@@ -397,7 +401,7 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.update_correct_y();
+                            body.update_correct_y(app.delta_time());
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
@@ -431,21 +435,21 @@ impl<'a> World<'a> {
         }
     }
 
-    fn update_vel_x(&mut self) {
+    fn update_vel_x(&mut self, dt: f64) {
         for (_, i) in &mut self.state.gameobjects {
             if i.has::<Rigidbody>() {
                 let body = i.get_mut::<Rigidbody>();
                 body.colliding = None;
-                body.update_vel_x();
+                body.update_vel_x(dt);
             }
         }
     }
 
-    fn update_vel_y(&mut self) {
+    fn update_vel_y(&mut self, dt: f64) {
         for (_, i) in &mut self.state.gameobjects {
             if i.has::<Rigidbody>() {
                 let body = i.get_mut::<Rigidbody>();
-                body.update_vel_y();
+                body.update_vel_y(dt);
             }
         }
     }

@@ -10,11 +10,10 @@ use ruwren::{ModuleLibrary, VMConfig, VMWrapper, BasicFileLoader, FunctionSignat
 use sdl2::keyboard::Keycode;
 use sdl2::mixer::{AUDIO_S16LSB, DEFAULT_CHANNELS};
 use sdl2::mouse::MouseButton;
-use sdl2::ttf::Sdl2TtfContext;
 use sdl2::{Sdl, EventPump, AudioSubsystem};
 use sdl2::pixels::Color;
 use sdl2::event::Event;
-use sdl2::video::{Window, FullscreenType, GLProfile, GLContext};
+use sdl2::video::{Window, FullscreenType, GLProfile, GLContext, SwapInterval};
 use crate::components::ComponentBehaviour;
 use crate::gameobject::GameObject;
 use crate::input::{Input, InputInfo};
@@ -280,7 +279,6 @@ impl Scripting {
 /// App wrapper
 pub struct App {
     pub gl_context: GLContext,
-    pub font_context: Sdl2TtfContext,
     pub input: Input,
     pub time: Timer, 
     pub default_program: ShaderProgram,
@@ -339,7 +337,6 @@ impl App {
 
     pub fn new(window_title : &str, window_size: Vec2) -> Self {
         let sdl_ctx: Sdl = sdl2::init().unwrap();
-        let font_context = sdl2::ttf::init().map_err(|e| e.to_string()).unwrap();
         let audio_context = sdl_ctx.audio().unwrap();
 
         let frequency = 44_100;
@@ -351,6 +348,7 @@ impl App {
         sdl2::mixer::allocate_channels(128);
 
         let video_subsystem = sdl_ctx.video().unwrap();
+        video_subsystem.gl_set_swap_interval(sdl2::video::SwapInterval::VSync);
         let win: Window = video_subsystem.window(window_title, window_size.x as u32, window_size.y as u32)
             .position_centered()
             .opengl()
@@ -381,6 +379,7 @@ impl App {
         unsafe {
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             
             *crate::math::PROJECTION_MATRIX = Mat4::orthographic_rh_gl(0.0, window_size.x as f32, 0.0,  window_size.y as f32, 1000.0, -1000.0);
         }
@@ -391,7 +390,6 @@ impl App {
             event_pump, 
             input: Input::new(),
             time: Timer::new(),
-            font_context,
             _audio_context: audio_context,
             default_program: program,
             text_program: text_program
@@ -456,16 +454,16 @@ impl App {
     }
 
     pub fn handle_input(&mut self) -> bool {
-        let mut end_app: bool = false;
-
-        let mouse_pos = Vec2::new(self.event_pump.mouse_state().x() as f64, self.event_pump.mouse_state().y() as f64);
-        self.input.update_mouse_pos(mouse_pos);
+        self.input.update_mouse_pos(
+            Vec2::new(self.event_pump.mouse_state().x() as f64, 
+            self.event_pump.mouse_state().y() as f64)
+        );
 
         for event in self.event_pump.poll_iter() {
             match event {
                 Event::Quit {..} |
                 Event::KeyDown { keycode: Some(Keycode::Escape), repeat: false, .. } => {
-                    end_app = true;
+                    return true;
                 },
                 Event::MouseButtonDown { 
                     mouse_btn,
@@ -493,11 +491,11 @@ impl App {
                 } => {
                     self.input.update_mapping((&keycode.unwrap(), &InputInfo{pressed: false, pressed_down: false}));
                 },
-                
                 _ => {}
             }
         }
-        return end_app
+        
+        false
     }
 
     pub fn set_draw_color(&mut self, color: Color) {
@@ -508,7 +506,6 @@ impl App {
     pub fn pre_frame(&mut self) -> bool {
         self.time.update();
         unsafe {
-            gl::ClearColor(0.0, 0.0, 1.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
         self.handle_input()
@@ -517,8 +514,9 @@ impl App {
     /// Draws canvas and sleeps until next frame
     pub fn present_frame(&mut self) {
         self.window.gl_swap_window();
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
         //::std::thread::sleep(Duration::new(0, ((60.0-self.time.fps())/1000.0) as u32));
+        ::std::thread::sleep(Duration::new(0, (1_000_000_000u32 / 60)-(self.time.delta_time as u32 * 1_000_000_000u32)));
     }
 }
 

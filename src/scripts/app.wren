@@ -180,14 +180,6 @@ class Lilah {
         }
         return null
     }
-
-    static to_screen_space(input) {
-        return Vec2.new(input.x+camera.ref.get("Transform").position.x, (-input.y-screen_size.y)+camera.ref.get("Transform").position.y)
-    }
-
-    static to_world_space(input) {
-        return Vec2.new(input.x-camera.ref.get("Transform").position.x, (-input.y+screen_size.y)-camera.ref.get("Transform").position.y)
-    }
 }
 
 class KeycodeLookup {
@@ -400,7 +392,7 @@ class UI {
 
     static tick() {
         if(!Input.mouse_pos) return 
-        var mouse = Lilah.to_world_space(Input.mouse_pos)
+        var mouse = Vec2.screen_to_world_space(Input.mouse_pos)
 
         for(i in on_click_callbacks) {
             var i_pos = i["gameobject"].ref.get("Transform").position

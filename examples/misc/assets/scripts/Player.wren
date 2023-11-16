@@ -70,9 +70,11 @@ class Player is Behaviour {
         }
         
         if(Input.key_down("Space")) {
-            var center = Vec2.to_world_space(Vec2.new(400, 300))
+            var center = Vec2.screen_to_world_space(Vec2.new(400, 300))
             System.print("%(center.x), %(center.y)")
-            Rigidbody.set_position(gameobject.ref, center)
+            var center2 = Vec2.world_to_screen_space(center)
+            System.print("%(center.x), %(center.y)")
+            //Rigidbody.set_position(gameobject.ref, center)
         }
     }
 }
