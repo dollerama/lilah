@@ -29,16 +29,16 @@ class Player is Behaviour {
 
     static start() {
         Animator.insert_state(gameobject.ref, "Row0", Vec2.new(3, 0))
-        Animator.insert_state(gameobject.ref, "Row1", Vec2.new(3, 1))
+        Animator.insert_state(gameobject.ref, "Row1", Vec2.new(3, 2))
         Animator.set_speed(gameobject.ref, 2)
-        Animator.set_state(gameobject.ref, "Row0")
+        Animator.set_state(gameobject.ref, "Row1")
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         Sprite.set_sort(gameobject.ref, -1)
     }
     
     static update() {
-        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*3)
+        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*50)
 
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
