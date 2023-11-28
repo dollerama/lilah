@@ -1489,9 +1489,31 @@ impl Sprite {
 
     pub fn anim_sprite_sheet(&mut self, ind: i32, ind2: i32) {
         self.index = (ind*self.get_size().0 as i32, ind2*self.get_size().1 as i32);
+        let ratio = (
+            ((self.base_size.0 as f32/self.size.0 as f32)/self.base_size.0 as f32),
+            ((self.base_size.1 as f32/self.size.1 as f32)/self.base_size.1 as f32)
+        );
 
-        let zero = ((ind as f32 + 0.5) /self.size.0 as f32, (ind2 as f32 + 0.5)/self.size.1 as f32);
-        let one = (zero.0+(self.size.0 as f32/self.base_size.0 as f32), zero.1+(self.size.1 as f32/self.base_size.1 as f32));
+        fn precision_f32(x: f32, decimals: u32) -> f32 {
+            if x == 0. || decimals == 0 {
+                0.
+            } else {
+                let shift = decimals as i32 - x.abs().log10().ceil() as i32;
+                let shift_factor = 10_f64.powi(shift) as f32;
+
+                (x * shift_factor).round() / shift_factor
+            }
+        }
+
+        let zero = (
+            precision_f32((ind as f32) / self.size.0 as f32 + (1.0/self.base_size.0 as f32), 2), 
+            precision_f32((ind2 as f32) / self.size.1 as f32 + (1.0/self.base_size.0 as f32), 2)
+        );
+
+        let one = (
+            precision_f32(zero.0+ratio.0 - (1.0/self.base_size.0 as f32) * 2.0, 2), 
+            precision_f32(zero.1+ratio.1 - (1.0/self.base_size.0 as f32) * 2.0, 2)
+        );
 
         let mut new_verts = Sprite::DEF_VERTICES;
         new_verts[0].1 = [zero.0, one.1];
