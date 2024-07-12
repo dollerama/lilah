@@ -1,33 +1,35 @@
 extern crate sdl2;
 use std::collections::HashMap;
-use std::str;
 use std::rc::Rc;
+use std::str;
 use std::time::Duration;
 
-use debug_print::debug_println;
-use glam::Mat4;
-use ruwren::{ModuleLibrary, VMConfig, VMWrapper, BasicFileLoader, FunctionSignature, Handle, FunctionHandle};
-use sdl2::keyboard::Keycode;
-use sdl2::mixer::{AUDIO_S16LSB, DEFAULT_CHANNELS};
-use sdl2::mouse::MouseButton;
-use sdl2::{Sdl, EventPump, AudioSubsystem};
-use sdl2::pixels::Color;
-use sdl2::event::Event;
-use sdl2::video::{Window, FullscreenType, GLProfile, GLContext, SwapInterval};
 use crate::components::ComponentBehaviour;
 use crate::gameobject::GameObject;
 use crate::input::{Input, InputInfo};
 use crate::math::Vec2;
-use crate::renderer::{ShaderProgram, Shader};
+use crate::renderer::{Shader, ShaderProgram};
 use crate::time::Timer;
 use crate::world::WorldState;
+use debug_print::debug_println;
+use glam::Mat4;
+use ruwren::{
+    BasicFileLoader, FunctionHandle, FunctionSignature, Handle, ModuleLibrary, VMConfig, VMWrapper,
+};
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+use sdl2::mixer::{AUDIO_S16LSB, DEFAULT_CHANNELS};
+use sdl2::mouse::MouseButton;
+use sdl2::pixels::Color;
+use sdl2::video::{FullscreenType, GLContext, GLProfile, SwapInterval, Window};
+use sdl2::{AudioSubsystem, EventPump, Sdl};
 
 #[macro_export]
 macro_rules! embed_script {
     ($path: expr, $scripting:ident) => {
         let module_str = $path.to_string();
         let module_name_full = module_str.split("/").collect::<Vec<&str>>();
-        let mut module_name = module_name_full[module_name_full.len()-1];
+        let mut module_name = module_name_full[module_name_full.len() - 1];
         let module_name_final = module_name.split(".").collect::<Vec<&str>>();
         $scripting.load_script(module_name_final[0], include_str!($path));
     };
@@ -37,29 +39,61 @@ pub use embed_script;
 #[macro_export]
 macro_rules! LilahTypeError {
     ($class: ty, $arg: literal, $t: ty) => {
-        eprintln!("--> {} ({}:{})\n |\tArg ({}) must be of type {}", stringify!($class), file!(), line!(), $arg, stringify!($t));
-    }
+        eprintln!(
+            "--> {} ({}:{})\n |\tArg ({}) must be of type {}",
+            stringify!($class),
+            file!(),
+            line!(),
+            $arg,
+            stringify!($t)
+        )
+    };
 }
 pub use LilahTypeError;
 
 #[macro_export]
 macro_rules! LilahTypePanic {
     ($class: ty, $arg: literal, $t: ty) => {
-        panic!("--> {} ({}:{})\n |\tArg ({}) must be of type {}", stringify!($class), file!(), line!(), $arg, stringify!($t));
-    }
+        panic!(
+            "--> {} ({}:{})\n |\tArg ({}) must be of type {}",
+            stringify!($class),
+            file!(),
+            line!(),
+            $arg,
+            stringify!($t)
+        );
+    };
 }
 pub use LilahTypePanic;
 
 #[macro_export]
 macro_rules! LilahError {
     ($class: ty, $arg: ident) => {
-        eprintln!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg);
+        eprintln!(
+            "--> {} ({}:{})\n |\t{}",
+            stringify!($class),
+            file!(),
+            line!(),
+            $arg
+        )
     };
     ($class: ty, $arg: literal) => {
-        eprintln!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg);
+        eprintln!(
+            "--> {} ({}:{})\n |\t{}",
+            stringify!($class),
+            file!(),
+            line!(),
+            $arg
+        );
     };
     ($class: ty, $arg: expr) => {
-        eprintln!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg);
+        eprintln!(
+            "--> {} ({}:{})\n |\t{}",
+            stringify!($class),
+            file!(),
+            line!(),
+            $arg
+        );
     };
 }
 pub use LilahError;
@@ -67,13 +101,31 @@ pub use LilahError;
 #[macro_export]
 macro_rules! LilahPanic {
     ($class: ty, $arg: literal) => {
-        panic!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg)
+        panic!(
+            "--> {} ({}:{})\n |\t{}",
+            stringify!($class),
+            file!(),
+            line!(),
+            $arg
+        )
     };
     ($class: ty, $arg: ident) => {
-        panic!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg)
+        panic!(
+            "--> {} ({}:{})\n |\t{}",
+            stringify!($class),
+            file!(),
+            line!(),
+            $arg
+        )
     };
     ($class: ty, $arg: expr) => {
-        panic!("--> {} ({}:{})\n |\t{}", stringify!($class), file!(), line!(), $arg)
+        panic!(
+            "--> {} ({}:{})\n |\t{}",
+            stringify!($class),
+            file!(),
+            line!(),
+            $arg
+        )
     };
 }
 pub use LilahPanic;
@@ -81,17 +133,24 @@ pub use LilahPanic;
 #[macro_export]
 macro_rules! LilahNotFoundError {
     ($class: ty, $t: ty, $arg: ident) => {
-        eprintln!("--> {} ({}:{})\n |\tCould Not Find {}({})", stringify!($class), file!(), line!(), stringify!($t), $arg);
-    }
+        eprintln!(
+            "--> {} ({}:{})\n |\tCould Not Find {}({})",
+            stringify!($class),
+            file!(),
+            line!(),
+            stringify!($t),
+            $arg
+        );
+    };
 }
 pub use LilahNotFoundError;
 
 /// Scripting wrapper
 pub struct Scripting {
     /// wren VM
-    pub vm : VMWrapper,
+    pub vm: VMWrapper,
     /// loaded modules. loaded as Module Name(String), Source(String).
-    pub modules : HashMap<String, String>
+    pub modules: HashMap<String, String>,
 }
 
 impl Scripting {
@@ -104,40 +163,52 @@ impl Scripting {
         crate::math::publish_modules(&mut lib);
         crate::components::publish_modules(&mut lib);
 
-        let vm = VMConfig::new().enable_relative_import(true).library(&lib).script_loader(loader).build();
+        let vm = VMConfig::new()
+            .enable_relative_import(true)
+            .library(&lib)
+            .script_loader(loader)
+            .build();
 
         //std engine modules
-        vm.interpret("math", include_str!("scripts/math.wren")).unwrap();
-        vm.interpret("app", include_str!("scripts/app.wren")).unwrap();
-        vm.interpret("game", include_str!("scripts/game.wren")).unwrap();
+        vm.interpret("math", include_str!("scripts/math.wren"))
+            .unwrap();
+        vm.interpret("app", include_str!("scripts/app.wren"))
+            .unwrap();
+        vm.interpret("game", include_str!("scripts/game.wren"))
+            .unwrap();
 
         Self {
-            vm : vm,
-            modules : modules
+            vm: vm,
+            modules: modules,
         }
     }
 
     pub fn load_script(&mut self, module: &str, source: &str) {
         let mod_name = module.to_string();
-        let src = format!("{}\nvar {} = {}.new()", source, mod_name.to_lowercase(), mod_name);
+        let src = format!(
+            "{}\nvar {} = {}.new()",
+            source,
+            mod_name.to_lowercase(),
+            mod_name
+        );
 
         self.modules.insert(mod_name.clone(), src.clone());
 
         match self.vm.interpret(mod_name.clone(), src) {
-            Ok(_) => { debug_println!("Script Loaded: Module->{}", mod_name) }
-            Err(e) => { panic!("Script Error: Could not load Module->{}\n{}", mod_name, e) }
+            Ok(_) => {
+                debug_println!("Script Loaded: Module->{}", mod_name)
+            }
+            Err(e) => {
+                panic!("Script Error: Could not load Module->{}\n{}", mod_name, e)
+            }
         }
     }
-    
-    pub fn tick(&mut self, app : &mut App, state : &mut WorldState) {
+
+    pub fn tick(&mut self, app: &mut App, state: &mut WorldState) {
         let state_class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
-        
+
         for m in &self.modules {
-            let class = Scripting::get_class_handle(
-                &self.vm, 
-                &m.0, 
-                &m.0.to_lowercase()
-            );
+            let class = Scripting::get_class_handle(&self.vm, &m.0, &m.0.to_lowercase());
 
             let frame_getter = Scripting::get_getter_handle(&self.vm, "frame");
             let frame_setter = Scripting::get_setter_handle(&self.vm, "frame");
@@ -153,31 +224,27 @@ impl Scripting {
 
             match frame {
                 0 => {
-                    Scripting::call_fn(&self.vm, &class, "setup", 0); 
+                    Scripting::call_fn(&self.vm, &class, "setup", 0);
 
                     self.vm.execute(|vm| {
-                        vm.set_slot_double(1, (frame+1).into());
+                        vm.set_slot_double(1, (frame + 1).into());
                     });
 
                     Scripting::call_handle(&self.vm, &class, &frame_setter);
                 }
                 1 => {
-                    Scripting::call_fn(&self.vm, &class, "start", 0); 
+                    Scripting::call_fn(&self.vm, &class, "start", 0);
 
                     self.vm.execute(|vm| {
-                        vm.set_slot_double(1, (frame+1).into());
+                        vm.set_slot_double(1, (frame + 1).into());
                     });
 
-                    Scripting::call_handle(&self.vm, &class, &frame_setter);   
+                    Scripting::call_handle(&self.vm, &class, &frame_setter);
 
                     for g in &mut state.gameobjects {
                         if g.1.has::<ComponentBehaviour>() {
                             if g.1.get::<ComponentBehaviour>().get_component() == m.0 {
-                                let obj = Scripting::get_class_handle(
-                                    &self.vm, 
-                                    &m.0, 
-                                    &m.0
-                                );
+                                let obj = Scripting::get_class_handle(&self.vm, &m.0, &m.0);
 
                                 if g.1.init && !g.1.start {
                                     self.vm.execute(|vm| {
@@ -188,14 +255,14 @@ impl Scripting {
                                 }
                             }
                         }
-                    }           
+                    }
                 }
                 _ => {
                     Scripting::call_fn(&self.vm, &state_class, "tick_fibers", 0);
-                    Scripting::call_fn(&self.vm, &class, "update", 0); 
+                    Scripting::call_fn(&self.vm, &class, "update", 0);
 
                     self.vm.execute(|vm| {
-                        vm.set_slot_double(1, (frame+1).into());
+                        vm.set_slot_double(1, (frame + 1).into());
                     });
 
                     Scripting::call_handle(&self.vm, &class, &frame_setter);
@@ -203,16 +270,11 @@ impl Scripting {
                     for g in &mut state.gameobjects {
                         if g.1.has::<ComponentBehaviour>() {
                             if g.1.get::<ComponentBehaviour>().get_component() == m.0 {
-                                let obj = Scripting::get_class_handle(
-                                    &self.vm, 
-                                    &m.0, 
-                                    &m.0
-                                );
+                                let obj = Scripting::get_class_handle(&self.vm, &m.0, &m.0);
 
                                 if g.1.init && g.1.start {
-                                    self.vm.execute(|vm| {
-                                        vm.set_slot_double(1, g.1.wren_id as f64)
-                                    });
+                                    self.vm
+                                        .execute(|vm| vm.set_slot_double(1, g.1.wren_id as f64));
                                     Scripting::call_setter(&self.vm, &obj, "gameobject");
                                     Scripting::call_fn(&self.vm, &obj, "update", 0);
                                 }
@@ -256,7 +318,11 @@ impl Scripting {
         }
     }
 
-    pub fn call_handle<'a>(vm: &'a VMWrapper, class: &Rc<Handle<'a>>, function: &Rc<FunctionHandle<'a>>) {
+    pub fn call_handle<'a>(
+        vm: &'a VMWrapper,
+        class: &Rc<Handle<'a>>,
+        function: &Rc<FunctionHandle<'a>>,
+    ) {
         vm.set_slot_handle(0, &class);
         if let Err(e) = vm.call_handle(&function) {
             LilahError!(Scripting, e);
@@ -271,7 +337,11 @@ impl Scripting {
         vm.make_call_handle(FunctionSignature::new_setter(function))
     }
 
-    pub fn get_fn_handle<'a>(vm: &'a VMWrapper, function: &str, arity: usize) -> Rc<FunctionHandle<'a>> {
+    pub fn get_fn_handle<'a>(
+        vm: &'a VMWrapper,
+        function: &str,
+        arity: usize,
+    ) -> Rc<FunctionHandle<'a>> {
         vm.make_call_handle(FunctionSignature::new_function(function, arity))
     }
 }
@@ -280,11 +350,11 @@ impl Scripting {
 pub struct App {
     pub gl_context: GLContext,
     pub input: Input,
-    pub time: Timer, 
+    pub time: Timer,
     pub default_program: ShaderProgram,
     pub text_program: ShaderProgram,
-    event_pump : EventPump,
-    _audio_context : AudioSubsystem,
+    event_pump: EventPump,
+    _audio_context: AudioSubsystem,
     window: Window,
 }
 
@@ -335,7 +405,7 @@ impl App {
     }
     "#;
 
-    pub fn new(window_title : &str, window_size: Vec2) -> Self {
+    pub fn new(window_title: &str, window_size: Vec2) -> Self {
         let sdl_ctx: Sdl = sdl2::init().unwrap();
         let audio_context = sdl_ctx.audio().unwrap();
 
@@ -344,12 +414,16 @@ impl App {
         let channels = DEFAULT_CHANNELS; // Stereo
         let chunk_size = 1_024;
         sdl2::mixer::open_audio(frequency, format, channels, chunk_size).unwrap();
-        let _mixer_context = sdl2::mixer::init(sdl2::mixer::InitFlag::MP3 | sdl2::mixer::InitFlag::FLAC | sdl2::mixer::InitFlag::OGG).unwrap();
+        let _mixer_context = sdl2::mixer::init(
+            sdl2::mixer::InitFlag::MP3 | sdl2::mixer::InitFlag::FLAC | sdl2::mixer::InitFlag::OGG,
+        )
+        .unwrap();
         sdl2::mixer::allocate_channels(128);
 
         let video_subsystem = sdl_ctx.video().unwrap();
         video_subsystem.gl_set_swap_interval(sdl2::video::SwapInterval::VSync);
-        let win: Window = video_subsystem.window(window_title, window_size.x as u32, window_size.y as u32)
+        let win: Window = video_subsystem
+            .window(window_title, window_size.x as u32, window_size.y as u32)
             .position_centered()
             .opengl()
             .build()
@@ -361,7 +435,7 @@ impl App {
 
         let gl_ctx = win.gl_create_context().unwrap();
         gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
-        
+
         let event_pump = sdl_ctx.event_pump().unwrap();
 
         let program = unsafe {
@@ -375,29 +449,36 @@ impl App {
             let fs = Shader::new(App::TEXT_FRAG, gl::FRAGMENT_SHADER).unwrap();
             ShaderProgram::new(&[fs, vs]).unwrap()
         };
-        
+
         unsafe {
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
-            
-            *crate::math::PROJECTION_MATRIX = Mat4::orthographic_rh_gl(0.0, window_size.x as f32, 0.0,  window_size.y as f32, 1000.0, -1000.0);
+
+            *crate::math::PROJECTION_MATRIX = Mat4::orthographic_rh_gl(
+                0.0,
+                window_size.x as f32,
+                0.0,
+                window_size.y as f32,
+                1000.0,
+                -1000.0,
+            );
         }
 
         Self {
             gl_context: gl_ctx,
             window: win,
-            event_pump, 
+            event_pump,
             input: Input::new(),
             time: Timer::new(),
             _audio_context: audio_context,
             default_program: program,
-            text_program: text_program
+            text_program: text_program,
         }
     }
 
     pub fn get_window_size(&self) -> Vec2 {
-       Vec2::new(self.window.size().0 as f64, self.window.size().1 as f64)
+        Vec2::new(self.window.size().0 as f64, self.window.size().1 as f64)
     }
 
     pub fn toggle_fullscreen(&mut self) {
@@ -422,15 +503,9 @@ impl App {
 
     pub fn get_fullscreen(&self) -> bool {
         match self.window.fullscreen_state() {
-            FullscreenType::Off => {
-                false
-            }
-            FullscreenType::True => {
-                true
-            }
-            FullscreenType::Desktop => {
-                true
-            }
+            FullscreenType::Off => false,
+            FullscreenType::True => true,
+            FullscreenType::Desktop => true,
         }
     }
 
@@ -454,47 +529,69 @@ impl App {
     }
 
     pub fn handle_input(&mut self) -> bool {
-        self.input.update_mouse_pos(
-            Vec2::new(self.event_pump.mouse_state().x() as f64, 
-            self.event_pump.mouse_state().y() as f64)
-        );
+        self.input.update_mouse_pos(Vec2::new(
+            self.event_pump.mouse_state().x() as f64,
+            self.event_pump.mouse_state().y() as f64,
+        ));
 
         for event in self.event_pump.poll_iter() {
             match event {
-                Event::Quit {..} |
-                Event::KeyDown { keycode: Some(Keycode::Escape), repeat: false, .. } => {
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    repeat: false,
+                    ..
+                } => {
                     return true;
-                },
-                Event::MouseButtonDown { 
-                    mouse_btn,
-                    ..
-                } => {
-                    self.input.update_mouse((&mouse_btn, &InputInfo{pressed: true, pressed_down: true}));
                 }
-                Event::MouseButtonUp { 
-                    mouse_btn,
-                    ..
-                } => {
-                    self.input.update_mouse((&mouse_btn, &InputInfo{pressed: false, pressed_down: false}));
+                Event::MouseButtonDown { mouse_btn, .. } => {
+                    self.input.update_mouse((
+                        &mouse_btn,
+                        &InputInfo {
+                            pressed: true,
+                            pressed_down: true,
+                        },
+                    ));
+                }
+                Event::MouseButtonUp { mouse_btn, .. } => {
+                    self.input.update_mouse((
+                        &mouse_btn,
+                        &InputInfo {
+                            pressed: false,
+                            pressed_down: false,
+                        },
+                    ));
                 }
                 Event::KeyDown {
-                keycode,
-                repeat: false,
-                ..
+                    keycode,
+                    repeat: false,
+                    ..
                 } => {
-                    self.input.update_mapping((&keycode.unwrap(), &InputInfo{pressed: true, pressed_down: true}));
-                },
+                    self.input.update_mapping((
+                        &keycode.unwrap(),
+                        &InputInfo {
+                            pressed: true,
+                            pressed_down: true,
+                        },
+                    ));
+                }
                 Event::KeyUp {
-                keycode,
-                repeat: false,
-                ..
+                    keycode,
+                    repeat: false,
+                    ..
                 } => {
-                    self.input.update_mapping((&keycode.unwrap(), &InputInfo{pressed: false, pressed_down: false}));
-                },
+                    self.input.update_mapping((
+                        &keycode.unwrap(),
+                        &InputInfo {
+                            pressed: false,
+                            pressed_down: false,
+                        },
+                    ));
+                }
                 _ => {}
             }
         }
-        
+
         false
     }
 
@@ -516,12 +613,15 @@ impl App {
         self.window.gl_swap_window();
         //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
         //::std::thread::sleep(Duration::new(0, ((60.0-self.time.fps())/1000.0) as u32));
-        ::std::thread::sleep(Duration::new(0, (1_000_000_000u32 / 60)-(self.time.delta_time as u32 * 1_000_000_000u32)));
+        ::std::thread::sleep(Duration::new(
+            0,
+            (1_000_000_000u32 / 60) - (self.time.delta_time as u32 * 1_000_000_000u32),
+        ));
     }
 }
 
 impl Scripting {
-    pub fn handle_input(&self, app : &mut App, _state : &mut WorldState) {
+    pub fn handle_input(&self, app: &mut App, _state: &mut WorldState) {
         let class = Scripting::get_class_handle(&self.vm, "app", "Input");
 
         let update_mapping_handle = Scripting::get_fn_handle(&self.vm, "update_mapping", 3);
@@ -538,7 +638,8 @@ impl Scripting {
             Scripting::call_handle(&self.vm, &class, &update_mapping_handle);
         }
 
-        let update_mouse_mapping_handle = Scripting::get_fn_handle(&self.vm, "update_mouse_mapping", 3);
+        let update_mouse_mapping_handle =
+            Scripting::get_fn_handle(&self.vm, "update_mouse_mapping", 3);
 
         for entry in &app.input.mouse_mapping {
             let a = match entry.0 {
@@ -572,14 +673,14 @@ impl Scripting {
             });
             Scripting::call_handle(&self.vm, &class, &update_binding_handle);
         }
-        
+
         self.vm.execute(|vm| {
             let _ = vm.set_slot_new_foreign("math", "Vec2", app.input.mouse_pos, 1);
         });
         Scripting::call_fn(&self.vm, &class, "set_mouse_pos", 1);
     }
 
-    pub fn handle_timer(&self, app : &mut App, _state : &mut WorldState) {
+    pub fn handle_timer(&self, app: &mut App, _state: &mut WorldState) {
         let state_class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
         let val = app.time.delta_time as f64;
         self.vm.execute(|vm| {
@@ -588,12 +689,17 @@ impl Scripting {
         Scripting::call_setter(&self.vm, &state_class, "delta_time");
     }
 
-    pub fn send_state(&self, app : &mut App, state : &mut WorldState) {
+    pub fn send_state(&self, app: &mut App, state: &mut WorldState) {
         let class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
         let input_class = Scripting::get_class_handle(&self.vm, "app", "Input");
-        
+
         self.vm.execute(|vm| {
-            let _ = vm.set_slot_new_foreign("math", "Vec2", Vec2::new(app.window.size().0 as f64, app.window.size().1 as f64), 1);
+            let _ = vm.set_slot_new_foreign(
+                "math",
+                "Vec2",
+                Vec2::new(app.window.size().0 as f64, app.window.size().1 as f64),
+                1,
+            );
         });
 
         Scripting::call_setter(&self.vm, &class, "screen_size");
@@ -607,8 +713,8 @@ impl Scripting {
             }
 
             for i in state.gameobjects.iter().enumerate() {
-                i.1.1.clone().send_to_wren(2, vm);
-                vm.set_list_element(1, i.1.1.wren_id as i32, 2);
+                i.1 .1.clone().send_to_wren(2, vm);
+                vm.set_list_element(1, i.1 .1.wren_id as i32, 2);
             }
         });
         Scripting::call_setter(&self.vm, &class, "gameobjects");
@@ -627,7 +733,7 @@ impl Scripting {
             });
             Scripting::call_handle(&self.vm, &input_class, &is_pressed);
 
-            let mut b = None;    
+            let mut b = None;
             self.vm.execute(|vm| {
                 if let Some(pressed) = vm.get_slot_bool(0) {
                     b = Some(pressed);
@@ -653,7 +759,7 @@ impl Scripting {
             });
             Scripting::call_handle(&self.vm, &input_class, &is_mouse_pressed);
 
-            let mut b = entry.1.pressed_down;    
+            let mut b = entry.1.pressed_down;
             self.vm.execute(|vm| {
                 if let Some(pressed) = vm.get_slot_bool(0) {
                     b = pressed;
@@ -663,14 +769,14 @@ impl Scripting {
         }
     }
 
-    pub fn receive_audio(&self, _app : &mut App, state : &mut WorldState) {
+    pub fn receive_audio(&self, _app: &mut App, state: &mut WorldState) {
         let audio_class = Scripting::get_class_handle(&self.vm, "app", "Audio");
 
         //recieve audio
         Scripting::call_getter(&self.vm, &audio_class, "dirty");
 
         let mut dirty = false;
-        self.vm.execute(|vm| {                
+        self.vm.execute(|vm| {
             if let Some(d) = vm.get_slot_bool(0) {
                 dirty = d;
             }
@@ -680,7 +786,7 @@ impl Scripting {
             Scripting::call_getter(&self.vm, &audio_class, "command");
 
             let mut command = String::from("");
-            self.vm.execute(|vm| {                
+            self.vm.execute(|vm| {
                 if let Some(cmd) = vm.get_slot_string(0) {
                     command = cmd;
                 }
@@ -688,7 +794,7 @@ impl Scripting {
 
             Scripting::call_getter(&self.vm, &audio_class, "volume");
 
-            self.vm.execute(|vm| {                
+            self.vm.execute(|vm| {
                 if let Some(vol) = vm.get_slot_double(0) {
                     sdl2::mixer::Music::set_volume(vol as i32);
                 }
@@ -696,27 +802,27 @@ impl Scripting {
 
             match command.as_ref() {
                 "play" => {
-                    sdl2::mixer::Music::resume();  
+                    sdl2::mixer::Music::resume();
                 }
                 "pause" => {
-                    sdl2::mixer::Music::pause();  
+                    sdl2::mixer::Music::pause();
                 }
                 "pause_fade" => {
                     Scripting::call_getter(&self.vm, &audio_class, "fade");
 
                     let mut fade = 0;
-                    self.vm.execute(|vm| {                
+                    self.vm.execute(|vm| {
                         if let Some(f) = vm.get_slot_double(0) {
                             fade = f as i32;
                         }
                     });
-                    let _ = sdl2::mixer::Music::fade_out(fade); 
+                    let _ = sdl2::mixer::Music::fade_out(fade);
                 }
                 "start" => {
                     Scripting::call_getter(&self.vm, &audio_class, "music");
                     let mut song = String::from("");
 
-                    self.vm.execute(|vm| {                
+                    self.vm.execute(|vm| {
                         if let Some(file) = vm.get_slot_string(0) {
                             song = file;
                         }
@@ -724,13 +830,13 @@ impl Scripting {
 
                     if let Some(music) = state.music.get(&song) {
                         let _ = music.play(-1);
-                    }  
+                    }
                 }
                 "start_fade" => {
                     Scripting::call_getter(&self.vm, &audio_class, "music");
                     let mut song = String::from("");
 
-                    self.vm.execute(|vm| {                
+                    self.vm.execute(|vm| {
                         if let Some(file) = vm.get_slot_string(0) {
                             song = file;
                         }
@@ -739,8 +845,8 @@ impl Scripting {
                     if let Some(music) = state.music.get(&song) {
                         Scripting::call_getter(&self.vm, &audio_class, "fade");
                         let mut fade = 0;
-                        
-                        self.vm.execute(|vm| {                
+
+                        self.vm.execute(|vm| {
                             if let Some(f) = vm.get_slot_double(0) {
                                 fade = f as i32;
                             }
@@ -748,13 +854,12 @@ impl Scripting {
 
                         sdl2::mixer::Music::halt();
                         let _ = music.fade_in(-1, fade);
-                    }  
+                    }
                 }
                 _ => {}
             }
-        }
-        else {
-            self.vm.execute(|vm| {                
+        } else {
+            self.vm.execute(|vm| {
                 vm.set_slot_double(1, sdl2::mixer::Music::get_volume() as f64);
             });
 
@@ -763,7 +868,7 @@ impl Scripting {
         //end
     }
 
-    pub fn receive_state(&self, app : &mut App, state : &mut WorldState) {
+    pub fn receive_state(&self, app: &mut App, state: &mut WorldState) {
         let state_class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
         let ui_class = Scripting::get_class_handle(&self.vm, "app", "UI");
 
@@ -773,10 +878,10 @@ impl Scripting {
             if let Some(count) = vm.get_list_count(0) {
                 for i in 0..count {
                     vm.get_list_element(0, i as i32, 1);
-                    
+
                     let go = vm.get_slot_foreign::<GameObject>(1);
                     if let Some(g) = go {
-                        let mut  g2 = g.clone();
+                        let mut g2 = g.clone();
                         g2.wren_id = i;
                         state.insert_wren(g2.clone());
                     }
@@ -790,7 +895,7 @@ impl Scripting {
             if let Some(count) = vm.get_list_count(0) {
                 for i in 0..count {
                     vm.get_list_element(0, i as i32, 1);
-                    
+
                     let go = vm.get_slot_foreign::<GameObject>(1);
                     if let Some(g) = go {
                         state.gameobjects.remove(&g.id.uuid);

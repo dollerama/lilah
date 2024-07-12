@@ -54,6 +54,11 @@ foreign class Sprite {
     foreign static set_sort(go, i)
 }
 
+foreign class Scene {
+    construct new(i) {}
+    foreign as_component
+}
+
 foreign class Rigidbody {
     construct new() {}
     foreign as_component
@@ -91,7 +96,7 @@ foreign class Animator {
     foreign get_state(s)
     foreign set_state(s)
     foreign insert_state(s, i)
-    
+
     foreign static play(g)
     foreign static stop(g)
     foreign static set_state(g, s)
@@ -105,7 +110,7 @@ foreign class Transform {
     construct new(p) {}
 
     foreign as_component
-    
+
     foreign position
     foreign scale
     foreign rotation
@@ -136,7 +141,7 @@ foreign class Transform {
 
 foreign class GameObject {
     construct new(name) {}
-    
+
     foreign add(x)
     foreign get(x)
     foreign set(x, y)

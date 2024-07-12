@@ -1,6 +1,6 @@
 import "math" for Vec2
 import "app" for Lilah, Input, GameObjectRef, UI
-import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour
+import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Scene
 
 class Player2 is Behaviour {
     static gameobject { __gameobject }
@@ -10,15 +10,20 @@ class Player2 is Behaviour {
         super(Player2)
     }
 
-    setup() {      
+    setup() {
         var gameobject = GameObject.new("D")
 
-        gameobject.add(Transform.new(Vec2.new(400, 200))) 
-        gameobject.add(Sprite.new("assets/test.png"))  
+        gameobject.add(Transform.new(Vec2.new(400, 200)))
+        gameobject.add(Sprite.new("assets/test.png"))
         gameobject.add(Rigidbody.new())
         gameobject.add(this.as_behaviour)
 
         gameobject = Lilah.instantiate(gameobject, {})
+
+        var scene = GameObject.new("scene")
+        scene.add(Transform.new(Vec2.new(0,0)))
+        scene.add(Scene.new("assets/Untitled.json"))
+        scene = Lilah.instantiate(scene, {})
     }
 
     static start() {
@@ -27,8 +32,10 @@ class Player2 is Behaviour {
         //Rigidbody.set_solid(gameobject.ref, false)
         Sprite.set_sort(gameobject.ref, 0)
     }
-    
+
     static update() {
-        
+        if(Input.key("Right")) {
+            Transform.update_position_x(Lilah.find("scene").ref, -2)
+        }
     }
 }

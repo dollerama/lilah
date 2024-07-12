@@ -1,19 +1,21 @@
-use glam::{Mat4, Vec3, Quat};
-use image::{DynamicImage, Rgba, EncodableLayout};
-use rusttype::{Font, Scale, point};
-use ruwren::{Class, VM, send_foreign, create_module, ModuleLibrary};
-use uuid::Uuid;
-use crate::renderer::{LilahTexture, Buffer, VertexArray, Vertex, Color};
-use crate::{LilahTypeError, LilahNotFoundError, LilahTypePanic, LilahPanic, set_attribute};
 use crate::gameobject::GameObjectId;
+use crate::math::Vec2;
+use crate::renderer::{Buffer, Color, LilahTexture, Vertex, VertexArray};
 use crate::world::StateUpdateContainer;
 use crate::{application::App, gameobject::GameObject};
-use crate::math::Vec2;
+use crate::{set_attribute, LilahNotFoundError, LilahPanic, LilahTypeError, LilahTypePanic};
+use gl::types::*;
+use glam::{Mat4, Quat, Vec3};
+use image::{DynamicImage, EncodableLayout, Rgba};
+use rusttype::{point, Font, Scale};
+use ruwren::{create_module, send_foreign, Class, ModuleLibrary, VM};
+use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use std::ffi::CString;
 use std::{any::Any, collections::HashMap};
-use gl::types::*;
+use uuid::Uuid;
 
-/// Tick/Update Component 
+/// Tick/Update Component
 pub trait Tickable<T: Component> {
     ///Tick Component with delta time and Component
     /// # Example
@@ -31,7 +33,7 @@ pub trait Tickable<T: Component> {
 pub trait Component {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
-    fn send_to_wren(&self, slot : usize, vm : &VM);
+    fn send_to_wren(&self, slot: usize, vm: &VM);
     fn clone_dyn(&self) -> Box<dyn Component>;
 }
 
@@ -51,7 +53,7 @@ pub struct Sfx {
     pub file: String,
     pub play_state: bool,
     pub volume: f64,
-    pub channel: Option<sdl2::mixer::Channel>
+    pub channel: Option<sdl2::mixer::Channel>,
 }
 
 /// Rigidbody Component for GameObjects
@@ -64,10 +66,10 @@ pub struct Rigidbody {
     /// Bounds of Collider
     pub bounds: Vec2,
     pub velocity: Vec2,
-    /// GameObjectID of current collider 
-    pub colliding : Option<GameObjectId>,
+    /// GameObjectID of current collider
+    pub colliding: Option<GameObjectId>,
     /// If set to false colliding is still populated but the rigidbody will not correct its velocity when collisions are detected.
-    pub solid : bool
+    pub solid: bool,
 }
 
 /// Sprite Component for GameObjects
@@ -87,9 +89,116 @@ pub struct Sprite {
     pub tint: Color,
 
     pub sort: u32,
-    
+
     vertex_buffer: Option<Buffer>,
-    vertex_array: Option<VertexArray>
+    vertex_array: Option<VertexArray>,
+}
+
+#[serde_as]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Layer {
+    #[serde_as(as = "Vec<(_, _)>")]
+    pub tiles: HashMap<(i32, i32), Tile>,
+    pub visible: bool,
+    pub tile_sheet: String,
+    pub current_tile_item: i32,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Tile {
+    pub sheet: String,
+    pub sheet_id: (u32, u32),
+    pub position: (f32, f32),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SceneData {
+    pub name: String,
+    pub path: String,
+    pub tile_sheets: Vec<TileSheet>,
+    pub layers: Vec<Layer>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TileSheet {
+    pub filename: String,
+    pub path: String,
+    pub absolute_path: String,
+    pub tile_size: (u32, u32),
+    pub sheet_size: (u32, u32),
+}
+
+#[derive(Clone, Default)]
+pub struct Scene {
+    pub file: String,
+    pub tiles: Vec<Sprite>,
+    pub transforms: Vec<Transform>,
+}
+
+impl Scene {
+    pub fn new(file_name: String) -> Self {
+        Self {
+            file: file_name,
+            tiles: vec![],
+            transforms: vec![],
+        }
+    }
+
+    pub fn load(
+        &mut self,
+        app: &mut App,
+        textures: &HashMap<String, LilahTexture>,
+        scenes: &HashMap<String, SceneData>,
+    ) {
+        let this_scene = &scenes[self.file.clone().as_str()];
+
+        for layer in &this_scene.layers {
+            for tile in &layer.tiles {
+                let mut current_sheet = "".to_string();
+                let mut current_sheet_id = 0;
+                for sheet in 0..this_scene.tile_sheets.len() {
+                    if this_scene.tile_sheets[sheet].path == tile.1.sheet {
+                        current_sheet = this_scene.tile_sheets[sheet].absolute_path.to_string();
+                        current_sheet_id = sheet;
+                        break;
+                    }
+                }
+                let mut new_tile = Sprite::new(current_sheet.as_str());
+                new_tile.cut_sprite_sheet(
+                    tile.1.sheet_id.0 as i32,
+                    tile.1.sheet_id.1 as i32,
+                    this_scene.tile_sheets[current_sheet_id].sheet_size.0
+                        / this_scene.tile_sheets[current_sheet_id].tile_size.0,
+                    this_scene.tile_sheets[current_sheet_id].sheet_size.1
+                        / this_scene.tile_sheets[current_sheet_id].tile_size.1,
+                );
+
+                self.tiles.push(new_tile);
+                let new_trans = Transform::new(Vec2::new(
+                    tile.1.position.0 as f64,
+                    tile.1.position.1 as f64,
+                ));
+                self.transforms.push(new_trans);
+            }
+        }
+
+        for i in &mut self.tiles {
+            i.load(app, textures);
+        }
+    }
+
+    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
+        for i in 0..self.tiles.len() {
+            let trans = &self.transforms[i];
+            let new_trans = Transform::new(trans.position + t.position);
+            self.tiles[i].draw(app, textures, &new_trans);
+        }
+    }
+
+    //for wren
+    fn wren_as_component(&self, vm: &VM) {
+        send_foreign!(vm, "game", "Scene", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
 }
 
 /// Animator Component for GameObjects
@@ -100,14 +209,14 @@ pub struct Animator {
     current_state: String,
     pub current_frame: f64,
     pub speed: f64,
-    playing: bool
+    playing: bool,
 }
 
 /// Behaviour Component for GameObjects
 #[derive(Clone)]
 pub struct ComponentBehaviour {
     /// Name of wren class to link to behaviour
-    component: String
+    component: String,
 }
 
 /// Text Component for GameObjects
@@ -123,9 +232,9 @@ pub struct Text {
     pub color: Color,
 
     pub sort: u32,
-    
+
     vertex_buffer: Option<Buffer>,
-    vertex_array: Option<VertexArray>
+    vertex_array: Option<VertexArray>,
 }
 
 //component impls
@@ -136,7 +245,7 @@ impl Sfx {
             file,
             play_state: false,
             volume: 128.0,
-            channel: None
+            channel: None,
         }
     }
 
@@ -156,7 +265,9 @@ impl Sfx {
     fn wren_name_setter(&mut self, vm: &VM) {
         match vm.get_slot_string(1) {
             Some(name) => self.name = name.clone(),
-            None => { eprintln!("Sfx Error: Arg (1) must be of type String"); }
+            None => {
+                eprintln!("Sfx Error: Arg (1) must be of type String");
+            }
         }
     }
 
@@ -171,7 +282,9 @@ impl Sfx {
     fn wren_volume_setter(&mut self, vm: &VM) {
         match vm.get_slot_double(1) {
             Some(volume) => self.volume = volume,
-            None => { eprintln!("Sfx Error: Arg (1) must be of type Double"); }
+            None => {
+                eprintln!("Sfx Error: Arg (1) must be of type Double");
+            }
         }
     }
 
@@ -191,8 +304,7 @@ impl Sfx {
                             break;
                         }
                     }
-                }
-                else {
+                } else {
                     eprintln!("Sfx Error: Arg (2) must be of type String and Arg (3) must be of type Double");
                 }
             }
@@ -213,8 +325,7 @@ impl Sfx {
                             break;
                         }
                     }
-                }
-                else {
+                } else {
                     eprintln!("Sfx Error: Arg (2) must be of type String");
                 }
             }
@@ -235,8 +346,7 @@ impl Sfx {
                             break;
                         }
                     }
-                }
-                else {
+                } else {
                     eprintln!("Sfx Error: Arg (2) must be of type String");
                 }
             }
@@ -254,7 +364,7 @@ impl Transform {
             position: pos,
             pivot: Vec2::ZERO,
             rotation: 0.0,
-            scale: Vec2::ONE
+            scale: Vec2::ONE,
         }
     }
 
@@ -263,13 +373,16 @@ impl Transform {
     }
 
     pub fn world_to_screen_position(&self, camera: &Vec2, screen_y: f64) -> Vec2 {
-        Vec2::new(self.position.x-camera.x, (-self.position.y+screen_y)-camera.y)
+        Vec2::new(
+            self.position.x - camera.x,
+            (-self.position.y + screen_y) - camera.y,
+        )
     }
 
     pub fn get_pivot(&self, size: &Vec2) -> Vec2 {
         Vec2::new(
-            (self.pivot.x/size.x)*self.scale.x,
-            (self.pivot.y/size.y)*self.scale.y
+            (self.pivot.x / size.x) * self.scale.x,
+            (self.pivot.y / size.y) * self.scale.y,
         )
     }
 
@@ -297,39 +410,47 @@ impl Transform {
     fn wren_set_pos(&mut self, vm: &VM) {
         match vm.get_slot_foreign::<Vec2>(1) {
             Some(pos) => self.position = *pos,
-            None => { LilahTypeError!(Transform, 1, Vec2); }
+            None => {
+                LilahTypeError!(Transform, 1, Vec2);
+            }
         }
     }
 
     fn wren_set_pivot(&mut self, vm: &VM) {
         match vm.get_slot_foreign::<Vec2>(1) {
             Some(pivot) => self.pivot = *pivot,
-            None => { LilahTypeError!(Transform, 1, Vec2); }
+            None => {
+                LilahTypeError!(Transform, 1, Vec2);
+            }
         }
     }
 
     fn wren_set_scale(&mut self, vm: &VM) {
         match vm.get_slot_foreign::<Vec2>(1) {
             Some(scale) => self.scale = *scale,
-            None => { LilahTypeError!(Transform, 1, Vec2); }
+            None => {
+                LilahTypeError!(Transform, 1, Vec2);
+            }
         }
     }
 
     fn wren_set_rotation(&mut self, vm: &VM) {
         match vm.get_slot_double(1) {
             Some(rotation) => self.rotation = rotation as f32,
-            None => { LilahTypeError!(Transform, 1, f64); }
+            None => {
+                LilahTypeError!(Transform, 1, f64);
+            }
         }
     }
 
     fn wren_set_pos_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_foreign::<Vec2>(2) {
-                    Some(pos) => comp.get_mut::<Transform>().position = *pos,
-                    None => { LilahTypeError!(Transform, 2, Vec2); }
+            Some(comp) => match vm.get_slot_foreign::<Vec2>(2) {
+                Some(pos) => comp.get_mut::<Transform>().position = *pos,
+                None => {
+                    LilahTypeError!(Transform, 2, Vec2);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Transform, 1, GameObject);
             }
@@ -338,12 +459,12 @@ impl Transform {
 
     fn wren_set_pivot_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_foreign::<Vec2>(2) {
-                    Some(pivot) => comp.get_mut::<Transform>().pivot = *pivot,
-                    None => { LilahTypeError!(Transform, 2, Vec2); }
+            Some(comp) => match vm.get_slot_foreign::<Vec2>(2) {
+                Some(pivot) => comp.get_mut::<Transform>().pivot = *pivot,
+                None => {
+                    LilahTypeError!(Transform, 2, Vec2);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Transform, 1, GameObject);
             }
@@ -352,72 +473,82 @@ impl Transform {
 
     fn wren_set_pos_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(pos_x) => comp.get_mut::<Transform>().position.x = pos_x,
-                    None => { LilahTypeError!(Transform, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(pos_x) => comp.get_mut::<Transform>().position.x = pos_x,
+                None => {
+                    LilahTypeError!(Transform, 2, f64);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
     fn wren_set_pos_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(pos_y) => comp.get_mut::<Transform>().position.y = pos_y,
-                    None => { LilahTypeError!(Transform, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(pos_y) => comp.get_mut::<Transform>().position.y = pos_y,
+                None => {
+                    LilahTypeError!(Transform, 2, f64);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
     fn wren_update_pos_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_foreign::<Vec2>(2) {
-                    Some(pos) => comp.get_mut::<Transform>().position += *pos,
-                    None => { LilahTypeError!(Transform, 2, Vec2);  }
+            Some(comp) => match vm.get_slot_foreign::<Vec2>(2) {
+                Some(pos) => comp.get_mut::<Transform>().position += *pos,
+                None => {
+                    LilahTypeError!(Transform, 2, Vec2);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
     fn wren_update_pos_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(pos_x) => comp.get_mut::<Transform>().position.x += pos_x,
-                    None => { LilahTypeError!(Transform, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(pos_x) => comp.get_mut::<Transform>().position.x += pos_x,
+                None => {
+                    LilahTypeError!(Transform, 2, f64);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
     fn wren_update_pos_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(pos_y) => comp.get_mut::<Transform>().position.y += pos_y,
-                    None => { LilahTypeError!(Transform, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(pos_y) => comp.get_mut::<Transform>().position.y += pos_y,
+                None => {
+                    LilahTypeError!(Transform, 2, f64);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
     fn wren_set_scale_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_foreign::<Vec2>(2) {
-                    Some(scale) => comp.get_mut::<Transform>().scale = *scale,
-                    None => { LilahTypeError!(Transform, 2, Vec2); }
+            Some(comp) => match vm.get_slot_foreign::<Vec2>(2) {
+                Some(scale) => comp.get_mut::<Transform>().scale = *scale,
+                None => {
+                    LilahTypeError!(Transform, 2, Vec2);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Transform, 1, GameObject);
             }
@@ -426,87 +557,99 @@ impl Transform {
 
     fn wren_set_scale_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(scale_x) => comp.get_mut::<Transform>().scale.x = scale_x,
-                    None => { LilahTypeError!(Transform, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(scale_x) => comp.get_mut::<Transform>().scale.x = scale_x,
+                None => {
+                    LilahTypeError!(Transform, 2, f64);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
     fn wren_set_scale_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(scale_y) => comp.get_mut::<Transform>().scale.y = scale_y,
-                    None => { LilahTypeError!(Transform, 2, f64);  }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(scale_y) => comp.get_mut::<Transform>().scale.y = scale_y,
+                None => {
+                    LilahTypeError!(Transform, 2, f64);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
 
     fn wren_update_scale_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_foreign::<Vec2>(2) {
-                    Some(scale) => comp.get_mut::<Transform>().scale += *scale,
-                    None => { LilahTypeError!(Transform, 2, Vec2);  }
+            Some(comp) => match vm.get_slot_foreign::<Vec2>(2) {
+                Some(scale) => comp.get_mut::<Transform>().scale += *scale,
+                None => {
+                    LilahTypeError!(Transform, 2, Vec2);
                 }
-            }
+            },
             None => {
-                LilahTypeError!(Transform, 1, GameObject); 
+                LilahTypeError!(Transform, 1, GameObject);
             }
         }
     }
 
     fn wren_update_scale_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(scale_x) => comp.get_mut::<Transform>().scale.x += scale_x,
-                    None => { LilahTypeError!(Transform, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(scale_x) => comp.get_mut::<Transform>().scale.x += scale_x,
+                None => {
+                    LilahTypeError!(Transform, 2, f64);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject);  }
         }
     }
 
     fn wren_update_scale_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(scale_y) => comp.get_mut::<Transform>().scale.y += scale_y,
-                    None => { LilahTypeError!(Transform, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(scale_y) => comp.get_mut::<Transform>().scale.y += scale_y,
+                None => {
+                    LilahTypeError!(Transform, 2, f64);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject);  }
         }
     }
 
     fn wren_set_rot_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(rotation) => comp.get_mut::<Transform>().rotation = rotation as f32,
-                    None => { LilahTypeError!(Transform, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(rotation) => comp.get_mut::<Transform>().rotation = rotation as f32,
+                None => {
+                    LilahTypeError!(Transform, 2, f64);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject);  }
         }
     }
 
     fn wren_update_rot_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(rotation) => comp.get_mut::<Transform>().rotation += rotation as f32,
-                    None => { LilahTypeError!(Transform, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(rotation) => comp.get_mut::<Transform>().rotation += rotation as f32,
+                None => {
+                    LilahTypeError!(Transform, 2, f64);
                 }
+            },
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
             }
-            None => { LilahTypeError!(Transform, 1, GameObject); }
         }
     }
     //for wren
@@ -515,44 +658,44 @@ impl Transform {
 impl Rigidbody {
     pub fn new(pos: Vec2) -> Self {
         Self {
-            bounds : Vec2::ONE,
+            bounds: Vec2::ONE,
             pivot: Vec2::ZERO,
-            velocity : Vec2::ZERO,
+            velocity: Vec2::ZERO,
             rotation: 0.0,
-            position : pos,
+            position: pos,
             scale: Vec2::ONE,
-            colliding : None,
-            solid : true
+            colliding: None,
+            solid: true,
         }
     }
 
     pub fn new_without_pos() -> Self {
         Self {
-            bounds : Vec2::ONE,
+            bounds: Vec2::ONE,
             pivot: Vec2::ZERO,
-            velocity : Vec2::ZERO,
+            velocity: Vec2::ZERO,
             scale: Vec2::ONE,
             rotation: 0.0,
-            position : Vec2::ZERO,
-            colliding : None,
-            solid : true
+            position: Vec2::ZERO,
+            colliding: None,
+            solid: true,
         }
     }
 
     pub fn update_vel_y(&mut self, dt: f64) {
-        self.position.y += self.velocity.y*dt; 
+        self.position.y += self.velocity.y * dt;
     }
 
     pub fn update_vel_x(&mut self, dt: f64) {
-        self.position.x += self.velocity.x*dt; 
+        self.position.x += self.velocity.x * dt;
     }
 
     pub fn update_correct_y(&mut self, dt: f64) {
-        self.position.y -= self.velocity.y*dt; 
+        self.position.y -= self.velocity.y * dt;
     }
 
     pub fn update_correct_x(&mut self, dt: f64) {
-        self.position.x -= self.velocity.x*dt; 
+        self.position.x -= self.velocity.x * dt;
     }
 
     pub fn check_collision_sat(&self, other: &Rigidbody, app: &App) -> (bool, Vec2) {
@@ -565,20 +708,17 @@ impl Rigidbody {
     /// Simple AABB collision
     pub fn check_collision_aabb(&self, other: &Rigidbody) -> bool {
         //The sides of the rectangles
-        let left_a = self.position.x-self.pivot.x;
-        let left_b = other.position.x-other.pivot.x;
-        let right_a = left_a+(self.bounds.x*self.scale.x);
-        let right_b = left_b+(other.bounds.x*other.scale.x);
-        let top_a = self.position.y-self.pivot.y;
-        let top_b = other.position.y-other.pivot.y;
-        let bottom_a = top_a+(self.bounds.y*self.scale.y);
-        let bottom_b = top_b+(other.bounds.y*other.scale.y);
+        let left_a = self.position.x - self.pivot.x;
+        let left_b = other.position.x - other.pivot.x;
+        let right_a = left_a + (self.bounds.x * self.scale.x);
+        let right_b = left_b + (other.bounds.x * other.scale.x);
+        let top_a = self.position.y - self.pivot.y;
+        let top_b = other.position.y - other.pivot.y;
+        let bottom_a = top_a + (self.bounds.y * self.scale.y);
+        let bottom_b = top_b + (other.bounds.y * other.scale.y);
 
         //If any of the sides from A are outside of B
-        if  bottom_a >= top_b &&
-            top_a <= bottom_b &&
-            right_a >= left_b &&
-            left_a <= right_b {
+        if bottom_a >= top_b && top_a <= bottom_b && right_a >= left_b && left_a <= right_b {
             return true;
         }
 
@@ -601,7 +741,9 @@ impl Rigidbody {
     fn wren_vel_setter(&mut self, vm: &VM) {
         match vm.get_slot_foreign::<Vec2>(1) {
             Some(vel) => self.velocity = *vel,
-            None => { LilahTypeError!(Rigidbody, 1, Vec2); }
+            None => {
+                LilahTypeError!(Rigidbody, 1, Vec2);
+            }
         }
     }
 
@@ -612,7 +754,9 @@ impl Rigidbody {
     fn wren_solid_setter(&mut self, vm: &VM) {
         match vm.get_slot_bool(1) {
             Some(solid) => self.solid = solid,
-            None => { LilahTypeError!(Rigidbody, 1, bool); }
+            None => {
+                LilahTypeError!(Rigidbody, 1, bool);
+            }
         }
     }
 
@@ -625,8 +769,7 @@ impl Rigidbody {
             vm.set_slot_string(1, "uuid");
             vm.set_slot_string(2, coll.uuid.clone());
             vm.set_map_value(0, 1, 2);
-        }
-        else {
+        } else {
             vm.set_slot_null(0)
         }
     }
@@ -642,23 +785,24 @@ impl Rigidbody {
                     vm.set_slot_string(2, "uuid");
                     vm.set_slot_string(3, coll.uuid.clone());
                     vm.set_map_value(0, 2, 3);
-                }
-                else {
+                } else {
                     vm.set_slot_null(0)
                 }
             }
-            None => { LilahTypeError!(Rigidbody, 1, GameObject); }
+            None => {
+                LilahTypeError!(Rigidbody, 1, GameObject);
+            }
         }
     }
 
     fn wren_set_vel_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_foreign::<Vec2>(2) {
-                    Some(vel) => comp.get_mut::<Rigidbody>().velocity = *vel,
-                    None => { LilahTypeError!(Rigidbody, 2, Vec2); }
+            Some(comp) => match vm.get_slot_foreign::<Vec2>(2) {
+                Some(vel) => comp.get_mut::<Rigidbody>().velocity = *vel,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, Vec2);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
@@ -667,12 +811,12 @@ impl Rigidbody {
 
     fn wren_set_pos_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_foreign::<Vec2>(2) {
-                    Some(pos) => comp.get_mut::<Rigidbody>().position = *pos,
-                    None => { LilahTypeError!(Rigidbody, 2, Vec2); }
+            Some(comp) => match vm.get_slot_foreign::<Vec2>(2) {
+                Some(pos) => comp.get_mut::<Rigidbody>().position = *pos,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, Vec2);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
@@ -681,12 +825,12 @@ impl Rigidbody {
 
     fn wren_set_pos_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(pos_x) => comp.get_mut::<Rigidbody>().position.x = pos_x,
-                    None => { LilahTypeError!(Rigidbody, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(pos_x) => comp.get_mut::<Rigidbody>().position.x = pos_x,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, f64);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
@@ -695,12 +839,12 @@ impl Rigidbody {
 
     fn wren_set_pos_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(pos_y) => comp.get_mut::<Rigidbody>().position.y = pos_y,
-                    None => { LilahTypeError!(Rigidbody, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(pos_y) => comp.get_mut::<Rigidbody>().position.y = pos_y,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, f64);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
@@ -709,12 +853,12 @@ impl Rigidbody {
 
     fn wren_set_vel_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(vel_x) => comp.get_mut::<Rigidbody>().velocity.x = vel_x,
-                    None => { LilahTypeError!(Rigidbody, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(vel_x) => comp.get_mut::<Rigidbody>().velocity.x = vel_x,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, f64);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
@@ -723,12 +867,12 @@ impl Rigidbody {
 
     fn wren_set_vel_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(vel_y) => comp.get_mut::<Rigidbody>().velocity.y = vel_y,
-                    None => { LilahTypeError!(Rigidbody, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(vel_y) => comp.get_mut::<Rigidbody>().velocity.y = vel_y,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, f64);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
@@ -737,12 +881,12 @@ impl Rigidbody {
 
     fn wren_set_solid_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_bool(2) {
-                    Some(solid) => comp.get_mut::<Rigidbody>().solid = solid,
-                    None => { LilahTypeError!(Rigidbody, 2, bool); }
+            Some(comp) => match vm.get_slot_bool(2) {
+                Some(solid) => comp.get_mut::<Rigidbody>().solid = solid,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, bool);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
@@ -751,12 +895,12 @@ impl Rigidbody {
 
     fn wren_update_vel_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_foreign::<Vec2>(2) {
-                    Some(vel) => comp.get_mut::<Rigidbody>().velocity += *vel,
-                    None => { LilahTypeError!(Rigidbody, 2, Vec2); }
+            Some(comp) => match vm.get_slot_foreign::<Vec2>(2) {
+                Some(vel) => comp.get_mut::<Rigidbody>().velocity += *vel,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, Vec2);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
@@ -765,12 +909,12 @@ impl Rigidbody {
 
     fn wren_update_vel_x_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(vel_x) => comp.get_mut::<Rigidbody>().velocity.x += vel_x,
-                    None => { LilahTypeError!(Rigidbody, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(vel_x) => comp.get_mut::<Rigidbody>().velocity.x += vel_x,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, f64);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
@@ -779,12 +923,12 @@ impl Rigidbody {
 
     fn wren_update_vel_y_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(vel_y) => comp.get_mut::<Rigidbody>().velocity.y += vel_y,
-                    None => { LilahTypeError!(Rigidbody, 2, f64); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(vel_y) => comp.get_mut::<Rigidbody>().velocity.y += vel_y,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, f64);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Rigidbody, 1, GameObject);
             }
@@ -793,13 +937,15 @@ impl Rigidbody {
 
     fn wren_set_rot_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(rotation) => comp.get_mut::<Rigidbody>().rotation = rotation as f32,
-                    None => { LilahTypeError!(Rigidbody, 2, f32); }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(rotation) => comp.get_mut::<Rigidbody>().rotation = rotation as f32,
+                None => {
+                    LilahTypeError!(Rigidbody, 2, f32);
                 }
+            },
+            None => {
+                LilahTypeError!(Rigidbody, 1, GameObject);
             }
-            None => { LilahTypeError!(Rigidbody, 1, GameObject);  }
         }
     }
 }
@@ -811,7 +957,7 @@ impl Animator {
             current_state: String::from("None"),
             current_frame: 0.0,
             speed: 10.0,
-            playing: false
+            playing: false,
         }
     }
 
@@ -839,7 +985,7 @@ impl Animator {
         self.playing = true;
         self
     }
-    
+
     pub fn build(self) -> Animator {
         self
     }
@@ -851,11 +997,11 @@ impl Animator {
     pub fn stop(&mut self) {
         self.playing = false;
     }
-    
-    pub fn set_state(&mut self, st: &str) {    
+
+    pub fn set_state(&mut self, st: &str) {
         match self.states.get(&st.to_string()) {
             Some(_) => self.current_state = st.to_string(),
-            None => {} 
+            None => {}
         }
     }
 
@@ -873,7 +1019,7 @@ impl Animator {
                 self.current_frame = 0.0;
             }
 
-            self.current_frame += dt as f64*self.speed;
+            self.current_frame += dt as f64 * self.speed;
 
             if self.current_frame > self.states.get(&self.current_state).unwrap().0 as f64 {
                 self.current_frame = 0.0;
@@ -884,8 +1030,8 @@ impl Animator {
     pub fn update_sprite(&self, sprite: &mut Sprite) {
         if self.current_state != String::from("None") {
             sprite.anim_sprite_sheet(
-                self.current_frame as i32, 
-                self.states.get(&self.current_state).unwrap().1
+                self.current_frame as i32,
+                self.states.get(&self.current_state).unwrap().1,
             );
         }
     }
@@ -896,40 +1042,38 @@ impl Animator {
     }
 
     fn wren_playing_getter(&self, vm: &VM) {
-        vm.set_slot_bool(0, self.playing);   
+        vm.set_slot_bool(0, self.playing);
     }
 
     fn wren_frame_getter(&self, vm: &VM) {
-        vm.set_slot_double(0, self.current_frame as f64);   
+        vm.set_slot_double(0, self.current_frame as f64);
     }
 
     fn wren_speed_getter(&self, vm: &VM) {
-        vm.set_slot_double(0, self.speed);   
+        vm.set_slot_double(0, self.speed);
     }
 
     fn wren_play(&mut self, _vm: &VM) {
-        self.play();  
+        self.play();
     }
 
     fn wren_stop(&mut self, _vm: &VM) {
-        self.stop();  
+        self.stop();
     }
 
     fn wren_get_state(&self, vm: &VM) {
         match vm.get_slot_string(1) {
-            Some(state) => {
-                match self.states.get(&state) {
-                    Some(s) => {
-                        vm.set_slot_new_map(0);
-                        vm.set_slot_string(1, state);
-                        send_foreign!(vm, "math", "Vec2", Vec2::new(s.0 as f64, s.1 as f64) => 2);
-                        vm.set_map_value(0, 1, 2);
-                    }
-                    None => {
-                        LilahNotFoundError!(Animator, String, state);
-                    }
+            Some(state) => match self.states.get(&state) {
+                Some(s) => {
+                    vm.set_slot_new_map(0);
+                    vm.set_slot_string(1, state);
+                    send_foreign!(vm, "math", "Vec2", Vec2::new(s.0 as f64, s.1 as f64) => 2);
+                    vm.set_map_value(0, 1, 2);
                 }
-            }
+                None => {
+                    LilahNotFoundError!(Animator, String, state);
+                }
+            },
             None => {
                 LilahTypeError!(Animator, 1, String);
             }
@@ -949,16 +1093,14 @@ impl Animator {
 
     fn wren_insert_state(&mut self, vm: &VM) {
         match vm.get_slot_string(1) {
-            Some(state) => {
-                match vm.get_slot_foreign::<Vec2>(2) {
-                    Some(loc) => {
-                        self.states.insert(state, (loc.x as i32, loc.y as i32));
-                    }
-                    None => {
-                        LilahTypeError!(Animator, 2, Vec2);
-                    }
+            Some(state) => match vm.get_slot_foreign::<Vec2>(2) {
+                Some(loc) => {
+                    self.states.insert(state, (loc.x as i32, loc.y as i32));
                 }
-            }
+                None => {
+                    LilahTypeError!(Animator, 2, Vec2);
+                }
+            },
             None => {
                 LilahTypeError!(Animator, 1, String);
             }
@@ -1011,16 +1153,14 @@ impl Animator {
 
     fn wren_set_state_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_string(2) {
-                    Some(state) => {
-                        comp.get_mut::<Animator>().set_state(&state);
-                    }
-                    None => {
-                        LilahTypeError!(Animator, 2, String);
-                    }
+            Some(comp) => match vm.get_slot_string(2) {
+                Some(state) => {
+                    comp.get_mut::<Animator>().set_state(&state);
                 }
-            }
+                None => {
+                    LilahTypeError!(Animator, 2, String);
+                }
+            },
             None => {
                 LilahTypeError!(Animator, 1, GameObject);
             }
@@ -1029,26 +1169,22 @@ impl Animator {
 
     fn wren_get_state_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_string(2) {
-                    Some(state) => {
-                        match comp.get::<Animator>().states.get(&state) {
-                            Some(s) => {
-                                vm.set_slot_new_map(0);
-                                vm.set_slot_string(1, state);
-                                send_foreign!(vm, "math", "Vec2", Vec2::new(s.0 as f64, s.1 as f64) => 2);
-                                vm.set_map_value(0, 1, 2);
-                            }
-                            None => {
-                                LilahNotFoundError!(Animator, String, state);
-                            }
-                        }
+            Some(comp) => match vm.get_slot_string(2) {
+                Some(state) => match comp.get::<Animator>().states.get(&state) {
+                    Some(s) => {
+                        vm.set_slot_new_map(0);
+                        vm.set_slot_string(1, state);
+                        send_foreign!(vm, "math", "Vec2", Vec2::new(s.0 as f64, s.1 as f64) => 2);
+                        vm.set_map_value(0, 1, 2);
                     }
                     None => {
-                        LilahTypeError!(Animator, 2, String);
+                        LilahNotFoundError!(Animator, String, state);
                     }
+                },
+                None => {
+                    LilahTypeError!(Animator, 2, String);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Animator, 1, GameObject);
             }
@@ -1057,23 +1193,21 @@ impl Animator {
 
     fn wren_insert_state_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_string(2) {
-                    Some(state) => {
-                        match vm.get_slot_foreign::<Vec2>(3) {
-                            Some(loc) => {
-                                comp.get_mut::<Animator>().states.insert(state, (loc.x as i32, loc.y as i32));
-                            }
-                            None => {
-                                LilahTypeError!(Animator, 3, Vec2);
-                            }
-                        }
+            Some(comp) => match vm.get_slot_string(2) {
+                Some(state) => match vm.get_slot_foreign::<Vec2>(3) {
+                    Some(loc) => {
+                        comp.get_mut::<Animator>()
+                            .states
+                            .insert(state, (loc.x as i32, loc.y as i32));
                     }
                     None => {
-                        LilahTypeError!(Animator, 2, String);
+                        LilahTypeError!(Animator, 3, Vec2);
                     }
+                },
+                None => {
+                    LilahTypeError!(Animator, 2, String);
                 }
-            }
+            },
             None => {
                 LilahTypeError!(Animator, 1, GameObject);
             }
@@ -1082,16 +1216,14 @@ impl Animator {
 
     fn wren_set_speed_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(speed) => {
-                        comp.get_mut::<Animator>().speed = speed;
-                    }
-                    None => {
-                        LilahTypeError!(Animator, 2, f64);
-                    }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(speed) => {
+                    comp.get_mut::<Animator>().speed = speed;
                 }
-            }
+                None => {
+                    LilahTypeError!(Animator, 2, f64);
+                }
+            },
             None => {
                 LilahTypeError!(Animator, 1, GameObject);
             }
@@ -1100,16 +1232,14 @@ impl Animator {
 
     fn wren_set_frame_from_gameobject(vm: &VM) {
         match vm.get_slot_foreign_mut::<GameObject>(1) {
-            Some(comp) => {
-                match vm.get_slot_double(2) {
-                    Some(frame) => {
-                        comp.get_mut::<Animator>().current_frame = frame;
-                    }
-                    None => {
-                        LilahTypeError!(Animator, 2, f64);
-                    }
+            Some(comp) => match vm.get_slot_double(2) {
+                Some(frame) => {
+                    comp.get_mut::<Animator>().current_frame = frame;
                 }
-            }
+                None => {
+                    LilahTypeError!(Animator, 2, f64);
+                }
+            },
             None => {
                 LilahTypeError!(Animator, 1, GameObject);
             }
@@ -1138,11 +1268,11 @@ impl Text {
             font_size: 24,
             font: font.to_string(),
             texture_id: Uuid::new_v4().to_string(),
-            changed: true, 
+            changed: true,
             vertex_array: None,
             vertex_buffer: None,
             color: Color::new(1.0, 1.0, 1.0, 1.0),
-            sort: 0
+            sort: 0,
         }
     }
 
@@ -1187,14 +1317,17 @@ impl Text {
 
                 let pos_attrib = app.text_program.get_attrib_location("position").unwrap();
                 set_attribute!(vao, pos_attrib, Vertex::0, gl::FLOAT);
-                let color_attrib = app.text_program.get_attrib_location("vertexTexCoord").unwrap();
+                let color_attrib = app
+                    .text_program
+                    .get_attrib_location("vertexTexCoord")
+                    .unwrap();
                 set_attribute!(vao, color_attrib, Vertex::1, gl::FLOAT);
 
                 self.vertex_array = Some(vao);
                 self.vertex_buffer = Some(vbo);
             }
         }
-        
+
         if self.changed {
             self.changed = false;
 
@@ -1223,7 +1356,8 @@ impl Text {
                 };
 
                 // Create a new rgba image with some padding
-                let mut image: image::ImageBuffer<Rgba<u8>, Vec<u8>> = DynamicImage::new_rgba8(glyphs_width + 40, glyphs_height + 40).to_rgba8();
+                let mut image: image::ImageBuffer<Rgba<u8>, Vec<u8>> =
+                    DynamicImage::new_rgba8(glyphs_width + 40, glyphs_height + 40).to_rgba8();
 
                 // Loop through the glyphs in the text, positing each one on a line
                 for glyph in glyphs {
@@ -1241,27 +1375,41 @@ impl Text {
                     }
                 }
 
-                StateUpdateContainer { textures: Some((self.texture_id.clone(), image)), sfx: None  }
-            }
-            else {
+                StateUpdateContainer {
+                    textures: Some((self.texture_id.clone(), image)),
+                    sfx: None,
+                }
+            } else {
                 let f = self.font.clone();
                 LilahNotFoundError!(Text, String, f);
-                StateUpdateContainer { textures: None, sfx: None  }
+                StateUpdateContainer {
+                    textures: None,
+                    sfx: None,
+                }
             }
-        }
-        else {
-            StateUpdateContainer { textures: None, sfx: None }
+        } else {
+            StateUpdateContainer {
+                textures: None,
+                sfx: None,
+            }
         }
     }
 
     pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
-        let model = 
-        Mat4::IDENTITY * 
-        Mat4::from_scale_rotation_translation( 
-            Vec3::new(textures[&self.texture_id].size.x as f32, textures[&self.texture_id].size.y as f32, 1.0) * Vec3::new(t.scale.x as f32, t.scale.y as f32, 1.0),
-            Quat::from_rotation_z(t.rotation), 
-            Vec3::new(t.position.x as f32 + (textures[&self.texture_id].size.x/2.0) as f32, t.position.y as f32 - (textures[&self.texture_id].size.y/2.0) as f32, 0.0)
-        );
+        let model = Mat4::IDENTITY
+            * Mat4::from_scale_rotation_translation(
+                Vec3::new(
+                    textures[&self.texture_id].size.x as f32,
+                    textures[&self.texture_id].size.y as f32,
+                    1.0,
+                ) * Vec3::new(t.scale.x as f32, t.scale.y as f32, 1.0),
+                Quat::from_rotation_z(t.rotation),
+                Vec3::new(
+                    t.position.x as f32 + (textures[&self.texture_id].size.x / 2.0) as f32,
+                    t.position.y as f32 - (textures[&self.texture_id].size.y / 2.0) as f32,
+                    0.0,
+                ),
+            );
 
         let view = unsafe { *crate::math::VIEW_MATRIX };
         let projection = unsafe { *crate::math::PROJECTION_MATRIX };
@@ -1272,18 +1420,27 @@ impl Text {
             textures[&self.texture_id].bind();
 
             app.text_program.apply();
-            
+
             self.vertex_array.as_ref().unwrap().bind();
-            
-            let mat_attr = gl::GetUniformLocation(app.text_program.id, CString::new("mvp").unwrap().as_ptr());
+
+            let mat_attr =
+                gl::GetUniformLocation(app.text_program.id, CString::new("mvp").unwrap().as_ptr());
             gl::UniformMatrix4fv(mat_attr, 1, gl::FALSE as GLboolean, &mvp.to_cols_array()[0]);
 
-            let tint_attr = gl::GetUniformLocation(app.text_program.id, CString::new("tint").unwrap().as_ptr());
-            gl::Uniform4f(tint_attr, self.color.r, self.color.g, self.color.b, self.color.a);
+            let tint_attr =
+                gl::GetUniformLocation(app.text_program.id, CString::new("tint").unwrap().as_ptr());
+            gl::Uniform4f(
+                tint_attr,
+                self.color.r,
+                self.color.g,
+                self.color.b,
+                self.color.a,
+            );
 
-            let sort_attr = gl::GetUniformLocation(app.text_program.id, CString::new("sort").unwrap().as_ptr());
+            let sort_attr =
+                gl::GetUniformLocation(app.text_program.id, CString::new("sort").unwrap().as_ptr());
             gl::Uniform1f(sort_attr, self.sort as f32);
-            
+
             gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
         }
     }
@@ -1309,8 +1466,7 @@ impl Text {
         let a = vm.get_slot_string(1);
         if let Some(a) = a {
             self.set_text(&a);
-        }
-        else {
+        } else {
             LilahTypeError!(Text, 1, String);
         }
     }
@@ -1319,8 +1475,7 @@ impl Text {
         let a = vm.get_slot_string(1);
         if let Some(a) = a {
             self.set_font(&a);
-        }
-        else {
+        } else {
             LilahTypeError!(Text, 1, String);
         }
     }
@@ -1329,8 +1484,7 @@ impl Text {
         let a = vm.get_slot_double(1);
         if let Some(a) = a {
             self.set_font_size(a as u32);
-        }
-        else {
+        } else {
             LilahTypeError!(Text, 1, f64);
         }
     }
@@ -1338,8 +1492,7 @@ impl Text {
     fn wren_get_text_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             vm.set_slot_string(0, comp.get_mut::<Text>().get_text());
-        }
-        else {
+        } else {
             LilahTypeError!(Text, 1, GameObject);
         }
     }
@@ -1347,8 +1500,7 @@ impl Text {
     fn wren_get_font_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             vm.set_slot_string(0, comp.get_mut::<Text>().get_font());
-        }
-        else {
+        } else {
             LilahTypeError!(Text, 1, GameObject);
         }
     }
@@ -1356,8 +1508,7 @@ impl Text {
     fn wren_get_font_size_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             vm.set_slot_double(0, comp.get_mut::<Text>().get_font_size() as f64);
-        }
-        else {
+        } else {
             LilahTypeError!(Text, 1, GameObject);
         }
     }
@@ -1367,12 +1518,10 @@ impl Text {
             let a = vm.get_slot_string(2);
             if let Some(a) = a {
                 comp.get_mut::<Text>().set_text(&a);
-            }
-            else {
+            } else {
                 LilahTypeError!(Text, 2, String);
             }
-        }
-        else {
+        } else {
             LilahTypeError!(Text, 1, GameObject);
         }
     }
@@ -1382,12 +1531,10 @@ impl Text {
             let a = vm.get_slot_string(2);
             if let Some(a) = a {
                 comp.get_mut::<Text>().set_font(&a);
-            }
-            else {
+            } else {
                 LilahTypeError!(Text, 2, String);
             }
-        }
-        else {
+        } else {
             LilahTypeError!(Text, 1, GameObject);
         }
     }
@@ -1397,12 +1544,10 @@ impl Text {
             let a = vm.get_slot_double(2);
             if let Some(a) = a {
                 comp.get_mut::<Text>().set_font_size(a as u32);
-            }
-            else {
+            } else {
                 LilahTypeError!(Text, 2, f64);
             }
-        }
-        else {
+        } else {
             LilahTypeError!(Text, 1, GameObject);
         }
     }
@@ -1428,12 +1573,12 @@ impl Sprite {
             size: (1, 1),
             base_size: (1, 1),
             index_cut: (0, 0),
-            index: (0,0),
+            index: (0, 0),
             texture_id: t_id.to_string(),
             vertex_array: None,
             vertex_buffer: None,
             tint: Color::WHITE,
-            sort: 0
+            sort: 0,
         }
     }
 
@@ -1450,7 +1595,10 @@ impl Sprite {
 
             let pos_attrib = app.default_program.get_attrib_location("position").unwrap();
             set_attribute!(vao, pos_attrib, Vertex::0, gl::FLOAT);
-            let color_attrib = app.default_program.get_attrib_location("vertexTexCoord").unwrap();
+            let color_attrib = app
+                .default_program
+                .get_attrib_location("vertexTexCoord")
+                .unwrap();
             set_attribute!(vao, color_attrib, Vertex::1, gl::FLOAT);
 
             textures[&self.texture_id].bind();
@@ -1461,37 +1609,36 @@ impl Sprite {
         }
 
         if let Some(t) = textures.get(&self.texture_id) {
-            self.base_size = (
-                t.size.x as u32,
-                t.size.y as u32,
-            );
-        }
-        else {
+            self.base_size = (t.size.x as u32, t.size.y as u32);
+        } else {
             let id = self.texture_id.clone();
             LilahNotFoundError!(Sprite, Texture, id);
         }
 
-        //self.anim_sprite_sheet(self.index_cut.0, self.index_cut.1);
+        self.anim_sprite_sheet(self.index_cut.0, self.index_cut.1);
     }
 
     pub fn get_size(&self) -> (u32, u32) {
         (
-            self.base_size.0/self.size.0,
-            self.base_size.1/self.size.1,
+            self.base_size.0 / self.size.0,
+            self.base_size.1 / self.size.1,
         )
     }
 
     pub fn cut_sprite_sheet(&mut self, ind: i32, ind2: i32, col: u32, row: u32) {
-        self.size = (col,row);
+        self.size = (col, row);
         self.index_cut = (ind, ind2);
         self.index = (0, 0);
     }
 
     pub fn anim_sprite_sheet(&mut self, ind: i32, ind2: i32) {
-        self.index = (ind*self.get_size().0 as i32, ind2*self.get_size().1 as i32);
+        self.index = (
+            ind * self.get_size().0 as i32,
+            ind2 * self.get_size().1 as i32,
+        );
         let ratio = (
-            ((self.base_size.0 as f32/self.size.0 as f32)/self.base_size.0 as f32),
-            ((self.base_size.1 as f32/self.size.1 as f32)/self.base_size.1 as f32)
+            ((self.base_size.0 as f32 / self.size.0 as f32) / self.base_size.0 as f32),
+            ((self.base_size.1 as f32 / self.size.1 as f32) / self.base_size.1 as f32),
         );
 
         fn precision_f32(x: f32, decimals: u32) -> f32 {
@@ -1506,13 +1653,19 @@ impl Sprite {
         }
 
         let zero = (
-            precision_f32((ind as f32) / self.size.0 as f32 + (1.0/self.base_size.0 as f32), 2), 
-            precision_f32((ind2 as f32) / self.size.1 as f32 + (1.0/self.base_size.0 as f32), 2)
+            precision_f32(
+                (ind as f32) / self.size.0 as f32 + (1.0 / self.base_size.0 as f32),
+                2,
+            ),
+            precision_f32(
+                (ind2 as f32) / self.size.1 as f32 + (1.0 / self.base_size.0 as f32),
+                2,
+            ),
         );
 
         let one = (
-            precision_f32(zero.0+ratio.0 - (1.0/self.base_size.0 as f32) * 2.0, 2), 
-            precision_f32(zero.1+ratio.1 - (1.0/self.base_size.0 as f32) * 2.0, 2)
+            precision_f32(zero.0 + ratio.0 - (1.0 / self.base_size.0 as f32) * 2.0, 2),
+            precision_f32(zero.1 + ratio.1 - (1.0 / self.base_size.0 as f32) * 2.0, 2),
         );
 
         let mut new_verts = Sprite::DEF_VERTICES;
@@ -1521,20 +1674,27 @@ impl Sprite {
         new_verts[2].1 = [one.0, zero.1];
         new_verts[3].1 = [zero.0, zero.1];
 
-        unsafe { 
+        unsafe {
             self.vertex_array.as_ref().unwrap().bind();
-            self.vertex_buffer.as_mut().unwrap().set_data(&new_verts, gl::DYNAMIC_DRAW);
+            self.vertex_buffer
+                .as_mut()
+                .unwrap()
+                .set_data(&new_verts, gl::DYNAMIC_DRAW);
         }
     }
 
     pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
-        let model = 
-        Mat4::IDENTITY * 
-        Mat4::from_scale_rotation_translation( 
-            Vec3::new(self.get_size().0 as f32, self.get_size().1 as f32, 1.0) * Vec3::new(t.scale.x as f32, t.scale.y as f32, 1.0),
-            Quat::from_rotation_z(t.rotation), 
-            Vec3::new(t.position.x as f32 + (self.get_size().0/2) as f32, t.position.y as f32 - (self.get_size().1/2) as f32, 0.0)
-        );
+        let model = Mat4::IDENTITY
+            * Mat4::from_scale_rotation_translation(
+                Vec3::new(self.get_size().0 as f32, self.get_size().1 as f32, 1.0)
+                    * Vec3::new(t.scale.x as f32, t.scale.y as f32, 1.0),
+                Quat::from_rotation_z(t.rotation),
+                Vec3::new(
+                    t.position.x as f32 + (self.get_size().0 / 2) as f32,
+                    t.position.y as f32 - (self.get_size().1 / 2) as f32,
+                    0.0,
+                ),
+            );
 
         let view = unsafe { *crate::math::VIEW_MATRIX };
         let projection = unsafe { *crate::math::PROJECTION_MATRIX };
@@ -1545,18 +1705,33 @@ impl Sprite {
             textures[&self.texture_id].activate(gl::TEXTURE0);
 
             app.default_program.apply();
-            
+
             self.vertex_array.as_ref().unwrap().bind();
-            
-            let mat_attr = gl::GetUniformLocation(app.default_program.id, CString::new("mvp").unwrap().as_ptr());
+
+            let mat_attr = gl::GetUniformLocation(
+                app.default_program.id,
+                CString::new("mvp").unwrap().as_ptr(),
+            );
             gl::UniformMatrix4fv(mat_attr, 1, gl::FALSE as GLboolean, &mvp.to_cols_array()[0]);
 
-            let tint_attr = gl::GetUniformLocation(app.default_program.id, CString::new("tint").unwrap().as_ptr());
-            gl::Uniform4f(tint_attr, self.tint.r, self.tint.g, self.tint.b, self.tint.a);
+            let tint_attr = gl::GetUniformLocation(
+                app.default_program.id,
+                CString::new("tint").unwrap().as_ptr(),
+            );
+            gl::Uniform4f(
+                tint_attr,
+                self.tint.r,
+                self.tint.g,
+                self.tint.b,
+                self.tint.a,
+            );
 
-            let sort_attr = gl::GetUniformLocation(app.default_program.id, CString::new("sort").unwrap().as_ptr());
+            let sort_attr = gl::GetUniformLocation(
+                app.default_program.id,
+                CString::new("sort").unwrap().as_ptr(),
+            );
             gl::Uniform1f(sort_attr, self.sort as f32);
-            
+
             gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
         }
     }
@@ -1575,15 +1750,16 @@ impl Sprite {
     }
 
     fn wren_cut_sprite_sheet(&mut self, vm: &VM) {
-        if let (Some(xy), Some(colrow)) = (vm.get_slot_foreign::<Vec2>(1), vm.get_slot_foreign::<Vec2>(1)) {
+        if let (Some(xy), Some(colrow)) = (
+            vm.get_slot_foreign::<Vec2>(1),
+            vm.get_slot_foreign::<Vec2>(1),
+        ) {
             self.cut_sprite_sheet(xy.x as i32, xy.y as i32, colrow.x as u32, colrow.y as u32);
-        }
-        else {
+        } else {
             LilahTypeError!(Sprite, 2, Vec2);
             LilahTypeError!(Sprite, 3, Vec2);
         }
     }
-
 
     fn wren_get_texture_id(&self, vm: &VM) {
         vm.set_slot_string(0, self.texture_id.clone());
@@ -1593,12 +1769,10 @@ impl Sprite {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             if let Some(pos) = vm.get_slot_foreign::<Vec2>(2) {
                 comp.get_mut::<Sprite>().base_size = (pos.x as u32, pos.y as u32);
-            }
-            else {
+            } else {
                 LilahTypeError!(Sprite, 2, Vec2);
             }
-        }
-        else {
+        } else {
             LilahTypeError!(Sprite, 1, GameObject);
         }
     }
@@ -1607,37 +1781,40 @@ impl Sprite {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             if let Some(sort) = vm.get_slot_double(2) {
                 comp.get_mut::<Sprite>().sort = sort as u32;
-            }
-            else {
+            } else {
                 LilahTypeError!(Sprite, 2, float);
             }
-        }
-        else {
+        } else {
             LilahTypeError!(Sprite, 1, GameObject);
         }
     }
 
     fn wren_cut_sprite_sheet_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            if let (Some(xy), Some(colrow)) = (vm.get_slot_foreign::<Vec2>(2), vm.get_slot_foreign::<Vec2>(3)) {
-                comp.get_mut::<Sprite>()
-                .cut_sprite_sheet(xy.x as i32, xy.y as i32, colrow.x as u32, colrow.y as u32);
-            }
-            else {
+            if let (Some(xy), Some(colrow)) = (
+                vm.get_slot_foreign::<Vec2>(2),
+                vm.get_slot_foreign::<Vec2>(3),
+            ) {
+                comp.get_mut::<Sprite>().cut_sprite_sheet(
+                    xy.x as i32,
+                    xy.y as i32,
+                    colrow.x as u32,
+                    colrow.y as u32,
+                );
+            } else {
                 LilahTypeError!(Sprite, 2, Vec2);
                 LilahTypeError!(Sprite, 3, Vec2);
             }
-        }
-        else {
+        } else {
             LilahTypeError!(Sprite, 1, GameObject);
         }
     }
 }
 
 impl ComponentBehaviour {
-    pub fn new(s : String) -> Self {
+    pub fn new(s: String) -> Self {
         Self {
-            component: s.clone()
+            component: s.clone(),
         }
     }
 
@@ -1666,14 +1843,14 @@ impl Default for Sprite {
 impl Default for Rigidbody {
     fn default() -> Self {
         Self {
-            bounds : Vec2::ONE,
+            bounds: Vec2::ONE,
             pivot: Vec2::ZERO,
             scale: Vec2::ONE,
             rotation: 0.0,
-            velocity : Vec2::ZERO,
-            position : Vec2::ONE,
-            colliding : None,
-            solid : true    
+            velocity: Vec2::ZERO,
+            position: Vec2::ONE,
+            colliding: None,
+            solid: true,
         }
     }
 }
@@ -1687,7 +1864,7 @@ impl Component for Transform {
         self
     }
 
-    fn send_to_wren(&self, slot : usize, vm : &VM) {
+    fn send_to_wren(&self, slot: usize, vm: &VM) {
         send_foreign!(vm, "game", "Transform", self.clone() => slot);
     }
 
@@ -1696,15 +1873,33 @@ impl Component for Transform {
     }
 }
 
-impl Component for Sprite {
-    fn as_any(& self) -> & dyn Any {
-        self
-    }
-    fn as_any_mut(& mut self) -> & mut dyn Any {
+impl Component for Scene {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 
-    fn send_to_wren(&self, slot : usize, vm : &VM) {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn send_to_wren(&self, slot: usize, vm: &VM) {
+        send_foreign!(vm, "game", "Scene", self.clone() => slot);
+    }
+
+    fn clone_dyn(&self) -> Box<dyn Component> {
+        Box::new(self.clone())
+    }
+}
+
+impl Component for Sprite {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn send_to_wren(&self, slot: usize, vm: &VM) {
         send_foreign!(vm, "game", "Sprite", self.clone() => slot);
     }
 
@@ -1722,7 +1917,7 @@ impl Component for Rigidbody {
         self
     }
 
-    fn send_to_wren(&self, slot : usize, vm : &VM) {
+    fn send_to_wren(&self, slot: usize, vm: &VM) {
         send_foreign!(vm, "game", "Rigidbody", self.clone() => slot);
     }
 
@@ -1740,7 +1935,7 @@ impl Component for Animator {
         self
     }
 
-    fn send_to_wren(&self, slot : usize, vm : &VM) {
+    fn send_to_wren(&self, slot: usize, vm: &VM) {
         send_foreign!(vm, "game", "Animator", self.clone() => slot);
     }
 
@@ -1758,7 +1953,7 @@ impl Component for ComponentBehaviour {
         self
     }
 
-    fn send_to_wren(&self, slot : usize, vm : &VM) {
+    fn send_to_wren(&self, slot: usize, vm: &VM) {
         send_foreign!(vm, "game", "ComponentBehaviour", self.clone() => slot);
     }
 
@@ -1776,7 +1971,7 @@ impl Component for Text {
         self
     }
 
-    fn send_to_wren(&self, slot : usize, vm : &VM) {
+    fn send_to_wren(&self, slot: usize, vm: &VM) {
         send_foreign!(vm, "game", "Text", self.clone() => slot);
     }
 
@@ -1794,7 +1989,7 @@ impl Component for Sfx {
         self
     }
 
-    fn send_to_wren(&self, slot : usize, vm : &VM) {
+    fn send_to_wren(&self, slot: usize, vm: &VM) {
         send_foreign!(vm, "game", "Sfx", self.clone() => slot);
     }
 
@@ -1847,9 +2042,18 @@ impl Class for Transform {
     fn initialize(vm: &VM) -> Transform {
         if let Some(pos) = vm.get_slot_foreign::<Vec2>(1) {
             Transform::new(*pos)
-        }
-        else {
+        } else {
             LilahTypePanic!(ComponentBehaviour, 1, Vec2);
+        }
+    }
+}
+
+impl Class for Scene {
+    fn initialize(vm: &VM) -> Self {
+        if let Some(t_id) = vm.get_slot_string(1) {
+            Scene::new(t_id.to_string())
+        } else {
+            LilahTypePanic!(Scene, 1, String);
         }
     }
 }
@@ -1858,8 +2062,7 @@ impl Class for Sprite {
     fn initialize(vm: &VM) -> Sprite {
         if let Some(t_id) = vm.get_slot_string(1) {
             Sprite::new(t_id.as_str())
-        }
-        else {
+        } else {
             LilahTypePanic!(Sprite, 1, String);
         }
     }
@@ -1875,8 +2078,7 @@ impl Class for ComponentBehaviour {
     fn initialize(vm: &VM) -> ComponentBehaviour {
         if let Some(c) = vm.get_slot_string(1) {
             ComponentBehaviour::new(c)
-        }
-        else {
+        } else {
             LilahTypePanic!(ComponentBehaviour, 1, String);
         }
     }
@@ -1892,8 +2094,7 @@ impl Class for Sfx {
     fn initialize(vm: &VM) -> Sfx {
         if let (Some(b), Some(c)) = (vm.get_slot_string(1), vm.get_slot_string(2)) {
             Sfx::new(b, c)
-        }
-        else {
+        } else {
             LilahTypePanic!(Sfx, 1, String);
         }
     }
@@ -1903,8 +2104,7 @@ impl Class for Text {
     fn initialize(vm: &VM) -> Text {
         if let (Some(b), Some(c)) = (vm.get_slot_string(1), vm.get_slot_string(2)) {
             Text::new(b.as_str(), c.as_str())
-        }
-        else {
+        } else {
             LilahTypePanic!(Text, 1, String);
         }
     }
@@ -1954,6 +2154,10 @@ create_module! (
     class("Component") Box<dyn crate::components::Component> => component {
     }
 
+    class("Scene") crate::components::Scene => scene {
+        instance(getter "as_component") wren_as_component
+    }
+
     class("GameObject") crate::gameobject::GameObject => go {
         instance(fn "get", 1) wren_get_component,
         instance(fn "add", 1) wren_add_component,
@@ -1972,7 +2176,7 @@ create_module! (
         instance(getter "solid") wren_solid_getter,
         instance(setter "solid") wren_solid_setter,
         instance(getter "colliding") wren_colliding_getter,
-        
+
         static(fn "colliding", 1) wren_colliding_from_gameobject,
         static(fn "set_velocity", 2) wren_set_vel_from_gameobject,
         static(fn "set_velocity_x", 2) wren_set_vel_x_from_gameobject,
@@ -2044,6 +2248,6 @@ create_module! (
     module => game
 );
 
-pub fn publish_modules(lib : &mut ModuleLibrary) {
+pub fn publish_modules(lib: &mut ModuleLibrary) {
     game::publish_module(lib);
 }

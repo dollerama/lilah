@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sdl2 = {version = "0.35.0", features = ["mixer"] }
+sdl2 = { version = "0.35.0", features = ["mixer"] }
 ruwren = "0.4"
 glob = "0.3.1"
 debug_print = "1.0.0"
@@ -17,6 +17,9 @@ thiserror = "1.0"
 gl = "0.14.0"
 lazy_mut = "*"
 rusttype = "*"
+serde = { version = "*", features = ["derive"] }
+serde_with = "3.4.0"
+serde_json = "*"
 
 [dependencies.uuid]
 version = "1.4.1"
