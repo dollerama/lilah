@@ -12,10 +12,9 @@ use data2sound::decode_bytes;
 use debug_print::debug_println;
 use glam::{Mat4, Vec3};
 use image::Rgba;
-use rusttype::{point, Font, Scale};
-use serde::{Deserialize, Serialize};
+use rusttype::Font;
 use serde_json;
-use std::fs;
+use std::cmp::Ordering;
 use std::fs::File;
 use std::io::Read;
 use std::{collections::HashMap, path::Path};
@@ -192,7 +191,9 @@ impl<'a> WorldState<'a> {
     pub fn load_texture_bytes(&mut self, name: &str, source: &[u8], _app: &App) {
         let mut new_texture = unsafe { LilahTexture::new() };
         unsafe {
-            new_texture.load_as_bytes(source);
+            if let Err(e) = new_texture.load_as_bytes(source) {
+                LilahPanic!(LilahTexture, e);
+            }
         }
 
         unsafe {
@@ -231,7 +232,9 @@ impl<'a> WorldState<'a> {
     pub fn load_scene_data(&mut self, name: &str, source: &str) {
         let mut js = File::open(source).expect("file");
         let mut buf = String::from("");
-        js.read_to_string(&mut buf);
+        if let Err(e) = js.read_to_string(&mut buf) {
+            LilahPanic!(SceneData, e);
+        }
 
         let result: SceneData = match serde_json::from_str(buf.as_str()) {
             Ok(v) => v,
@@ -446,7 +449,26 @@ impl<'a> World<'a> {
     }
 
     pub fn draw(&self, app: &mut App) {
-        for (_, i) in &self.state.gameobjects {
+        let mut values = vec!();
+        for i in &self.state.gameobjects {
+            values.push(i.1.clone());
+        }
+
+        values.sort_by(|a, b| {
+            if a.has::<Sprite>() && b.has::<Sprite>() { 
+                a.get::<Sprite>().sort.partial_cmp(&b.get::<Sprite>().sort).unwrap()
+            } else if a.has::<Text>() && b.has::<Text>() { 
+                a.get::<Text>().sort.partial_cmp(&b.get::<Text>().sort).unwrap()
+            } else if a.has::<Sprite>() && b.has::<Text>() { 
+                a.get::<Sprite>().sort.partial_cmp(&b.get::<Text>().sort).unwrap()
+            } else if a.has::<Text>() && b.has::<Sprite>() { 
+                a.get::<Text>().sort.partial_cmp(&b.get::<Sprite>().sort).unwrap()
+            } else {
+                Ordering::Greater
+            }
+        });
+
+        for i in values {
             if i.has::<Transform>() {
                 if i.has::<Sprite>() {
                     i.get::<Sprite>()
@@ -546,6 +568,15 @@ impl<'a> World<'a> {
                                 .get::<Rigidbody>()
                                 .check_collision_sat(&j.get::<Rigidbody>(), app);
                             coll.push((i.id.clone(), j.id.clone(), check));
+                        }
+                    }
+
+                    if i.has::<Rigidbody>() {
+                        if j.has::<Scene>() {
+                            for r in &j.get::<Scene>().rigidbodies {
+                                let check = i.get::<Rigidbody>().check_collision_sat(r, app);
+                                coll.push((i.id.clone(), j.id.clone(), check));
+                            }
                         }
                     }
                 }

@@ -370,7 +370,7 @@ impl App {
     uniform float sort;
 
     void main() {
-        gl_Position = mvp * vec4(position, sort, 1.0);
+        gl_Position = mvp * vec4(position, -sort, 1.0);
         texCoord = vertexTexCoord;
     }
     "#;
@@ -452,6 +452,8 @@ impl App {
 
         unsafe {
             gl::Enable(gl::BLEND);
+            gl::Enable(gl::DEPTH_TEST);
+            gl::DepthFunc(gl::LESS);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -603,7 +605,7 @@ impl App {
     pub fn pre_frame(&mut self) -> bool {
         self.time.update();
         unsafe {
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
         self.handle_input()
     }

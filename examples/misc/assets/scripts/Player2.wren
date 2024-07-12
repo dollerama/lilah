@@ -23,6 +23,7 @@ class Player2 is Behaviour {
         var scene = GameObject.new("scene")
         scene.add(Transform.new(Vec2.new(0,0)))
         scene.add(Scene.new("assets/Untitled.json"))
+        scene.add(Rigidbody.new())
         scene = Lilah.instantiate(scene, {})
     }
 
@@ -30,12 +31,9 @@ class Player2 is Behaviour {
         //Transform.set_scale(gameobject.ref, Vec2.new(2,2))
         //Transform.set_pivot(gameobject.ref, gameobject.ref.get("Sprite").size/2)
         //Rigidbody.set_solid(gameobject.ref, false)
-        Sprite.set_sort(gameobject.ref, 0)
+        Sprite.set_sort(gameobject.ref, 2)
     }
 
     static update() {
-        if(Input.key("Right")) {
-            Transform.update_position_x(Lilah.find("scene").ref, -2)
-        }
     }
 }

@@ -1,7 +1,7 @@
 use std::{path::Path, ffi::{CString, NulError}, ptr, string::FromUtf8Error};
 
 use gl::types::*;
-use image::{ImageError, EncodableLayout, DynamicImage, Rgba};
+use image::{ImageError, EncodableLayout, Rgba};
 use thiserror::Error;
 
 use crate::math::Vec2;

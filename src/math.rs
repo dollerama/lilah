@@ -413,7 +413,7 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub fn new_from_rigidbody(body: &Rigidbody, app: &App) -> Self {
+    pub fn new_from_rigidbody(body: &Rigidbody, _app: &App) -> Self {
         let model = 
         Mat4::IDENTITY * 
         Mat4::from_rotation_translation(

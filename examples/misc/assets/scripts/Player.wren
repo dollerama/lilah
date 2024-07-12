@@ -16,8 +16,8 @@ class Player is Behaviour {
         Input.update_binding("Horizontal", "A", "D")
         Input.update_binding("Vertical", "S", "W")
 
-        gameobject.add(Transform.new(Vec2.new(-0.5,0))) 
-        gameobject.add(Sprite.new("assets/test.png"))  
+        gameobject.add(Transform.new(Vec2.new(-0.5,0)))
+        gameobject.add(Sprite.new("assets/test.png"))
         gameobject.add(Rigidbody.new())
         gameobject.add(Animator.new())
         gameobject.add(Text.new("Hello Lilah!", "assets/Lora-Regular.ttf"))
@@ -34,11 +34,11 @@ class Player is Behaviour {
         Animator.set_state(gameobject.ref, "Row1")
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
-        Sprite.set_sort(gameobject.ref, -1)
+        Sprite.set_sort(gameobject.ref, 2)
     }
-    
+
     static update() {
-        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*50)
+        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*100)
 
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
@@ -51,24 +51,24 @@ class Player is Behaviour {
         if(gameobject.ref.get("Rigidbody").colliding != null) {
             //Sfx.play(gameobject.ref, "sfx")
         }
-        
+
         // if(Input.key("Space")) {
         //     Lilah.fullscreen = !Lilah.fullscreen
         // }
 
         if(Input.key("Right")) {
-            Transform.update_position_x(Lilah.camera.ref, 1)
+            Transform.update_position_x(Lilah.camera.ref, 2)
         }
         if(Input.key("Up")) {
-            Transform.update_position_y(Lilah.camera.ref, 1)
+            Transform.update_position_y(Lilah.camera.ref, 2)
         }
         if(Input.key("Left")) {
-            Transform.update_position_x(Lilah.camera.ref, -1)
+            Transform.update_position_x(Lilah.camera.ref, -2)
         }
         if(Input.key("Down")) {
-            Transform.update_position_y(Lilah.camera.ref, -1)
+            Transform.update_position_y(Lilah.camera.ref, -2)
         }
-        
+
         if(Input.key_down("Space")) {
             var center = Vec2.screen_to_world_space(Vec2.new(400, 300))
             System.print("%(center.x), %(center.y)")

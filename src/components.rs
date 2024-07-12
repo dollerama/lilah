@@ -6,7 +6,7 @@ use crate::{application::App, gameobject::GameObject};
 use crate::{set_attribute, LilahNotFoundError, LilahPanic, LilahTypeError, LilahTypePanic};
 use gl::types::*;
 use glam::{Mat4, Quat, Vec3};
-use image::{DynamicImage, EncodableLayout, Rgba};
+use image::{DynamicImage, Rgba};
 use rusttype::{point, Font, Scale};
 use ruwren::{create_module, send_foreign, Class, ModuleLibrary, VM};
 use serde::{Deserialize, Serialize};
@@ -100,6 +100,7 @@ pub struct Layer {
     #[serde_as(as = "Vec<(_, _)>")]
     pub tiles: HashMap<(i32, i32), Tile>,
     pub visible: bool,
+    pub collision: bool,
     pub tile_sheet: String,
     pub current_tile_item: i32,
 }
@@ -131,8 +132,9 @@ pub struct TileSheet {
 #[derive(Clone, Default)]
 pub struct Scene {
     pub file: String,
-    pub tiles: Vec<Sprite>,
-    pub transforms: Vec<Transform>,
+    pub tiles: Vec<Vec<Sprite>>,
+    pub transforms: Vec<Vec<Transform>>,
+    pub rigidbodies: Vec<Rigidbody>,
 }
 
 impl Scene {
@@ -141,6 +143,7 @@ impl Scene {
             file: file_name,
             tiles: vec![],
             transforms: vec![],
+            rigidbodies: vec![],
         }
     }
 
@@ -151,8 +154,9 @@ impl Scene {
         scenes: &HashMap<String, SceneData>,
     ) {
         let this_scene = &scenes[self.file.clone().as_str()];
-
         for layer in &this_scene.layers {
+            let mut current_tiles = vec![];
+            let mut current_trans = vec![];
             for tile in &layer.tiles {
                 let mut current_sheet = "".to_string();
                 let mut current_sheet_id = 0;
@@ -172,26 +176,45 @@ impl Scene {
                     this_scene.tile_sheets[current_sheet_id].sheet_size.1
                         / this_scene.tile_sheets[current_sheet_id].tile_size.1,
                 );
+                new_tile.sort = self.tiles.len() as u32;
 
-                self.tiles.push(new_tile);
+                current_tiles.push(new_tile);
                 let new_trans = Transform::new(Vec2::new(
                     tile.1.position.0 as f64,
                     tile.1.position.1 as f64,
                 ));
-                self.transforms.push(new_trans);
+                current_trans.push(new_trans);
+                if layer.collision {
+                    let mut r = Rigidbody::new(Vec2::new(
+                        tile.1.position.0 as f64,
+                        tile.1.position.1 as f64,
+                    ));
+                    r.bounds = Vec2::new(
+                        this_scene.tile_sheets[current_sheet_id].tile_size.0 as f64,
+                        this_scene.tile_sheets[current_sheet_id].tile_size.1 as f64,
+                    );
+                    self.rigidbodies.push(r);
+                }
             }
+
+            self.tiles.push(current_tiles);
+            self.transforms.push(current_trans);
         }
 
         for i in &mut self.tiles {
-            i.load(app, textures);
+            for j in i {
+                j.load(app, textures);
+            }
         }
     }
 
     pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
         for i in 0..self.tiles.len() {
-            let trans = &self.transforms[i];
-            let new_trans = Transform::new(trans.position + t.position);
-            self.tiles[i].draw(app, textures, &new_trans);
+            for j in 0..self.tiles[i].len() {
+                let trans = &self.transforms[i][j];
+                let new_trans = Transform::new(trans.position + t.position);
+                self.tiles[i][j].draw(app, textures, &new_trans);
+            }
         }
     }
 
@@ -1272,7 +1295,7 @@ impl Text {
             vertex_array: None,
             vertex_buffer: None,
             color: Color::new(1.0, 1.0, 1.0, 1.0),
-            sort: 0,
+            sort: 1000,
         }
     }
 
