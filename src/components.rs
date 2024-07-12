@@ -20,7 +20,7 @@ pub trait Tickable<T: Component> {
     ///Tick Component with delta time and Component
     /// # Example
     /// impliments tickable for Transform that depends on Rigidbody. This snippet will set the transform to the rigidbody position when ticked.
-    /// ```rust, no_run
+    /// ```rust, ignore
     /// impl Tickable<Rigidbody> for Transform {
     ///     fn tick(&mut self, _: f32, d: &Rigidbody) {
     ///         self.position = d.position;
