@@ -208,14 +208,17 @@ impl Scene {
         }
     }
 
-    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
-        for i in 0..self.tiles.len() {
-            for j in 0..self.tiles[i].len() {
-                let trans = &self.transforms[i][j];
-                let new_trans = Transform::new(trans.position + t.position);
-                self.tiles[i][j].draw(app, textures, &new_trans);
-            }
+    pub fn draw(&self, sort: usize, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
+        if sort > self.tiles.len() {
+            return;
         }
+        //for i in 0..self.tiles.len() {
+            for j in 0..self.tiles[sort].len() {
+                let trans = &self.transforms[sort][j];
+                let new_trans = Transform::new(trans.position + t.position);
+                self.tiles[sort][j].draw(app, textures, &new_trans);
+            }
+        //}
     }
 
     //for wren

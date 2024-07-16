@@ -478,8 +478,8 @@ impl Rect {
             let proj_a = Rect::get_projection(self, e);
             let proj_b = Rect::get_projection(other, e);
 
-            if !(proj_a.0.min(proj_a.1) <= proj_b.0.max(proj_b.1) &&
-                proj_b.0.min(proj_b.1) <= proj_a.0.max(proj_a.1)) {
+            if !(proj_a.0.min(proj_a.1) < proj_b.0.max(proj_b.1) &&
+                proj_b.0.min(proj_b.1) < proj_a.0.max(proj_a.1)) {
                 return (false, Vec2::ZERO);
             }
             
@@ -490,7 +490,7 @@ impl Rect {
 
         intersecting_axis.sort_by(|a, b| a.1.total_cmp(&b.1));
 
-        (true, *intersecting_axis[intersecting_axis.len()-1].0*intersecting_axis[intersecting_axis.len()-1].1)
+        (true, Vec2::ONE*intersecting_axis[0].1)
     }
 }
 

@@ -451,36 +451,36 @@ impl<'a> World<'a> {
     pub fn draw(&self, app: &mut App) {
         let mut values = vec!();
         for i in &self.state.gameobjects {
-            values.push(i.1.clone());
+            if i.1.has::<Scene>() {
+                for j in 0..i.1.get::<Scene>().tiles.len() {
+                    values.push((i.1.clone(), j as u32))
+                }
+            }
+            if i.1.has::<Sprite>() {
+                values.push((i.1.clone(), i.1.get::<Sprite>().sort));
+            }
+            if i.1.has::<Text>() {
+                values.push((i.1.clone(), i.1.get::<Text>().sort));
+            }
         }
 
         values.sort_by(|a, b| {
-            if a.has::<Sprite>() && b.has::<Sprite>() { 
-                a.get::<Sprite>().sort.partial_cmp(&b.get::<Sprite>().sort).unwrap()
-            } else if a.has::<Text>() && b.has::<Text>() { 
-                a.get::<Text>().sort.partial_cmp(&b.get::<Text>().sort).unwrap()
-            } else if a.has::<Sprite>() && b.has::<Text>() { 
-                a.get::<Sprite>().sort.partial_cmp(&b.get::<Text>().sort).unwrap()
-            } else if a.has::<Text>() && b.has::<Sprite>() { 
-                a.get::<Text>().sort.partial_cmp(&b.get::<Sprite>().sort).unwrap()
-            } else {
-                Ordering::Less
-            }
+            a.1.cmp(&b.1)
         });
 
         for i in values {
-            if i.has::<Transform>() {
-                if i.has::<Sprite>() {
-                    i.get::<Sprite>()
-                        .draw(app, &self.state.textures, i.get::<Transform>());
+            if i.0.has::<Transform>() {
+                if i.0.has::<Sprite>() {
+                    i.0.get::<Sprite>()
+                        .draw(app, &self.state.textures, i.0.get::<Transform>());
                 }
-                if i.has::<Text>() {
-                    i.get::<Text>()
-                        .draw(app, &self.state.textures, i.get::<Transform>());
+                if i.0.has::<Text>() {
+                    i.0.get::<Text>()
+                        .draw(app, &self.state.textures, i.0.get::<Transform>());
                 }
-                if i.has::<Scene>() {
-                    i.get::<Scene>()
-                        .draw(app, &self.state.textures, i.get::<Transform>());
+                if i.0.has::<Scene>() {
+                    i.0.get::<Scene>()
+                        .draw(i.1 as usize, app, &self.state.textures, i.0.get::<Transform>());
                 }
             }
         }
@@ -507,29 +507,6 @@ impl<'a> World<'a> {
         let mut collisions: Vec<(GameObjectId, GameObjectId, (bool, Vec2))> =
             Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
 
-        self.check_collision(&mut collisions, &app);
-
-        for coll in &collisions {
-            if coll.2 .0 {
-                if self.get(&coll.0.uuid).start && self.get(&coll.1.uuid).start {
-                    let g2_is_solid = self.get(&coll.1.uuid).get::<Rigidbody>().solid;
-                    if self.get(&coll.0.uuid).has::<Rigidbody>() {
-                        let body = self.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
-                        body.colliding = Some(coll.1.clone());
-                        if g2_is_solid {
-                            println!("{}", coll.2.1);
-                            body.velocity.x = 0f64;
-                            body.velocity.y = 0f64;
-                            body.position -= coll.2.1*2;// * (100.1f64);//* (10.1f64) * app.delta_time();
-                        }
-
-                        let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
-                        body2.colliding = Some(coll.0.clone());
-                    }
-                }
-            }
-        }
-
         self.update_vel_y(app.delta_time());
         collisions = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
         self.check_collision(&mut collisions, &app);
@@ -542,10 +519,7 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            println!("{}", coll.2.1);
-                            body.velocity.x = 0f64;
-                            body.velocity.y = 0f64;
-                            body.position += coll.2.1*2;// * (100.1f64);// * app.delta_time();
+                            body.position -= (body.velocity * coll.2.1.magnitude());
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();

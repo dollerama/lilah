@@ -13,12 +13,6 @@ class Player is Behaviour {
     }
 
     setup() {
-        //System.print(Fs.write("examples/misc/assets/new.json", Json.stringify(Vec2.new(3.5, 4.5).serialize())))
-        var f = Fs.read("examples/misc/assets/new.json")
-        var read = Json.parse(f)
-        System.print(read)
-        read = Vec2.new(0, 0).deserialize(read)
-        System.print(read)
         var gameobject = GameObject.new("C")
 
         Input.update_binding("Horizontal", "A", "D")

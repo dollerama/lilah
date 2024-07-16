@@ -374,7 +374,7 @@ impl App {
     uniform float sort;
 
     void main() {
-        gl_Position = mvp * vec4(position, -sort, 1.0);
+        gl_Position = mvp * vec4(position, 0.0, 1.0);
         texCoord = vertexTexCoord;
     }
     "#;
@@ -934,7 +934,10 @@ impl Fs {
 
             match file_in {
                 Ok(v) => vm.set_slot_string(0, v),
-                Err(e) => LilahPanic!(Fs, e)
+                Err(e) => {
+                    LilahError!(Fs, e);
+                    vm.set_slot_null(0);
+                }
             }
         } else {
             LilahTypeError!(String, 1, Fs);
@@ -946,8 +949,13 @@ impl Fs {
                 let file_in = std::fs::write(file, contents);
 
                 match file_in {
-                    Ok(_) => {},
-                    Err(e) => LilahPanic!(Fs, e)
+                    Ok(_) => {
+                        vm.set_slot_bool(0, true);
+                    },
+                    Err(e) => {
+                        LilahError!(Fs, e);
+                        vm.set_slot_bool(0, false);
+                    }
                 }
             } else {
                LilahTypeError!(String, 2, Fs); 
