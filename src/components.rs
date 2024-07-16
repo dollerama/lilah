@@ -714,7 +714,7 @@ impl Rigidbody {
     }
 
     pub fn update_correct_y(&mut self, dt: f64) {
-        self.position.y -= self.velocity.y * dt;
+        self.position.y -= self.velocity.y  * dt;
     }
 
     pub fn update_correct_x(&mut self, dt: f64) {

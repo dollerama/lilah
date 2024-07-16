@@ -14,7 +14,7 @@ use crate::world::WorldState;
 use debug_print::debug_println;
 use glam::Mat4;
 use ruwren::{
-    BasicFileLoader, FunctionHandle, FunctionSignature, Handle, ModuleLibrary, VMConfig, VMWrapper,
+    create_module, BasicFileLoader, Class, FunctionHandle, FunctionSignature, Handle, ModuleLibrary, VMConfig, VMWrapper, VM
 };
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -159,9 +159,11 @@ impl Scripting {
         let loader = BasicFileLoader::new().base_dir("");
 
         let mut lib = ModuleLibrary::new();
-
+        
+        io::publish_module(&mut lib);
         crate::math::publish_modules(&mut lib);
         crate::components::publish_modules(&mut lib);
+        
 
         let vm = VMConfig::new()
             .enable_relative_import(true)
@@ -170,6 +172,8 @@ impl Scripting {
             .build();
 
         //std engine modules
+        vm.interpret("io", include_str!("scripts/io.wren"))
+            .unwrap();
         vm.interpret("math", include_str!("scripts/math.wren"))
             .unwrap();
         vm.interpret("app", include_str!("scripts/app.wren"))
@@ -452,8 +456,8 @@ impl App {
 
         unsafe {
             gl::Enable(gl::BLEND);
-            gl::Enable(gl::DEPTH_TEST);
-            gl::DepthFunc(gl::LESS);
+            //gl::Enable(gl::DEPTH_TEST);
+            //gl::DepthFunc(gl::LESS);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -921,3 +925,56 @@ impl Scripting {
         Scripting::call_fn(&self.vm, &ui_class, "tick", 0);
     }
 }
+
+pub struct Fs {}
+impl Fs {
+    fn wren_read_as_str(vm: &VM) {
+        if let Some(file) = vm.get_slot_string(1) {
+            let file_in = std::fs::read_to_string(file);
+
+            match file_in {
+                Ok(v) => vm.set_slot_string(0, v),
+                Err(e) => LilahPanic!(Fs, e)
+            }
+        } else {
+            LilahTypeError!(String, 1, Fs);
+        }
+    }
+    fn wren_write_to_str(vm: &VM) {
+        if let Some(file) = vm.get_slot_string(1) {
+            if let Some(contents) = vm.get_slot_string(2) {
+                let file_in = std::fs::write(file, contents);
+
+                match file_in {
+                    Ok(_) => {},
+                    Err(e) => LilahPanic!(Fs, e)
+                }
+            } else {
+               LilahTypeError!(String, 2, Fs); 
+            }
+        } else {
+            LilahTypeError!(String, 1, Fs);
+        }
+    }
+}
+
+impl Class for Fs {
+    fn initialize(_: &VM) -> Self {
+        LilahPanic!(Component, "Cannot instantiate static class");
+    }
+}
+
+create_module! (
+    class("Fs") crate::application::Fs => fs {
+        static(fn "read", 1) wren_read_as_str,
+        static(fn "write", 2) wren_write_to_str
+    }
+
+    module => io
+);
+
+pub fn publish_modules(lib: &mut ModuleLibrary) {
+    io::publish_module(lib);
+}
+
+

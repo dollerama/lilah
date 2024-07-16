@@ -464,7 +464,7 @@ impl<'a> World<'a> {
             } else if a.has::<Text>() && b.has::<Sprite>() { 
                 a.get::<Text>().sort.partial_cmp(&b.get::<Sprite>().sort).unwrap()
             } else {
-                Ordering::Greater
+                Ordering::Less
             }
         });
 
@@ -506,6 +506,7 @@ impl<'a> World<'a> {
         self.update_vel_x(app.delta_time());
         let mut collisions: Vec<(GameObjectId, GameObjectId, (bool, Vec2))> =
             Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
+
         self.check_collision(&mut collisions, &app);
 
         for coll in &collisions {
@@ -516,7 +517,10 @@ impl<'a> World<'a> {
                         let body = self.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.update_correct_x(app.delta_time());
+                            println!("{}", coll.2.1);
+                            body.velocity.x = 0f64;
+                            body.velocity.y = 0f64;
+                            body.position -= coll.2.1*2;// * (100.1f64);//* (10.1f64) * app.delta_time();
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
@@ -538,7 +542,10 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.update_correct_y(app.delta_time());
+                            println!("{}", coll.2.1);
+                            body.velocity.x = 0f64;
+                            body.velocity.y = 0f64;
+                            body.position += coll.2.1*2;// * (100.1f64);// * app.delta_time();
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();

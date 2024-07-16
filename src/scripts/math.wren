@@ -1,10 +1,22 @@
-foreign class Vec2 {
-    construct new(x, y) {}
+import "io" for Serializable
 
+foreign class Vec2 is Serializable {
+    construct new(x, y) {}
+ 
+    #!x(ord = 0)
     foreign x
+    #!y(ord = 1)
     foreign y
     foreign x=(x)
     foreign y=(y)
+
+    serialize() {
+        return super.serialize([this.x, this.y])
+    }
+
+    deserialize(obj) {
+        return super.deserialize(obj, [Fn.new {|v| this.x = v}, Fn.new {|v| this.y = v}])
+    }
 
     foreign static one
     foreign static zero
@@ -56,5 +68,9 @@ foreign class Vec2 {
 
     ==(other) {
         return (x == other.x && y == other.y)
+    }
+
+    toString {
+        return "Vec2(%(this.x), %(this.y))"
     }
 }

@@ -490,7 +490,7 @@ impl Rect {
 
         intersecting_axis.sort_by(|a, b| a.1.total_cmp(&b.1));
 
-        (true, *intersecting_axis[0].0*intersecting_axis[0].1)
+        (true, *intersecting_axis[intersecting_axis.len()-1].0*intersecting_axis[intersecting_axis.len()-1].1)
     }
 }
 
