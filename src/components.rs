@@ -2027,6 +2027,7 @@ impl Component for Sfx {
 impl Tickable<Sprite> for Rigidbody {
     fn tick(&mut self, _: f64, d: &Sprite) {
         let sprite_size = d.get_size();
+        
         self.bounds = Vec2::new(sprite_size.0 as f64, sprite_size.1 as f64);
     }
 }

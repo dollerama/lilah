@@ -42,6 +42,8 @@ class Player is Behaviour {
     static update() {
         Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*100)
 
+        System.print(gameobject.ref.get("Transform").serialize())
+
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
         } else {

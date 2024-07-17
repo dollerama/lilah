@@ -1,5 +1,6 @@
 import "math" for Vec2
 import "app" for Lilah
+import "io" for Serializable
 
 class Behaviour {
     frame {
@@ -106,7 +107,7 @@ foreign class Animator {
     foreign static set_frame(g, f)
 }
 
-foreign class Transform {
+foreign class Transform is Serializable {
     construct new(p) {}
 
     foreign as_component
@@ -115,10 +116,29 @@ foreign class Transform {
     foreign scale
     foreign rotation
     foreign pivot
+    #!position(ord = 0)
     foreign position=(value)
+    #!scale(ord = 1)
     foreign scale=(value)
+    #!rotation(ord = 2)
     foreign rotation=(value)
+    #!pivot(ord = 3)
     foreign pivot=(value)
+
+    static default { Transform.new(Vec2.new(0, 0)) }
+
+    getProperty() {
+        return properties([[this.position, Vec2], [this.scale, Vec2], this.rotation, [this.pivot, Vec2]])
+    }
+
+    setProperty() {
+        return properties {|v|
+            this.position = v.call()
+            this.scale = v.call()
+            this.rotation = v.call()
+            this.pivot = v.call()
+        }
+    }
 
     foreign static set_pivot(go, new_pivot)
     foreign static set_position(go, new_pos)

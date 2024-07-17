@@ -10,12 +10,17 @@ foreign class Vec2 is Serializable {
     foreign x=(x)
     foreign y=(y)
 
-    serialize() {
-        return super.serialize([this.x, this.y])
+    static default { Vec2.new(0, 0) }
+
+    getProperty() {
+        return properties([this.x, this.y])
     }
 
-    deserialize(obj) {
-        return super.deserialize(obj, [Fn.new {|v| this.x = v}, Fn.new {|v| this.y = v}])
+    setProperty() {
+        return properties { |v| 
+            this.x = v.call()
+            this.y = v.call()
+        }
     }
 
     foreign static one

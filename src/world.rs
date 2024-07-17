@@ -503,12 +503,12 @@ impl<'a> World<'a> {
     }
 
     pub fn update(&mut self, mut app: &mut App) {
-        self.update_vel_x(app.delta_time());
+        
         let mut collisions: Vec<(GameObjectId, GameObjectId, (bool, Vec2))> =
             Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
-
-        self.update_vel_y(app.delta_time());
-        collisions = Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
+            
+        self.update_vel_x(app.delta_time());
+        
         self.check_collision(&mut collisions, &app);
 
         for coll in &collisions {
@@ -519,7 +519,29 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.position -= (body.velocity * coll.2.1.magnitude());
+                            body.position.x -= ((body.velocity * app.delta_time()) * 100 * coll.2.1.magnitude()).x;
+                        }
+
+                        let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
+                        body2.colliding = Some(coll.0.clone());
+                    }
+                }
+            }
+        }
+
+        self.update_vel_y(app.delta_time());
+        collisions.clear();
+        self.check_collision(&mut collisions, &app);
+
+        for coll in &collisions {
+            if coll.2 .0 {
+                if self.get(&coll.0.uuid).init && self.get(&coll.1.uuid).init {
+                    let g2_is_solid = self.get(&coll.1.uuid).get::<Rigidbody>().solid;
+                    if self.get(&coll.0.uuid).has::<Rigidbody>() {
+                        let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
+                        body.colliding = Some(coll.1.clone());
+                        if g2_is_solid {
+                            body.position.y -= ((body.velocity * app.delta_time()) * 100 * coll.2.1.magnitude()).y;
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();

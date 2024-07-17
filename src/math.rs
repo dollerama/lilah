@@ -1,7 +1,7 @@
 use std::{ops, hash::Hasher, hash::Hash};
 use glam::{Mat4, Quat, Vec3};
 use ruwren::{Class, VM, create_module, ModuleLibrary};
-
+use std::f64::consts::PI;
 use crate::{LilahError, LilahPanic, LilahTypeError, components::Rigidbody, application::App};
 
 lazy_mut! {
@@ -416,8 +416,8 @@ impl Rect {
     pub fn new_from_rigidbody(body: &Rigidbody, _app: &App) -> Self {
         let model = 
         Mat4::IDENTITY * 
-        Mat4::from_rotation_translation(
-            Quat::from_rotation_z(0.0),
+        Mat4::from_rotation_translation( 
+            Quat::from_rotation_z(body.rotation),
             Vec3::new(body.position.x as f32, body.position.y as f32, 0.0)
         );
 
@@ -430,6 +430,10 @@ impl Rect {
         let b = mvp * glam::Vec4::new(body.bounds.x as f32, 0.0, 0.0, 1.0);
         let c = mvp * glam::Vec4::new(body.bounds.x as f32, -body.bounds.y as f32, 0.0, 1.0);
         let d = mvp * glam::Vec4::new(0.0, -body.bounds.y as f32, 0.0, 1.0);
+        // let a = mvp * glam::Vec4::new(-body.bounds.x as f32/2.0, -body.bounds.y as f32/2.0, 0.0, 1.0);
+        // let b = mvp * glam::Vec4::new(body.bounds.x as f32/2.0, -body.bounds.y as f32/2.0, 0.0, 1.0);
+        // let c = mvp * glam::Vec4::new(body.bounds.x as f32/2.0, body.bounds.y as f32/2.0, 0.0, 1.0);
+        // let d = mvp * glam::Vec4::new(-body.bounds.x as f32/2.0, body.bounds.y as f32/2.0, 0.0, 1.0);
 
         Self {
             points: vec![
@@ -473,13 +477,13 @@ impl Rect {
         edges.append(&mut Rect::get_edges(&other));
         Rect::process_edges(&mut edges);
         let mut intersecting_axis = vec!();
-
+    
         for e in &edges {
             let proj_a = Rect::get_projection(self, e);
             let proj_b = Rect::get_projection(other, e);
 
-            if !(proj_a.0.min(proj_a.1) < proj_b.0.max(proj_b.1) &&
-                proj_b.0.min(proj_b.1) < proj_a.0.max(proj_a.1)) {
+            if !(proj_a.0.min(proj_a.1) <= proj_b.0.max(proj_b.1) &&
+                proj_b.0.min(proj_b.1) <= proj_a.0.max(proj_a.1)) {
                 return (false, Vec2::ZERO);
             }
             
