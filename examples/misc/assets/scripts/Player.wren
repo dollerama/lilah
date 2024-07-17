@@ -37,12 +37,13 @@ class Player is Behaviour {
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         Sprite.set_sort(gameobject.ref, 2)
+        
+        gameobject.data = Json.parse(Fs.read("examples/misc/pos.json"))
+        Rigidbody.set_position(gameobject.ref, Serializable.wrapper({"math": "Vec2"}, "data", [["pos", Vec2]]).deserialize(gameobject.data).pos)
     }
 
     static update() {
         Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*100)
-
-        System.print(gameobject.ref.get("Transform").serialize())
 
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
@@ -74,11 +75,9 @@ class Player is Behaviour {
         }
 
         if(Input.key_down("Space")) {
-            var center = Vec2.screen_to_world_space(Vec2.new(400, 300))
-            System.print("%(center.x), %(center.y)")
-            var center2 = Vec2.world_to_screen_space(center)
-            System.print("%(center.x), %(center.y)")
-            //Rigidbody.set_position(gameobject.ref, center)
+            gameobject.data["pos"] = gameobject.ref.get("Transform").position
+            var p = Serializable.serialize(gameobject.data)
+            Fs.write("examples/misc/pos.json", Json.stringify(p))
         }
     }
 }

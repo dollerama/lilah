@@ -6,6 +6,11 @@ class GameObjectRef {
     }
 
     ref { Lilah.gameobjects[_ref] }
+
+    data=(v) {
+       Lilah.data[ref.uuid] = v 
+    }
+
     data {
         if(_ref == null || Lilah.data == null || !Lilah.data.containsKey(ref.uuid)) {
             return null
@@ -19,6 +24,10 @@ class GameObjectRef {
         }
         return data[key]
     }
+
+    [key]=(v) {
+        data[key]=v
+    } 
 
     construct new(i) {
         _ref = i
