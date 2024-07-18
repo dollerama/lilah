@@ -49,10 +49,12 @@ foreign class Sprite {
     foreign size
     foreign texture_id
     foreign current_index
+    foreign tint
     foreign cut_sprite_sheet(i, j)
 
     foreign static cut_sprite_sheet(go, i, j)
     foreign static set_sort(go, i)
+    foreign static set_tint(go, color)
 }
 
 foreign class Scene {

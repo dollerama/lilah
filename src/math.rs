@@ -1,5 +1,5 @@
 use std::{ops, hash::Hasher, hash::Hash};
-use glam::{Mat4, Quat, Vec3};
+use glam::{Mat4, Quat, Vec3, Vec4};
 use ruwren::{Class, VM, create_module, ModuleLibrary};
 use std::f64::consts::PI;
 use crate::{LilahError, LilahPanic, LilahTypeError, components::Rigidbody, application::App};
@@ -416,24 +416,21 @@ impl Rect {
     pub fn new_from_rigidbody(body: &Rigidbody, _app: &App) -> Self {
         let model = 
         Mat4::IDENTITY * 
-        Mat4::from_rotation_translation( 
+        Mat4::from_scale_rotation_translation( 
+            Vec3::new(body.bounds.x as f32, body.bounds.y  as f32, 1.0),
             Quat::from_rotation_z(body.rotation),
-            Vec3::new(body.position.x as f32, body.position.y as f32, 0.0)
+            Vec3::new(body.position.x as f32 + body.bounds.x as f32/2f32, body.position.y as f32 - body.bounds.y as f32/2f32, 0.0)
         );
 
         let view = unsafe { *crate::math::VIEW_MATRIX };
         let projection = unsafe { *crate::math::PROJECTION_MATRIX };
 
-        let mvp = projection * view * model;
+        let mvp =  view * model;
 
-        let a = mvp * glam::Vec4::new(0.0, 0.0, 0.0, 1.0);
-        let b = mvp * glam::Vec4::new(body.bounds.x as f32, 0.0, 0.0, 1.0);
-        let c = mvp * glam::Vec4::new(body.bounds.x as f32, -body.bounds.y as f32, 0.0, 1.0);
-        let d = mvp * glam::Vec4::new(0.0, -body.bounds.y as f32, 0.0, 1.0);
-        // let a = mvp * glam::Vec4::new(-body.bounds.x as f32/2.0, -body.bounds.y as f32/2.0, 0.0, 1.0);
-        // let b = mvp * glam::Vec4::new(body.bounds.x as f32/2.0, -body.bounds.y as f32/2.0, 0.0, 1.0);
-        // let c = mvp * glam::Vec4::new(body.bounds.x as f32/2.0, body.bounds.y as f32/2.0, 0.0, 1.0);
-        // let d = mvp * glam::Vec4::new(-body.bounds.x as f32/2.0, body.bounds.y as f32/2.0, 0.0, 1.0);
+        let a = mvp * glam::Vec4::new(-0.5f32, 0.5f32, 0.0, 1.0);
+        let b = mvp * glam::Vec4::new(0.5f32, 0.5f32, 0.0, 1.0);
+        let c = mvp * glam::Vec4::new(0.5f32, -0.5f32, 0.0, 1.0);
+        let d = mvp * glam::Vec4::new(-0.5f32, -0.5f32, 0.0, 1.0);
 
         Self {
             points: vec![
@@ -445,57 +442,79 @@ impl Rect {
         }
     }
 
+   // Assuming Vec2 is a struct with fields x and y, and methods like dot, normalized, and basic arithmetic operations implemented.
+
     fn get_edges(r: &Rect) -> Vec<Vec2> {
-        let mut edges = vec!();
+        let mut edges = vec![];
 
         for i in 0..r.points.len() {
-            edges.push(r.points[(i+1).rem_euclid(r.points.len())]-r.points[i]);
+            let next_index = (i + 1) % r.points.len();
+            edges.push(r.points[next_index] - r.points[i]);
         }
 
         edges
     }
 
     fn get_projection(r: &Rect, axis: &Vec2) -> (f64, f64) {
-        let mut projections = vec!();
+        let mut min_proj = f64::MAX;
+        let mut max_proj = f64::MIN;
 
         for point in &r.points {
-            projections.push(Vec2::dot(*point, *axis));
+            let proj = Vec2::dot(*point, *axis);
+            if proj < min_proj {
+                min_proj = proj;
+            }
+            if proj > max_proj {
+                max_proj = proj;
+            }
         }
 
-        (*projections.iter().min_by(|a, b| a.total_cmp(b)).unwrap(), *projections.iter().max_by(|a, b| a.total_cmp(b)).unwrap())
+        (min_proj, max_proj)
     }
 
-    fn process_edges(edges : &mut Vec<Vec2>) {
-        for e in edges {
-            let new_e = e.clone();
-            *e = Vec2::new(new_e.x, new_e.y).normalized();
+    fn process_edges(edges: &mut Vec<Vec2>) {
+        for e in edges.iter_mut() {
+            *e = e.normalized();
         }
     }
 
     pub fn intersects(&self, other: &Rect) -> (bool, Vec2) {
+        //println!("r -> {:?}", self.points);
+
         let mut edges = Rect::get_edges(self);
-        edges.append(&mut Rect::get_edges(&other));
+        edges.append(&mut Rect::get_edges(other));
         Rect::process_edges(&mut edges);
-        let mut intersecting_axis = vec!();
-    
+        //let mut intersecting_axis = vec![];
+        let mut mtv_distance = f64::MAX;
+        let mut mtv_axis = Vec2::ZERO;
+
         for e in &edges {
             let proj_a = Rect::get_projection(self, e);
             let proj_b = Rect::get_projection(other, e);
 
-            if !(proj_a.0.min(proj_a.1) <= proj_b.0.max(proj_b.1) &&
-                proj_b.0.min(proj_b.1) <= proj_a.0.max(proj_a.1)) {
+            if !(proj_a.0 <= proj_b.1 && proj_b.0 <= proj_a.1) {
                 return (false, Vec2::ZERO);
             }
-            
-            if (proj_a.0.max(proj_a.1) - proj_b.0.min(proj_b.1)) != 0.0 {
-                intersecting_axis.push((e, (proj_a.0.max(proj_a.1) - proj_b.0.min(proj_b.1))));
+
+            let overlap = if proj_a.1 > proj_b.1 {
+                proj_b.1 - proj_a.0
+            } else {
+                proj_a.1 - proj_b.0
+            };
+
+            if overlap.abs() < mtv_distance {
+                mtv_distance = overlap.abs();
+                mtv_axis = *e;
             }
-        }  
+        }
 
-        intersecting_axis.sort_by(|a, b| a.1.total_cmp(&b.1));
+        let mtv_axis2 = unsafe { *crate::math::PROJECTION_MATRIX } * Vec4::new(mtv_axis.x as f32, mtv_axis.y as f32, 0.0, 0.0); 
 
-        (true, Vec2::ONE*intersecting_axis[0].1)
+        let mtv = Vec2::new(mtv_axis2.x as f64, mtv_axis2.y as f64) * mtv_distance;
+        
+        (true, mtv)
     }
+    
 }
 
 create_module! (

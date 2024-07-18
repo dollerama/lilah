@@ -10,7 +10,7 @@ use crate::{
 };
 use data2sound::decode_bytes;
 use debug_print::debug_println;
-use glam::{Mat4, Vec3};
+use glam::{Mat4, Quat, Vec3};
 use image::Rgba;
 use rusttype::Font;
 use serde_json;
@@ -383,11 +383,19 @@ impl<'a> World<'a> {
             if camera_pos != camera_pos_temp {
                 camera_pos = camera_pos_temp;
                 unsafe {
-                    *crate::math::VIEW_MATRIX = Mat4::from_translation(Vec3::new(
-                        -camera_pos.x as f32,
-                        -camera_pos.y as f32,
-                        0.0,
-                    ));
+                    *crate::math::VIEW_MATRIX = Mat4::from_scale_rotation_translation(
+                        Vec3::new(
+                            1f32,
+                            1f32,
+                            1f32
+                        ),
+                        Quat::IDENTITY,
+                        Vec3::new(
+                            -camera_pos.x as f32,
+                            -camera_pos.y as f32,
+                            0.0,
+                        )
+                    );
                 }
             }
 
@@ -541,6 +549,7 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
+                            println!("{}", app.delta_time());
                             body.position.y -= ((body.velocity * app.delta_time()) * 100 * coll.2.1.magnitude()).y;
                         }
 

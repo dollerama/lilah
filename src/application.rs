@@ -461,6 +461,8 @@ impl App {
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
 
+            let aspect = (window_size.x/window_size.y) as f32;
+
             *crate::math::PROJECTION_MATRIX = Mat4::orthographic_rh_gl(
                 0.0,
                 window_size.x as f32,

@@ -1712,8 +1712,8 @@ impl Sprite {
     pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
         let model = Mat4::IDENTITY
             * Mat4::from_scale_rotation_translation(
-                Vec3::new(self.get_size().0 as f32, self.get_size().1 as f32, 1.0)
-                    * Vec3::new(t.scale.x as f32, t.scale.y as f32, 1.0),
+                Vec3::new(self.get_size().0 as f32, self.get_size().1 as f32,0.0)
+                    * Vec3::new(t.scale.x as f32, t.scale.y as f32, 0.0),
                 Quat::from_rotation_z(t.rotation),
                 Vec3::new(
                     t.position.x as f32 + (self.get_size().0 / 2) as f32,
@@ -1773,6 +1773,36 @@ impl Sprite {
 
     fn wren_get_index(&self, vm: &VM) {
         send_foreign!(vm, "math", "Vec2", Vec2::new(self.index.0 as f64, self.index.1 as f64) => 0);
+    }
+
+    fn wren_get_tint(&self, vm: &VM) {
+        vm.set_slot_new_list(0);
+        vm.set_slot_double(1, self.tint.r as f64);
+        vm.set_list_element(0, 0, 1);
+        vm.set_slot_double(1, self.tint.g as f64);
+        vm.set_list_element(0, 1, 1);
+        vm.set_slot_double(1, self.tint.b as f64);
+        vm.set_list_element(0,2, 1);
+        vm.set_slot_double(1, self.tint.a as f64);
+        vm.set_list_element(0, 3, 1);
+    }
+
+    fn wren_set_tint_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            if(comp.has::<Sprite>()) {
+                let mut spr = comp.get_mut::<Sprite>();
+                vm.get_list_element(2, 0, 3);
+                spr.tint.r = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+                vm.get_list_element(2, 1, 3);
+                spr.tint.g = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+                vm.get_list_element(2, 2, 3);
+                spr.tint.b = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+                vm.get_list_element(2, 3, 3);
+                spr.tint.a = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+            }
+        } else {
+            LilahTypeError!(Sprite, 1, GameObject);
+        }
     }
 
     fn wren_cut_sprite_sheet(&mut self, vm: &VM) {
@@ -2171,11 +2201,13 @@ create_module! (
     class("Sprite") crate::components::Sprite => sprite {
         instance(getter "as_component") wren_as_component,
         instance(getter "size") wren_get_size,
+        instance(getter "tint") wren_get_tint,
         instance(getter "texture_id") wren_get_texture_id,
         instance(getter "current_index") wren_get_index,
         instance(fn "cut_sprite_sheet", 2) wren_cut_sprite_sheet,
         static(fn "cut_sprite_sheet", 3) wren_cut_sprite_sheet_from_gameobject,
-        static(fn "set_sort", 2) wren_set_sort_from_gameobject
+        static(fn "set_sort", 2) wren_set_sort_from_gameobject,
+        static(fn "set_tint", 2) wren_set_tint_from_gameobject
     }
 
     class("Component") Box<dyn crate::components::Component> => component {

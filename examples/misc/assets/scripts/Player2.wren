@@ -39,7 +39,7 @@ class Player2 is Behaviour {
     }
 
     static update() {
-        //Rigidbody.set_rotation(gameobject.ref, 4)
+        Rigidbody.set_rotation(gameobject.ref, 4)
 
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)

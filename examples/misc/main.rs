@@ -14,7 +14,7 @@ fn setup(app: &mut App, state: &mut WorldState, scripting: &mut Scripting) {
 }
 
 pub fn main() {
-    let mut app = App::new("Misc", Vec2::new(800.0, 600.0));
+    let mut app = App::new("Misc", Vec2::new(800.0,600.0));
     let mut scripting = Scripting::new();
 
     World::new()

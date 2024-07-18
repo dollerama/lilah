@@ -18,7 +18,7 @@ class Player is Behaviour {
         Input.update_binding("Horizontal", "A", "D")
         Input.update_binding("Vertical", "S", "W")
 
-        gameobject.add(Transform.new(Vec2.new(-0.5,0)))
+        gameobject.add(Transform.new(Vec2.new(0,0)))
         gameobject.add(Sprite.new("assets/test.png"))
         gameobject.add(Rigidbody.new())
         gameobject.add(Animator.new())
@@ -40,10 +40,14 @@ class Player is Behaviour {
         
         gameobject.data = Json.parse(Fs.read("examples/misc/pos.json"))
         Rigidbody.set_position(gameobject.ref, Serializable.wrapper({"math": "Vec2"}, "data", [["pos", Vec2]]).deserialize(gameobject.data).pos)
+
+       gameobject["rot"] = 0
     }
 
     static update() {
         Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*100)
+        //gameobject["rot"] = gameobject["rot"] + 0.5 * Lilah.delta_time
+        Rigidbody.set_rotation(gameobject.ref, gameobject["rot"])
 
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
@@ -51,10 +55,13 @@ class Player is Behaviour {
             Animator.stop(gameobject.ref)
         }
 
-        Text.set_text(gameobject.ref, "%(gameobject.ref.get("Rigidbody").velocity.x) x %(gameobject.ref.get("Rigidbody").velocity.y)")
+        //Text.set_text(gameobject.ref, "%(gameobject.ref.get("Rigidbody").position.x) x %(gameobject.ref.get("Rigidbody").position.y)")
 
         if(gameobject.ref.get("Rigidbody").colliding != null) {
             //Sfx.play(gameobject.ref, "sfx")
+            Sprite.set_tint(gameobject.ref, [1,0,0,1])
+        } else {
+            Sprite.set_tint(gameobject.ref, [1,1,1,1]) 
         }
 
         // if(Input.key("Space")) {
