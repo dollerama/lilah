@@ -1,5 +1,5 @@
 import "math" for Vec2
-import "app" for Lilah, Input, GameObjectRef, Audio
+import "app" for Lilah, Input, GameObjectRef, Audio, Tween
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
 import "io" for Fs, Json, Serializable
 
@@ -37,16 +37,28 @@ class Player is Behaviour {
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         Sprite.set_sort(gameobject.ref, 2)
+
+        Transform.set_pivot(gameobject.ref, Vec2.new(0, 0))
+        Transform.set_scale(gameobject.ref, Vec2.new(2,2))
         
         gameobject.data = Json.parse(Fs.read("examples/misc/pos.json"))
         Rigidbody.set_position(gameobject.ref, Serializable.wrapper({"math": "Vec2"}, "data", [["pos", Vec2]]).deserialize(gameobject.data).pos)
 
        gameobject["rot"] = 0
+
+       Tween.new(Vec2.new(500, 700), Vec2.new(0, 0))
+        .time(5)
+        .curve(Tween.inCubic)
+        .play { |v|
+            Rigidbody.set_position(gameobject.ref, v)
+        }
+
+        Tween.new(0, 10).time(10).onComplete{ System.print("Complete") }.play { |v| System.print(v) }
     }
 
     static update() {
         Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*100)
-        //gameobject["rot"] = gameobject["rot"] + 0.5 * Lilah.delta_time
+        gameobject["rot"] = gameobject["rot"] + 0.5 * Lilah.delta_time
         Rigidbody.set_rotation(gameobject.ref, gameobject["rot"])
 
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
@@ -54,9 +66,7 @@ class Player is Behaviour {
         } else {
             Animator.stop(gameobject.ref)
         }
-
-        //Text.set_text(gameobject.ref, "%(gameobject.ref.get("Rigidbody").position.x) x %(gameobject.ref.get("Rigidbody").position.y)")
-
+        
         if(gameobject.ref.get("Rigidbody").colliding != null) {
             //Sfx.play(gameobject.ref, "sfx")
             Sprite.set_tint(gameobject.ref, [1,0,0,1])
@@ -68,23 +78,19 @@ class Player is Behaviour {
         //     Lilah.fullscreen = !Lilah.fullscreen
         // }
 
-        if(Input.key("Right")) {
-            Transform.update_position_x(Lilah.camera.ref, 2)
-        }
-        if(Input.key("Up")) {
-            Transform.update_position_y(Lilah.camera.ref, 2)
-        }
-        if(Input.key("Left")) {
-            Transform.update_position_x(Lilah.camera.ref, -2)
-        }
-        if(Input.key("Down")) {
-            Transform.update_position_y(Lilah.camera.ref, -2)
-        }
+        Transform.set_position(
+            Lilah.camera.ref, 
+            Vec2.lerp(
+                Lilah.camera.ref.get("Transform").position, 
+                gameobject.ref.get("Transform").position, Lilah.delta_time * 10
+            )
+        )
 
         if(Input.key_down("Space")) {
-            gameobject.data["pos"] = gameobject.ref.get("Transform").position
-            var p = Serializable.serialize(gameobject.data)
-            Fs.write("examples/misc/pos.json", Json.stringify(p))
+            //gameobject.data["pos"] = gameobject.ref.get("Transform").position
+            //var p = Serializable.serialize(gameobject.data)
+            //Fs.write("examples/misc/pos.json", Json.stringify(p))
+            
         }
     }
 }

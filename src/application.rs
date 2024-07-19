@@ -464,10 +464,10 @@ impl App {
             let aspect = (window_size.x/window_size.y) as f32;
 
             *crate::math::PROJECTION_MATRIX = Mat4::orthographic_rh_gl(
-                0.0,
-                window_size.x as f32,
-                0.0,
-                window_size.y as f32,
+                -window_size.x as f32/2.0,
+                window_size.x as f32/2.0,
+                -window_size.y as f32/2.0,
+                window_size.y as f32/2.0,
                 1000.0,
                 -1000.0,
             );
@@ -534,6 +534,10 @@ impl App {
 
     pub fn delta_time(&self) -> f64 {
         self.time.delta_time
+    }
+
+    pub fn fixed_delta_time(&self) -> f64 {
+        0.021f64
     }
 
     pub fn handle_input(&mut self) -> bool {

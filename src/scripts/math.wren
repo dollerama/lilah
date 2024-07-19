@@ -1,5 +1,11 @@
 import "io" for Serializable
 
+class Util {
+    static lerp(a, b, t) {
+        return (a + (b - a) * t)
+    }
+}
+
 foreign class Vec2 is Serializable {
     construct new(x, y) {}
  

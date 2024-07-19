@@ -36,11 +36,10 @@ class Player2 is Behaviour {
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         Sprite.set_sort(gameobject.ref, 2)
+        Rigidbody.set_rotation(gameobject.ref, 4)
     }
 
     static update() {
-        Rigidbody.set_rotation(gameobject.ref, 4)
-
         if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
         } else {

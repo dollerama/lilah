@@ -1431,8 +1431,8 @@ impl Text {
                 ) * Vec3::new(t.scale.x as f32, t.scale.y as f32, 1.0),
                 Quat::from_rotation_z(t.rotation),
                 Vec3::new(
-                    t.position.x as f32 + (textures[&self.texture_id].size.x / 2.0) as f32,
-                    t.position.y as f32 - (textures[&self.texture_id].size.y / 2.0) as f32,
+                    t.position.x as f32 + t.pivot.x as f32,// + (textures[&self.texture_id].size.x / 2.0) as f32,
+                    t.position.y as f32 + t.pivot.y as f32,// - (textures[&self.texture_id].size.y / 2.0) as f32,
                     0.0,
                 ),
             );
@@ -1716,10 +1716,10 @@ impl Sprite {
                     * Vec3::new(t.scale.x as f32, t.scale.y as f32, 0.0),
                 Quat::from_rotation_z(t.rotation),
                 Vec3::new(
-                    t.position.x as f32 + (self.get_size().0 / 2) as f32,
-                    t.position.y as f32 - (self.get_size().1 / 2) as f32,
+                    t.position.x as f32 + t.pivot.x as f32,
+                    t.position.y as f32 + t.pivot.y as f32,
                     0.0,
-                ),
+                )
             );
 
         let view = unsafe { *crate::math::VIEW_MATRIX };

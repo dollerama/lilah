@@ -221,9 +221,9 @@ impl Vec2 {
             let _ = vm.set_slot_new_foreign("math", "Vec2", Vec2::lerp(*aa, *bb, tt), 0);
         }
         else {
-            LilahTypeError!(Vec2, 1, Vec2);
-            LilahTypeError!(Vec2, 2, Vec2);
-            LilahTypeError!(Vec2, 3, f64);
+            if a.is_none() { LilahTypeError!(Vec2, 1, Vec2); }
+            if b.is_none() { LilahTypeError!(Vec2, 2, Vec2); }
+            if t.is_none() { LilahTypeError!(Vec2, 3, f64); }
             vm.set_slot_null(0);
         }
     }
@@ -417,9 +417,9 @@ impl Rect {
         let model = 
         Mat4::IDENTITY * 
         Mat4::from_scale_rotation_translation( 
-            Vec3::new(body.bounds.x as f32, body.bounds.y  as f32, 1.0),
+            Vec3::new(body.bounds.x as f32 * body.scale.x as f32, body.bounds.y  as f32 * body.scale.y as f32, 1.0),
             Quat::from_rotation_z(body.rotation),
-            Vec3::new(body.position.x as f32 + body.bounds.x as f32/2f32, body.position.y as f32 - body.bounds.y as f32/2f32, 0.0)
+            Vec3::new(body.position.x as f32 + body.pivot.x as f32, body.position.y as f32 + body.pivot.y as f32, 0.0)
         );
 
         let view = unsafe { *crate::math::VIEW_MATRIX };

@@ -343,7 +343,7 @@ impl<'a> World<'a> {
         let mut camera_pos = Vec2::new(-1.0, -1000.0);
         self.state.insert(
             GameObject::new("Camera".to_string())
-                .with::<Transform>()
+                .with_specific::<Transform>(Transform::new(Vec2::new(0f64, 0f64)))
                 .build(),
         );
         let camera_id = self.state.wrap("Camera").unwrap().id.clone();
@@ -380,19 +380,25 @@ impl<'a> World<'a> {
             let camera_pos_temp = self.state.gameobjects[&camera_id.uuid]
                 .get::<Transform>()
                 .position;
+            let camera_scale_temp = self.state.gameobjects[&camera_id.uuid]
+                .get::<Transform>()
+                .scale;
+            let camera_rot_temp = self.state.gameobjects[&camera_id.uuid]
+                .get::<Transform>()
+                .rotation;
             if camera_pos != camera_pos_temp {
                 camera_pos = camera_pos_temp;
                 unsafe {
                     *crate::math::VIEW_MATRIX = Mat4::from_scale_rotation_translation(
                         Vec3::new(
-                            1f32,
-                            1f32,
+                            camera_scale_temp.x as f32,
+                            camera_scale_temp.y as f32,
                             1f32
                         ),
-                        Quat::IDENTITY,
+                        Quat::from_rotation_z(camera_rot_temp),
                         Vec3::new(
-                            -camera_pos.x as f32,
-                            -camera_pos.y as f32,
+                            -camera_pos.x as f32*camera_scale_temp.x as f32,
+                            -camera_pos.y as f32*camera_scale_temp.y as f32,
                             0.0,
                         )
                     );
@@ -527,7 +533,7 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.position.x -= ((body.velocity * app.delta_time()) * 100 * coll.2.1.magnitude()).x;
+                            body.position.x -= ((body.velocity * app.fixed_delta_time()) * 100 * coll.2.1.magnitude()).x;
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
@@ -549,8 +555,7 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            println!("{}", app.delta_time());
-                            body.position.y -= ((body.velocity * app.delta_time()) * 100 * coll.2.1.magnitude()).y;
+                            body.position.y -= ((body.velocity * app.fixed_delta_time()) * 100 * coll.2.1.magnitude()).y;
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();

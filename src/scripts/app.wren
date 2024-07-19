@@ -1,4 +1,4 @@
-import "math" for Vec2
+import "math" for Vec2, Util
 
 class GameObjectRef {
     static create_ref(id) {
@@ -104,6 +104,17 @@ class Lilah {
     static screen_size=(v) { __screen_size = v }
 
     static tick_fibers() {
+        if(Tween.tweens != null) {
+            for(t in Tween.tweens) {
+                var val = t[1].call()
+                if(val != null) {
+                    t[0].call(val)
+                }
+            }
+
+            Tween.tweens = Tween.tweens.where {|i| !i[1].isDone }.toList
+        }
+
         if(__fibers == null) return
 
         for(f in __fibers) {
@@ -439,5 +450,89 @@ class UI {
                 }
             }
         }
+    }
+}
+
+class Tween {
+    static tweens { __tweens }
+    static tweens=(v) { __tweens = v }
+
+    static insert_tween(t) {
+        if(__tweens == null) {
+            __tweens = []
+        }
+
+        __tweens.add(t)
+    }
+
+    static Linear {
+        return Fn.new { |x|
+            return x
+        }
+    }
+
+    static InSine {
+        return Fn.new { |x|
+            return 1 - (x * Num.pi).cos / 2
+        }
+    }
+
+    static inCubic {
+        return Fn.new { |x|
+            return x * x * x
+        }
+    }
+
+    duration { _duration }
+    use_curve { _use_curve }
+    from { _from }
+    to { _to } 
+    on_complete { _on_complete } 
+    duration=(v) { _duration = v}
+    use_curve=(v) { _use_curve = v }
+    from=(v) { _from = v }
+    to=(v) { _to = v } 
+    on_complete=(v) { _on_complete = v } 
+    
+    construct new(f, t) {
+        from = f
+        to = t
+        use_curve = Tween.Linear
+        duration = 1
+    }
+
+    time(t) {
+        duration = t
+        return this
+    }
+
+    curve(c) {
+        use_curve = c
+        return this
+    }
+
+    onComplete(c) {
+        on_complete = c
+        return this
+    }
+
+    play(c) {
+        var f = Fiber.new {
+            var t = 0
+            while(t < duration) {
+                t = t + Lilah.delta_time
+                if(from is Vec2 && to is Vec2) {
+                    Fiber.yield(Vec2.lerp(from, to, use_curve.call(t/duration)))
+                } else if(from is Num && to is Num) {
+                    Fiber.yield(Util.lerp(from, to, use_curve.call(t/duration)))
+                }
+            }
+
+            if(on_complete != null) {
+                on_complete.call()
+            }
+        }
+
+        Tween.insert_tween([c, f])
     }
 }
