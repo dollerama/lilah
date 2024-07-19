@@ -175,12 +175,20 @@ class Lilah {
 
         var d = null
         var j = 0
-        for(i in (0..__gameobjects.count)) {
+        for(i in (0..__gameobjects.count-1)) {
             var id = __gameobjects[i].id
-            if(id["uuid"] == key || id["name"] == key) {
-                d = GameObjectRef.new(i)
-                j=i
-                break
+            if(key is GameObjectRef) {
+                if(id["uuid"] == key.uuid) {
+                    d = GameObjectRef.new(i)
+                    j=i
+                    break
+                }
+            } else if(key is String) {
+                if(id["uuid"] == key || id["name"] == key) {
+                    d = GameObjectRef.new(i)
+                    j=i
+                    break
+                }
             }
         }
 
@@ -465,21 +473,127 @@ class Tween {
         __tweens.add(t)
     }
 
-    static Linear {
+    static linear {
         return Fn.new { |x|
             return x
         }
     }
 
-    static InSine {
+    static inQuad {
         return Fn.new { |x|
-            return 1 - (x * Num.pi).cos / 2
+            return x * x
         }
     }
 
-    static inCubic {
+    static outQuad {
         return Fn.new { |x|
-            return x * x * x
+            return 1 - (1 - x) * (1 - x)
+        }
+    }
+
+    static inOutQuad {
+        return Fn.new { |x|
+            if(x < 0.5) {
+                return 2 * x * x
+            } else {
+                return 1 - (-2 * x + 2).pow(2) / 2
+            }
+        }
+    }
+
+    static inQuart {
+        return Fn.new { |x|
+            return x * x * x * x
+        }
+    }
+
+    static outQuart {
+        return Fn.new { |x|
+            return 1 - (1 - x).pow(4)
+        }
+    }
+
+    static inOutQuart {
+        return Fn.new { |x|
+            if(x < 0.5) {
+                return 8 * x * x * x * x
+            } else {
+                return 1 - (-2 * x + 2).pow(4) / 2
+            }
+        }
+    }
+
+    static inBack {
+        return Fn.new { |x|
+            var c1 = 1.70158
+            var c3 = c1 + 1
+            return c3 * x * x * x - c1 * x * x
+        }
+    }
+
+    static outBack {
+        return Fn.new { |x|
+            var c1 = 1.70158
+            var c3 = c1 + 1
+
+            return 1 + c3 * (x - 1).pow(3) + c1 * (x - 1).pow(2)
+        }
+    }
+
+    static inOutBack {
+        return Fn.new { |x|
+            var c1 = 1.70158
+            var c2 = c1 * 1.525
+
+            if(x < 0.5) {
+                return ((2 * x).pow(2) * ((c2 + 1) * 2 * x - c2)) / 2
+            } else {
+                return ((2 * x - 2).pow(2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2
+            }
+        }
+    }
+
+    static inElastic {
+        return Fn.new { |x|
+            var c4 = (2 * Num.pi) / 3
+
+            if(x == 0) {
+                return 0
+            } else if(x == 1) {
+                return 1
+            } else {
+                return -(2).pow(10 * x - 10) * ((x * 10 - 10.75) * c4).sin
+            }
+        }
+    }
+
+    static outElastic {
+        return Fn.new { |x|
+            var c4 = (2 * Num.pi) / 3
+
+            if(x == 0) {
+                return 0
+            } else if(x == 1) {
+                return 1
+            } else {
+                return (2).pow(-10 * x) * ((x * 10 - 0.75) * c4).sin + 1
+            }
+        }
+    }
+
+    static inOutElastic {
+        return Fn.new { |x|
+            var c5 = (2 * Num.pi) / 4.5
+
+            if(x == 0) {
+                return 0
+            } else if(x == 1) {
+                return 1
+            } else if(x < 0.5) {
+                return -(2.pow(20 * x - 10) * ((20 * x - 11.125) * c5).sin) / 2
+            } else {
+                return (2.pow(-20 * x + 10) * ((20 * x - 11.125) * c5).sin) / 2 + 1
+            }
         }
     }
 
@@ -497,7 +611,7 @@ class Tween {
     construct new(f, t) {
         from = f
         to = t
-        use_curve = Tween.Linear
+        use_curve = Tween.linear
         duration = 1
     }
 

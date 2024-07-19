@@ -18,7 +18,7 @@ class Player is Behaviour {
         Input.update_binding("Horizontal", "A", "D")
         Input.update_binding("Vertical", "S", "W")
 
-        gameobject.add(Transform.new(Vec2.new(0,0)))
+        gameobject.add(Transform.new(Vec2.new(100,100)))
         gameobject.add(Sprite.new("assets/test.png"))
         gameobject.add(Rigidbody.new())
         gameobject.add(Animator.new())
@@ -37,21 +37,11 @@ class Player is Behaviour {
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         Sprite.set_sort(gameobject.ref, 2)
-
-        Transform.set_pivot(gameobject.ref, Vec2.new(0, 0))
-        Transform.set_scale(gameobject.ref, Vec2.new(2,2))
         
         gameobject.data = Json.parse(Fs.read("examples/misc/pos.json"))
         Rigidbody.set_position(gameobject.ref, Serializable.wrapper({"math": "Vec2"}, "data", [["pos", Vec2]]).deserialize(gameobject.data).pos)
 
        gameobject["rot"] = 0
-
-       Tween.new(Vec2.new(500, 700), Vec2.new(0, 0))
-        .time(5)
-        .curve(Tween.inCubic)
-        .play { |v|
-            Rigidbody.set_position(gameobject.ref, v)
-        }
 
         Tween.new(0, 10).time(10).onComplete{ System.print("Complete") }.play { |v| System.print(v) }
     }

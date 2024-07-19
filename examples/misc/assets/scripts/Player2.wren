@@ -1,5 +1,5 @@
 import "math" for Vec2
-import "app" for Lilah, Input, GameObjectRef, UI
+import "app" for Lilah, Input, GameObjectRef, UI, Tween
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Scene
 
 class Player2 is Behaviour {
@@ -37,6 +37,8 @@ class Player2 is Behaviour {
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         Sprite.set_sort(gameobject.ref, 2)
         Rigidbody.set_rotation(gameobject.ref, 4)
+
+        gameobject["dead"] = false
     }
 
     static update() {
@@ -44,6 +46,21 @@ class Player2 is Behaviour {
             Animator.play(gameobject.ref)
         } else {
             Animator.stop(gameobject.ref)
+        }
+
+        if(gameobject.ref.get("Rigidbody").colliding != null && !gameobject["dead"]) {
+            Rigidbody.set_solid(gameobject.ref, false)
+            gameobject["dead"] = true
+
+            Tween.new(Vec2.one, Vec2.zero)
+            .time(2)
+            .curve(Tween.inOutElastic)
+            .onComplete {
+                Lilah.destroy(gameobject.ref)
+            }
+            .play { |v|
+                Transform.set_scale(gameobject.ref, v)
+            }
         }
     }
 }
