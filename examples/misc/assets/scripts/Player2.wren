@@ -47,8 +47,10 @@ class Player2 is Behaviour {
         } else {
             Animator.stop(gameobject.ref)
         }
+    }
 
-        if(gameobject.ref.get("Rigidbody").colliding != null && !gameobject["dead"]) {
+    static onCollision(c) {
+        if(!gameobject["dead"]) {
             Rigidbody.set_solid(gameobject.ref, false)
             gameobject["dead"] = true
 

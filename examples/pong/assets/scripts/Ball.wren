@@ -15,55 +15,49 @@ class Ball is Behaviour {
     }
     
     static update() {
-        if(gameobject.ref.get("Transform").position.y > 600-10 || gameobject.ref.get("Transform").position.y < 0) {
+        if(gameobject.ref.get("Transform").position.y > 300-10 || gameobject.ref.get("Transform").position.y < -300+10) {
             Rigidbody.set_velocity_y(gameobject.ref, gameobject.ref.get("Rigidbody").velocity.y*-1)
         }
 
-        if(gameobject.ref.get("Transform").position.x > 800) {
+        var p2_side = gameobject.ref.get("Transform").position.x > 400
+        var p1_side = gameobject.ref.get("Transform").position.x < -400
+
+        if(p1_side || p2_side) {
             Lilah.start_fiber(Fiber.new {
-                Rigidbody.set_position(gameobject.ref, Vec2.new(800/2, 600/2))
-                Lilah.find("P2").data["score"] = Lilah.find("P2").data["score"]+1
-                if(Lilah.find("P2").data["score"] > 4) {
+                Rigidbody.set_position(gameobject.ref, Vec2.new(0, 0))
+                
+                if(p2_side) {
+                    Lilah.find("P2").data["score"] = Lilah.find("P2").data["score"]+1
+                    Text.set_text(Lilah.find("Score1").ref, "%(Lilah.find("P2").data["score"])")
+                } else if(p1_side) {
+                    Lilah.find("P1").data["score"] = Lilah.find("P1").data["score"]+1
+                    Text.set_text(Lilah.find("Score2").ref, "%(Lilah.find("P1").data["score"])")
+                }
+
+                if(Lilah.find("P2").data["score"] > 4 || Lilah.find("P1").data["score"] > 4) {
                     Lilah.find("P1").data["score"] = 0
                     Lilah.find("P2").data["score"] = 0
                 }
-
-                Text.set_text(Lilah.find("Score1").ref, "%(Lilah.find("P2").data["score"])")
+                
                 Rigidbody.set_velocity(gameobject.ref, Vec2.new(0, 0))
 
                 Fiber.yield(1)
 
-                Rigidbody.set_velocity(gameobject.ref, Vec2.new(-200, 0))
+                if(p2_side) Rigidbody.set_velocity(gameobject.ref, Vec2.new(-200, 0))
+                if(p1_side) Rigidbody.set_velocity(gameobject.ref, Vec2.new(200, 0))
             })
         }
+    }
 
-        if(gameobject.ref.get("Transform").position.x < 0) {
-            Lilah.start_fiber(Fiber.new {
-                Rigidbody.set_position(gameobject.ref, Vec2.new(800/2, 600/2))
-                Lilah.find("P1").data["score"] = Lilah.find("P1").data["score"]+1
-                if(Lilah.find("P1").data["score"] > 4) {
-                    Lilah.find("P1").data["score"] = 0
-                    Lilah.find("P2").data["score"] = 0
-                }
+    static onCollision(c) {
+        var paddle = Lilah.find(c["uuid"])
+        Rigidbody.set_velocity_x(gameobject.ref, gameobject.ref.get("Rigidbody").velocity.x*-1)
 
-                Text.set_text(Lilah.find("Score2").ref, "%(Lilah.find("P1").data["score"])")
-                Rigidbody.set_velocity(gameobject.ref, Vec2.new(0, 0))
+        var paddle_pos = paddle.ref.get("Transform").position
+        var ball_pos = gameobject.ref.get("Transform").position
+        var dist = (ball_pos-paddle_pos).normalized()
 
-                Fiber.yield(1)
-                Rigidbody.set_velocity(gameobject.ref, Vec2.new(200, 0))
-            })
-        }
-
-        if(gameobject.ref.get("Rigidbody").colliding != null) {
-            var paddle = Lilah.find(gameobject.ref.get("Rigidbody").colliding["uuid"])
-            Rigidbody.set_velocity_x(gameobject.ref, gameobject.ref.get("Rigidbody").velocity.x*-1)
-
-            var paddle_pos = paddle.ref.get("Transform").position-Vec2.new(7, 50)
-            var ball_pos = gameobject.ref.get("Transform").position-Vec2.new(10, 10)
-            var dist = (ball_pos-paddle_pos).normalized()
-
-            var dot = Vec2.dot(Vec2.up, dist)
-            Rigidbody.set_velocity_y(gameobject.ref, dot*200)
-        }
+        var dot = Vec2.dot(Vec2.up, dist)
+        Rigidbody.set_velocity_y(gameobject.ref, dot*200)
     }
 }

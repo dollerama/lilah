@@ -4,7 +4,7 @@ use std::rc::Rc;
 use std::str;
 use std::time::Duration;
 
-use crate::components::ComponentBehaviour;
+use crate::components::{ComponentBehaviour, Rigidbody};
 use crate::gameobject::GameObject;
 use crate::input::{Input, InputInfo};
 use crate::math::Vec2;
@@ -228,7 +228,7 @@ impl Scripting {
 
             match frame {
                 0 => {
-                    Scripting::call_fn(&self.vm, &class, "setup", 0);
+                    Scripting::call_fn_error_silent(&self.vm, &class, "setup", 0);
 
                     self.vm.execute(|vm| {
                         vm.set_slot_double(1, (frame + 1).into());
@@ -237,7 +237,7 @@ impl Scripting {
                     Scripting::call_handle(&self.vm, &class, &frame_setter);
                 }
                 1 => {
-                    Scripting::call_fn(&self.vm, &class, "start", 0);
+                    Scripting::call_fn_error_silent(&self.vm, &class, "start", 0);
 
                     self.vm.execute(|vm| {
                         vm.set_slot_double(1, (frame + 1).into());
@@ -255,7 +255,7 @@ impl Scripting {
                                         vm.set_slot_double(1, g.1.wren_id as f64);
                                     });
                                     Scripting::call_setter(&self.vm, &obj, "gameobject");
-                                    Scripting::call_fn(&self.vm, &obj, "start", 0);
+                                    Scripting::call_fn_error_silent(&self.vm, &obj, "start", 0);
                                 }
                             }
                         }
@@ -263,7 +263,7 @@ impl Scripting {
                 }
                 _ => {
                     Scripting::call_fn(&self.vm, &state_class, "tick_fibers", 0);
-                    Scripting::call_fn(&self.vm, &class, "update", 0);
+                    Scripting::call_fn_error_silent(&self.vm, &class, "update", 0);
 
                     self.vm.execute(|vm| {
                         vm.set_slot_double(1, (frame + 1).into());
@@ -280,7 +280,22 @@ impl Scripting {
                                     self.vm
                                         .execute(|vm| vm.set_slot_double(1, g.1.wren_id as f64));
                                     Scripting::call_setter(&self.vm, &obj, "gameobject");
-                                    Scripting::call_fn(&self.vm, &obj, "update", 0);
+                                    Scripting::call_fn_error_silent(&self.vm, &obj, "update", 0);
+
+                                    if let Some(body) = g.1.wrap_component::<Rigidbody>() {
+                                        if let Some(coll) = &body.colliding {
+                                            self.vm.execute(|vm| {
+                                                vm.set_slot_new_map(1);
+                                                vm.set_slot_string(2, "id");
+                                                vm.set_slot_string(3, coll.name.clone());
+                                                vm.set_map_value(1, 2,3);
+                                                vm.set_slot_string(2, "uuid");
+                                                vm.set_slot_string(3, coll.uuid.clone());
+                                                vm.set_map_value(1,2, 3); 
+                                            });
+                                            Scripting::call_fn_error_silent(&self.vm, &obj, "onCollision", 1);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -319,6 +334,13 @@ impl Scripting {
         vm.set_slot_handle(0, &class);
         if let Err(e) = vm.call(FunctionSignature::new_function(function, arity)) {
             LilahError!(Scripting, e);
+        }
+    }
+
+    pub fn call_fn_error_silent<'a>(vm: &'a VMWrapper, class: &Rc<Handle<'a>>, function: &str, arity: usize) {
+        vm.set_slot_handle(0, &class);
+        if let Err(e) = vm.call(FunctionSignature::new_function(function, arity)) {
+            return
         }
     }
 

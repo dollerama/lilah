@@ -77,10 +77,9 @@ class Player is Behaviour {
         )
 
         if(Input.key_down("Space")) {
-            //gameobject.data["pos"] = gameobject.ref.get("Transform").position
-            //var p = Serializable.serialize(gameobject.data)
-            //Fs.write("examples/misc/pos.json", Json.stringify(p))
-            
+            gameobject.data["pos"] = gameobject.ref.get("Transform").position
+            var p = Serializable.serialize(gameobject.data)
+            Fs.write("examples/misc/pos.json", Json.stringify(p))
         }
     }
 }

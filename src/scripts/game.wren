@@ -18,10 +18,12 @@ class Behaviour {
 
     static start() {}
     static update() {}
+    static onCollision(collision) {}
 
     setup() {}
     start() {}
     update() {}
+    
 }
 
 foreign class Component {}
