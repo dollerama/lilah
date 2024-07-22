@@ -3,6 +3,17 @@ import "app" for Lilah
 import "io" for Serializable
 
 class Behaviour {
+    static data { __data }
+    static data=(v) { __data = v }
+
+    static [i] {
+        return __data[i]
+    }
+
+    static [i] = (v) {
+        return __data[i] = v
+    }
+
     frame {
         if(_frame == null) {
             _frame = 0
@@ -12,8 +23,21 @@ class Behaviour {
     frame=(v) {_frame=v}
     as_behaviour { _behaviour }
 
-    construct new(c) {
-        _behaviour = ComponentBehaviour.new("%(c)").as_component
+    construct new(g, c) {
+        if(__data == null) {
+            __data = {}
+        }
+        if(__data[g.uuid] == null) {
+            __data[g.uuid] = {}
+        }
+        if(__data[g.uuid]["%(c)"] == null) {
+            __data[g.uuid]["%(c)"] = {}
+        }
+        
+
+        var b = ComponentBehaviour.new("%(c)")
+        _behaviour = b.as_component
+        __data[g.uuid]["%(c)"][b.uuid] = c.new()
     }
 
     static start() {}
@@ -193,4 +217,5 @@ foreign class Sfx {
 foreign class ComponentBehaviour {
     construct new(b) { }
     foreign as_component
+    foreign uuid
 }

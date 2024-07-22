@@ -7,6 +7,35 @@ class GameObjectRef {
 
     ref { Lilah.gameobjects[_ref] }
 
+    behaviourData(b) {
+        if(b.supertype[ref.uuid]["%(b)"].count == 1) {
+            return b.supertype[ref.uuid]["%(b)"].values.toList[0]
+        } else if(b.supertype[ref.uuid]["%(b)"].count > 1) {
+            return b.supertype[ref.uuid]["%(b)"].values.toList
+        }
+    }
+
+    behaviourData(b, uuid) {
+        if(uuid is String) {
+            return b.supertype[ref.uuid]["%(b)"][uuid]
+        } else {
+            return null
+            // if(b.supertype[ref.uuid]["%(b)"].count == 1) {
+            //     uuid_or_mut.call(b.supertype[ref.uuid]["%(b)"].values.toList[0])
+            // } else if(b.supertype[ref.uuid]["%(b)"].count > 1) {
+            //     var i = 0
+            //     for(j in b.supertype[ref.uuid]["%(b)"]) {
+            //         uuid_or_mut.call(i, j.value)
+            //         i = i+1
+            //     }
+            // }
+        }
+    }
+
+    behaviourData(b, u, mut) {
+        mut.call(b.supertype[ref.uuid]["%(b)"][u])
+    }
+
     data=(v) {
        Lilah.data[ref.uuid] = v 
     }

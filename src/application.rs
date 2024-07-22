@@ -246,8 +246,9 @@ impl Scripting {
                     Scripting::call_handle(&self.vm, &class, &frame_setter);
 
                     for g in &mut state.gameobjects {
-                        if g.1.has::<ComponentBehaviour>() {
-                            if g.1.get::<ComponentBehaviour>().get_component() == m.0 {
+                        let behaviours = g.1.wrap_all::<ComponentBehaviour>();
+                        for b in behaviours {
+                            if b.get_component() == m.0 {
                                 let obj = Scripting::get_class_handle(&self.vm, &m.0, &m.0);
 
                                 if g.1.init && !g.1.start {
@@ -255,6 +256,12 @@ impl Scripting {
                                         vm.set_slot_double(1, g.1.wren_id as f64);
                                     });
                                     Scripting::call_setter(&self.vm, &obj, "gameobject");
+                                    
+                                    self.vm.execute(|vm| {
+                                        vm.set_slot_string(1, b.uuid.as_str());
+                                    });
+                                    Scripting::call_setter(&self.vm, &obj, "self");
+
                                     Scripting::call_fn_error_silent(&self.vm, &obj, "start", 0);
                                 }
                             }
@@ -272,14 +279,21 @@ impl Scripting {
                     Scripting::call_handle(&self.vm, &class, &frame_setter);
 
                     for g in &mut state.gameobjects {
-                        if g.1.has::<ComponentBehaviour>() {
-                            if g.1.get::<ComponentBehaviour>().get_component() == m.0 {
+                        let behaviours = g.1.wrap_all::<ComponentBehaviour>();
+                        for b in behaviours {
+                            if b.get_component() == m.0 {
                                 let obj = Scripting::get_class_handle(&self.vm, &m.0, &m.0);
 
                                 if g.1.init && g.1.start {
                                     self.vm
                                         .execute(|vm| vm.set_slot_double(1, g.1.wren_id as f64));
                                     Scripting::call_setter(&self.vm, &obj, "gameobject");
+
+                                    self.vm.execute(|vm| {
+                                        vm.set_slot_string(1, b.uuid.as_str());
+                                    });
+                                    Scripting::call_setter(&self.vm, &obj, "self");
+
                                     Scripting::call_fn_error_silent(&self.vm, &obj, "update", 0);
 
                                     if let Some(body) = g.1.wrap_component::<Rigidbody>() {

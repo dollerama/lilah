@@ -137,96 +137,6 @@ pub struct Scene {
     pub rigidbodies: Vec<Rigidbody>,
 }
 
-impl Scene {
-    pub fn new(file_name: String) -> Self {
-        Self {
-            file: file_name,
-            tiles: vec![],
-            transforms: vec![],
-            rigidbodies: vec![],
-        }
-    }
-
-    pub fn load(
-        &mut self,
-        app: &mut App,
-        textures: &HashMap<String, LilahTexture>,
-        scenes: &HashMap<String, SceneData>,
-    ) {
-        let this_scene = &scenes[self.file.clone().as_str()];
-        for layer in &this_scene.layers {
-            let mut current_tiles = vec![];
-            let mut current_trans = vec![];
-            for tile in &layer.tiles {
-                let mut current_sheet = "".to_string();
-                let mut current_sheet_id = 0;
-                for sheet in 0..this_scene.tile_sheets.len() {
-                    if this_scene.tile_sheets[sheet].path == tile.1.sheet {
-                        current_sheet = this_scene.tile_sheets[sheet].absolute_path.to_string();
-                        current_sheet_id = sheet;
-                        break;
-                    }
-                }
-                let mut new_tile = Sprite::new(current_sheet.as_str());
-                new_tile.cut_sprite_sheet(
-                    tile.1.sheet_id.0 as i32,
-                    tile.1.sheet_id.1 as i32,
-                    this_scene.tile_sheets[current_sheet_id].sheet_size.0
-                        / this_scene.tile_sheets[current_sheet_id].tile_size.0,
-                    this_scene.tile_sheets[current_sheet_id].sheet_size.1
-                        / this_scene.tile_sheets[current_sheet_id].tile_size.1,
-                );
-                new_tile.sort = self.tiles.len() as u32;
-
-                current_tiles.push(new_tile);
-                let new_trans = Transform::new(Vec2::new(
-                    tile.1.position.0 as f64,
-                    tile.1.position.1 as f64,
-                ));
-                current_trans.push(new_trans);
-                if layer.collision {
-                    let mut r = Rigidbody::new(Vec2::new(
-                        tile.1.position.0 as f64,
-                        tile.1.position.1 as f64,
-                    ));
-                    r.bounds = Vec2::new(
-                        this_scene.tile_sheets[current_sheet_id].tile_size.0 as f64,
-                        this_scene.tile_sheets[current_sheet_id].tile_size.1 as f64,
-                    );
-                    self.rigidbodies.push(r);
-                }
-            }
-
-            self.tiles.push(current_tiles);
-            self.transforms.push(current_trans);
-        }
-
-        for i in &mut self.tiles {
-            for j in i {
-                j.load(app, textures);
-            }
-        }
-    }
-
-    pub fn draw(&self, sort: usize, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
-        if sort > self.tiles.len() {
-            return;
-        }
-        //for i in 0..self.tiles.len() {
-            for j in 0..self.tiles[sort].len() {
-                let trans = &self.transforms[sort][j];
-                let new_trans = Transform::new(trans.position + t.position);
-                self.tiles[sort][j].draw(app, textures, &new_trans);
-            }
-        //}
-    }
-
-    //for wren
-    fn wren_as_component(&self, vm: &VM) {
-        send_foreign!(vm, "game", "Scene", Box::new(self.clone()) as Box<dyn Component> => 0);
-    }
-}
-
 /// Animator Component for GameObjects
 #[derive(PartialEq, Default, Clone)]
 pub struct Animator {
@@ -242,7 +152,8 @@ pub struct Animator {
 #[derive(Clone)]
 pub struct ComponentBehaviour {
     /// Name of wren class to link to behaviour
-    component: String,
+    pub component: String,
+    pub uuid: String,
 }
 
 /// Text Component for GameObjects
@@ -380,6 +291,96 @@ impl Sfx {
                 eprintln!("Sfx Error: Arg (1) must be of type GameObject");
             }
         }
+    }
+}
+
+impl Scene {
+    pub fn new(file_name: String) -> Self {
+        Self {
+            file: file_name,
+            tiles: vec![],
+            transforms: vec![],
+            rigidbodies: vec![],
+        }
+    }
+
+    pub fn load(
+        &mut self,
+        app: &mut App,
+        textures: &HashMap<String, LilahTexture>,
+        scenes: &HashMap<String, SceneData>,
+    ) {
+        let this_scene = &scenes[self.file.clone().as_str()];
+        for layer in &this_scene.layers {
+            let mut current_tiles = vec![];
+            let mut current_trans = vec![];
+            for tile in &layer.tiles {
+                let mut current_sheet = "".to_string();
+                let mut current_sheet_id = 0;
+                for sheet in 0..this_scene.tile_sheets.len() {
+                    if this_scene.tile_sheets[sheet].path == tile.1.sheet {
+                        current_sheet = this_scene.tile_sheets[sheet].absolute_path.to_string();
+                        current_sheet_id = sheet;
+                        break;
+                    }
+                }
+                let mut new_tile = Sprite::new(current_sheet.as_str());
+                new_tile.cut_sprite_sheet(
+                    tile.1.sheet_id.0 as i32,
+                    tile.1.sheet_id.1 as i32,
+                    this_scene.tile_sheets[current_sheet_id].sheet_size.0
+                        / this_scene.tile_sheets[current_sheet_id].tile_size.0,
+                    this_scene.tile_sheets[current_sheet_id].sheet_size.1
+                        / this_scene.tile_sheets[current_sheet_id].tile_size.1,
+                );
+                new_tile.sort = self.tiles.len() as u32;
+
+                current_tiles.push(new_tile);
+                let new_trans = Transform::new(Vec2::new(
+                    tile.1.position.0 as f64,
+                    tile.1.position.1 as f64,
+                ));
+                current_trans.push(new_trans);
+                if layer.collision {
+                    let mut r = Rigidbody::new(Vec2::new(
+                        tile.1.position.0 as f64,
+                        tile.1.position.1 as f64,
+                    ));
+                    r.bounds = Vec2::new(
+                        this_scene.tile_sheets[current_sheet_id].tile_size.0 as f64,
+                        this_scene.tile_sheets[current_sheet_id].tile_size.1 as f64,
+                    );
+                    self.rigidbodies.push(r);
+                }
+            }
+
+            self.tiles.push(current_tiles);
+            self.transforms.push(current_trans);
+        }
+
+        for i in &mut self.tiles {
+            for j in i {
+                j.load(app, textures);
+            }
+        }
+    }
+
+    pub fn draw(&self, sort: usize, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
+        if sort > self.tiles.len() {
+            return;
+        }
+        //for i in 0..self.tiles.len() {
+            for j in 0..self.tiles[sort].len() {
+                let trans = &self.transforms[sort][j];
+                let new_trans = Transform::new(trans.position + t.position);
+                self.tiles[sort][j].draw(app, textures, &new_trans);
+            }
+        //}
+    }
+
+    //for wren
+    fn wren_as_component(&self, vm: &VM) {
+        send_foreign!(vm, "game", "Scene", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 }
 
@@ -1871,6 +1872,7 @@ impl ComponentBehaviour {
     pub fn new(s: String) -> Self {
         Self {
             component: s.clone(),
+            uuid: Uuid::new_v4().to_string()
         }
     }
 
@@ -1881,6 +1883,10 @@ impl ComponentBehaviour {
     //for wren
     fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    pub fn wren_getter_uuid(&mut self, vm: &VM) {
+        vm.set_slot_string(0, self.uuid.clone());
     }
 }
 
@@ -2272,7 +2278,8 @@ create_module! (
     }
 
     class("ComponentBehaviour") crate::components::ComponentBehaviour => component_behaviour {
-        instance(getter "as_component") wren_as_component
+        instance(getter "as_component") wren_as_component,
+        instance(getter "uuid") wren_getter_uuid
     }
 
     class("Text") crate::components::Text => text {
