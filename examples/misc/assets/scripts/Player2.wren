@@ -3,11 +3,7 @@ import "app" for Lilah, Input, GameObjectRef, UI, Tween
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Scene
 
 class Player2 is Behaviour {
-    static gameobject { __gameobject }
-    static gameobject=(v) { __gameobject = GameObjectRef.new(v) }
-
     construct new() {
-        super(Player2)
     }
 
     setup() {
@@ -17,15 +13,15 @@ class Player2 is Behaviour {
         gameobject.add(Sprite.new("assets/test.png"))
         gameobject.add(Rigidbody.new())
         gameobject.add(Animator.new())
-        gameobject.add(this.as_behaviour)
+        gameobject.add(Player2.new(gameobject).as_behaviour)
 
-        gameobject = Lilah.instantiate(gameobject, {})
+        Lilah.instantiate(gameobject, {})
 
         var scene = GameObject.new("scene")
         scene.add(Transform.new(Vec2.new(0,0)))
         scene.add(Scene.new("assets/Untitled.json"))
         scene.add(Rigidbody.new())
-        scene = Lilah.instantiate(scene, {})
+        Lilah.instantiate(scene, {})
     }
 
     static start() {

@@ -4,12 +4,7 @@ import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody,
 import "io" for Fs, Json, Serializable
 
 class Player is Behaviour {
-
-    static gameobject { __gameobject }
-    static gameobject=(v) { __gameobject = GameObjectRef.new(v) }
-
     construct new() {
-        super(Player)
     }
 
     setup() {
@@ -24,9 +19,9 @@ class Player is Behaviour {
         gameobject.add(Animator.new())
         gameobject.add(Text.new("Hello Lilah!", "assets/Lora-Regular.ttf"))
         gameobject.add(Sfx.new("sfx", "assets/sfx.wav"))
-        gameobject.add(this.as_behaviour)
+        gameobject.add(Player.new(gameobject).as_behaviour)
 
-        gameobject = Lilah.instantiate(gameobject)
+        Lilah.instantiate(gameobject)
     }
 
     static start() {
@@ -41,7 +36,7 @@ class Player is Behaviour {
         gameobject.data = Json.parse(Fs.read("examples/misc/pos.json"))
         Rigidbody.set_position(gameobject.ref, Serializable.wrapper({"math": "Vec2"}, "data", [["pos", Vec2]]).deserialize(gameobject.data).pos)
 
-       gameobject["rot"] = 0
+        gameobject["rot"] = 0
 
         Tween.new(0, 10).time(10).onComplete{ System.print("Complete") }.play { |v| System.print(v) }
     }

@@ -6,16 +6,7 @@ import "CamFollow" for CamFollow
 import "Message" for Message
 
 class Player is Behaviour {
-    static gameobject { __gameobject }
-    static gameobject=(v) { __gameobject = GameObjectRef.new(v) }
-    static self { gameobject.behaviourData(Player, __uuid) }
-    static self=(v) {__uuid = v}
-
     construct new() {
-    }
-
-    construct new(g) {
-        super(g, Player)
     }
 
     setup() {

@@ -189,12 +189,20 @@ impl Scripting {
 
     pub fn load_script(&mut self, module: &str, source: &str) {
         let mod_name = module.to_string();
+        let modded_source = source.split("Behaviour {").collect::<Vec<&str>>();
+        let static_helpers = 
+        format!("\n\tstatic gameobject {{ __gameobject }}\n\tstatic gameobject=(v) {{ __gameobject = GameObjectRef.new(v) }}\n\tstatic gamebehaviour {{ gameobject.behaviourData({}, __uuid) }}\n\tstatic gamebehaviour=(v) {{__uuid = v}}\n\tconstruct new(g) {{ super(g, {}) }}", mod_name, mod_name);
+    
         let src = format!(
-            "{}\nvar {} = {}.new()",
-            source,
+            "{}Behaviour {{ {} {}\nvar {} = {}.new()",
+            modded_source[0],
+            static_helpers,
+            modded_source[1],
             mod_name.to_lowercase(),
             mod_name
         );
+
+        println!("{}", src);
 
         self.modules.insert(mod_name.clone(), src.clone());
 
@@ -260,7 +268,7 @@ impl Scripting {
                                     self.vm.execute(|vm| {
                                         vm.set_slot_string(1, b.uuid.as_str());
                                     });
-                                    Scripting::call_setter(&self.vm, &obj, "self");
+                                    Scripting::call_setter(&self.vm, &obj, "gamebehaviour");
 
                                     Scripting::call_fn_error_silent(&self.vm, &obj, "start", 0);
                                 }
@@ -292,7 +300,7 @@ impl Scripting {
                                     self.vm.execute(|vm| {
                                         vm.set_slot_string(1, b.uuid.as_str());
                                     });
-                                    Scripting::call_setter(&self.vm, &obj, "self");
+                                    Scripting::call_setter(&self.vm, &obj, "gamebehaviour");
 
                                     Scripting::call_fn_error_silent(&self.vm, &obj, "update", 0);
 

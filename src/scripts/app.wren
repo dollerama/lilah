@@ -20,15 +20,6 @@ class GameObjectRef {
             return b.supertype[ref.uuid]["%(b)"][uuid]
         } else {
             return null
-            // if(b.supertype[ref.uuid]["%(b)"].count == 1) {
-            //     uuid_or_mut.call(b.supertype[ref.uuid]["%(b)"].values.toList[0])
-            // } else if(b.supertype[ref.uuid]["%(b)"].count > 1) {
-            //     var i = 0
-            //     for(j in b.supertype[ref.uuid]["%(b)"]) {
-            //         uuid_or_mut.call(i, j.value)
-            //         i = i+1
-            //     }
-            // }
         }
     }
 
