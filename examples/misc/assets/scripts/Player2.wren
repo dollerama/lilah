@@ -1,5 +1,5 @@
 import "math" for Vec2
-import "app" for Lilah, Input, GameObjectRef, UI, Tween
+import "app" for Lilah, Input, GameObjectRef, UI, Tween, Curve
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Scene
 
 class Player2 is Behaviour {
@@ -52,7 +52,7 @@ class Player2 is Behaviour {
 
             Tween.new(Vec2.one, Vec2.zero)
             .time(2)
-            .curve(Tween.inOutElastic)
+            .curve(Curve.inOutElastic)
             .onComplete {
                 Lilah.destroy(gameobject.ref)
             }
