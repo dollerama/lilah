@@ -5,7 +5,12 @@ class GameObjectRef {
         return GameObjectRef.new(id)
     }
 
-    ref { Lilah.gameobjects[_ref] }
+    ref { 
+        if(_ref < 0 || _ref >= Lilah.gameobjects.count) {
+            return null
+        }
+        return Lilah.gameobjects[_ref] 
+    }
 
     behaviourData(b) {
         if(b.supertype[ref.uuid]["%(b)"].count == 1) {
@@ -198,7 +203,7 @@ class Lilah {
         for(i in (0..__gameobjects.count-1)) {
             var id = __gameobjects[i].id
             if(key is GameObjectRef) {
-                if(id["uuid"] == key.uuid) {
+                if(id["uuid"] == key.ref.uuid) {
                     d = GameObjectRef.new(i)
                     j=i
                     break
@@ -214,6 +219,7 @@ class Lilah {
 
         if(d != null) {
             __destroy.add(d.ref)
+            __data[d.ref.uuid] = null
             __gameobjects.removeAt(j)
         }
     }
@@ -481,18 +487,7 @@ class UI {
     }
 }
 
-class Tween {
-    static tweens { __tweens }
-    static tweens=(v) { __tweens = v }
-
-    static insert_tween(t) {
-        if(__tweens == null) {
-            __tweens = []
-        }
-
-        __tweens.add(t)
-    }
-
+class Curve {
     static linear {
         return Fn.new { |x|
             return x
@@ -616,6 +611,19 @@ class Tween {
             }
         }
     }
+}
+
+class Tween {
+    static tweens { __tweens }
+    static tweens=(v) { __tweens = v }
+
+    static insert_tween(t) {
+        if(__tweens == null) {
+            __tweens = []
+        }
+
+        __tweens.add(t)
+    }
 
     duration { _duration }
     use_curve { _use_curve }
@@ -631,7 +639,7 @@ class Tween {
     construct new(f, t) {
         from = f
         to = t
-        use_curve = Tween.linear
+        use_curve = Curve.linear
         duration = 1
     }
 

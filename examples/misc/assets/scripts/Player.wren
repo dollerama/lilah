@@ -1,6 +1,7 @@
 import "math" for Vec2
 import "app" for Lilah, Input, GameObjectRef, Audio, Tween
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
+import "ParticleSystem" for ParticleSystem
 import "io" for Fs, Json, Serializable
 
 class Player is Behaviour {
@@ -20,6 +21,7 @@ class Player is Behaviour {
         gameobject.add(Text.new("Hello Lilah!", "assets/Lora-Regular.ttf"))
         gameobject.add(Sfx.new("sfx", "assets/sfx.wav"))
         gameobject.add(Player.new(gameobject).as_behaviour)
+        gameobject.add(ParticleSystem.new(gameobject).as_behaviour)
 
         Lilah.instantiate(gameobject)
     }
@@ -37,8 +39,6 @@ class Player is Behaviour {
         Rigidbody.set_position(gameobject.ref, Serializable.wrapper({"math": "Vec2"}, "data", [["pos", Vec2]]).deserialize(gameobject.data).pos)
 
         gameobject["rot"] = 0
-
-        Tween.new(0, 10).time(10).onComplete{ System.print("Complete") }.play { |v| System.print(v) }
     }
 
     static update() {

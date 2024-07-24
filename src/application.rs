@@ -155,8 +155,8 @@ pub struct Scripting {
 
 impl Scripting {
     pub fn new() -> Self {
-        let modules = HashMap::new();
-        let loader = BasicFileLoader::new().base_dir("");
+        let mut modules = HashMap::new();
+        //let loader = BasicFileLoader::new().base_dir("");
 
         let mut lib = ModuleLibrary::new();
         
@@ -168,18 +168,16 @@ impl Scripting {
         let vm = VMConfig::new()
             .enable_relative_import(true)
             .library(&lib)
-            .script_loader(loader)
+            //.script_loader(loader)
             .build();
 
         //std engine modules
-        vm.interpret("io", include_str!("scripts/io.wren"))
-            .unwrap();
-        vm.interpret("math", include_str!("scripts/math.wren"))
-            .unwrap();
-        vm.interpret("app", include_str!("scripts/app.wren"))
-            .unwrap();
-        vm.interpret("game", include_str!("scripts/game.wren"))
-            .unwrap();
+        vm.interpret("io", include_str!("scripts/io.wren")).expect("Failed");
+        vm.interpret("math", include_str!("scripts/math.wren")).expect("Failed");
+        vm.interpret("app", include_str!("scripts/app.wren")).expect("Failed");
+        vm.interpret("game", include_str!("scripts/game.wren")).expect("Failed");
+        vm.interpret("ParticleSystem", include_str!("scripts/ParticleSystem.wren")).expect("Failed");
+        modules.insert("ParticleSystem".to_string(), "".to_string());
 
         Self {
             vm: vm,
@@ -201,8 +199,6 @@ impl Scripting {
             mod_name.to_lowercase(),
             mod_name
         );
-
-        println!("{}", src);
 
         self.modules.insert(mod_name.clone(), src.clone());
 

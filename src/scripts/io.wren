@@ -6,188 +6,145 @@ foreign class Fs {
 }
 
 class Serializable {
-  static wrapperFn(imports, name, values) {
-	var source = ""
-	for(im in imports) {
-	if(im.value is List) {
-		source = source + "import \"%(im.key)\" for " + im.value.join(",") + "\n"
-	  } else {
-		source = source + "import \"%(im.key)\" for " + im.value + "\n"
-	  }
-	} 
-	source = source + "class %(name) is Serializable {\n"
-	
-	var construct_sign = []
-	var construct_body = []
-	
-	var serialize_fn = "\tgetProperty() {\n\t\treturn properties(["
-	var serialize_fields = []
-	
-	var deserialize_fn = "\tsetProperty() {\n\t\treturn properties { |v|\n"
-	var deserialize_fields = []
-	
-	for(val in values) {
-	  if(val is List) {
-		source = source + "\t#!%(val[0])(ord = %(values.indexOf(val)))\n\t%(val[0]) { _%(val[0]) }\n\t%(val[0])=(v) { _%(val[0]) = v }\n"
-		serialize_fields.add("[this.%(val[0]), %(val[1])]")
-		construct_sign.add("%(val[0])_p")
-		construct_body.add("\t\t%(val[0]) = %(val[0])_p")
-		deserialize_fields.add("\t\t\tthis.%(val[0]) = v.call()")
-	  } else {
-		source = source + "\t#!%(val)(ord = %(values.indexOf(val)))\n\t%(val) { _%(val) }\n\t%(val)=(v) { _%(val) = v }\n"
-		serialize_fields.add("this.%(val)")
-		construct_sign.add("%(val[0])_p")
-		construct_body.add("\t\t%(val[0]) = %(val[0])_p")
-		deserialize_fields.add("\t\tthis.%(val) = v.call()")
-	  }
-	}
-	serialize_fn = serialize_fn + serialize_fields.join(",") + "])\n\t}"
-	deserialize_fn = deserialize_fn + deserialize_fields.join("\n") + "\n\t\t}\n\t}"
-	source = source + "\n\tstatic default { %(name).new(%(List.filled(values.count, null).join(","))) }\n\tconstruct new(" + construct_sign.join(",") + ") {\n"
-	source = source + construct_body.join("\n") + "\n\t}\n"
-	 
-	source = source + serialize_fn + "\n" + deserialize_fn
-	
-	source = source + "\n}\nreturn %(name).new(%(List.filled(values.count, null).join(",")))"
-	//System.print("--generating serializable class---\n"+source+"\n-----------------------------------\n")
-	return Meta.compile(source)
-  }
+	//example Serializable.wrapper({"math": "Vec2"}, "Rect", [["pos", Vec2], ["size", Vec2]])
+	static wrapperFn(imports, name, values) {
+		var source = ""
+		for(im in imports) {
+			if(im.value is List) {
+				source = source + "import \"%(im.key)\" for " + im.value.join(",") + "\n"
+			} else {
+				source = source + "import \"%(im.key)\" for " + im.value + "\n"
+			}
+		} 
+		source = source + "class %(name) is Serializable {\n"
 
-  static wrapper(imports, name, values) {
-	return wrapperFn(imports, name, values).call()
-  }
+		var construct_sign = []
+		var construct_body = []
 
-  properties(f) {
-	if(f is List) {
-	  return Fiber.new {  
-		for(s in f) {
-		  Fiber.yield(s)
+		var serialize_fn = "\tgetProperty() {\n\t\treturn properties(["
+		var serialize_fields = []
+
+		var deserialize_fn = "\tsetProperty() {\n\t\treturn properties { |v|\n"
+		var deserialize_fields = []
+
+		for(val in values) {
+			if(val is List) {
+				source = source + "\t#!%(val[0])(ord = %(values.indexOf(val)))\n\t%(val[0]) { _%(val[0]) }\n\t%(val[0])=(v) { _%(val[0]) = v }\n"
+				serialize_fields.add("[this.%(val[0]), %(val[1])]")
+				construct_sign.add("%(val[0])_p")
+				construct_body.add("\t\t%(val[0]) = %(val[0])_p")
+				deserialize_fields.add("\t\t\tthis.%(val[0]) = v.call()")
+			} else {
+				source = source + "\t#!%(val)(ord = %(values.indexOf(val)))\n\t%(val) { _%(val) }\n\t%(val)=(v) { _%(val) = v }\n"
+				serialize_fields.add("this.%(val)")
+				construct_sign.add("%(val[0])_p")
+				construct_body.add("\t\t%(val[0]) = %(val[0])_p")
+				deserialize_fields.add("\t\tthis.%(val) = v.call()")
+			}
 		}
-	  }
-	} else {
-	  return f
-	}
-  }
-  
-  static serialize(obj) {
-	var result = {}
-	for(item in obj) {
-	  if(item.value is Serializable) {
-		result[item.key] = item.value.serialize()
-	  } else {
-		result[item.key] = item.value
-	  }
-	}
-	return result
-  }
+		serialize_fn = serialize_fn + serialize_fields.join(",") + "])\n\t}"
+		deserialize_fn = deserialize_fn + deserialize_fields.join("\n") + "\n\t\t}\n\t}"
+		source = source + "\n\tstatic default { %(name).new(%(List.filled(values.count, null).join(","))) }\n\tconstruct new(" + construct_sign.join(",") + ") {\n"
+		source = source + construct_body.join("\n") + "\n\t}\n"
 
-  serialize() { 
-	var iter = Serializable.iterProperties(this.type)
-	var result = {}
-	var f = getProperty()
+		source = source + serialize_fn + "\n" + deserialize_fn
 
-	while(true) {
-	  var entry = f.call()
-	  if(f.isDone) break
-	  
-	  if(entry is List) {
-		result[iter.call()] = entry[0].serialize()
-	  } else {
-		result[iter.call()] = entry
-	  }
+		source = source + "\n}\nreturn %(name).new(%(List.filled(values.count, null).join(",")))"
+		//System.print("--generating serializable class---\n"+source+"\n-----------------------------------\n")
+		return Meta.compile(source)
 	}
-	return result
-  }
-  
-  deserialize(obj) { 
-	var iter = Serializable.iterProperties(type)
-	var f = getProperty()
-	var f2 = setProperty()
-	
-	var args = []
 
-	while(true) {
-	  var entry = f.call()
-	  var i = iter.call()
-	  if(f.isDone) break
-	  
-	  if(entry is List) {
-		args.add(entry[1].default.deserialize(obj[i]))
-	  } else {
-		args.add(obj[i])
-	  }
+	static wrapper(imports, name, values) {
+		return wrapperFn(imports, name, values).call()
 	}
-	
-	f2.call(Fiber.new { 
-	  for(a in args) {
-		Fiber.yield(a)
-	  }
-	})
-	
-	return this
-  }
-  
-  static iterProperties(t) {
-	var props = t.attributes.methods
-	var len = props.count
-	var i = 0
-	return Fiber.new {
-	  while(i < len) {
-		for(prop in props) {
-		  if(prop.value[prop.value.keys.toList[0]]["ord"][0] == i) {
-			Fiber.yield(prop.value.keys.toList[0])
-			i = i+1
-			break
-		  }
+
+	properties(f) {
+		if(f is List) {
+			return Fiber.new {  
+				for(s in f) {
+					Fiber.yield(s)
+				}
+			}
+		} else {
+			return f
 		}
-	  }
 	}
-  }
-}
-
-/* example
-class Vec2 is Serializable {
-  #!x(ord = 0)
-  x { _x }
-  #!y(ord = 1)
-  y { _y }
   
-  x=(v) { _x = v }
-  y=(v) { _y = v }
-  
-  construct new(xv, yv) {
-	x = xv
-	y = yv
-  }
-  
-  serialize() {
-	return super.serialize([this.x, this.y])
-  }
-  deserialize(obj) {
-	return super.deserialize(
-	  obj, 
-	  [
-		Fn.new {|v| this.x = v}, 
-		Fn.new {|v| this.y = v}
-	  ]
-	)
-  }
-}
+	static serialize(obj) {
+		var result = {}
+		for(item in obj) {
+			if(item.value is Serializable) {
+				result[item.key] = item.value.serialize()
+			} else {
+				esult[item.key] = item.value
+			}
+		}
+		return result
+	}
 
-var data = {
-  "x": [1,2,3],
-  "y": 2,
-  "z": {
-	"x": 1,
-	"y": 2,
-  }
-}
+	serialize() { 
+		var iter = Serializable.iterProperties(this.type)
+		var result = {}
+		var f = getProperty()
 
-var a = Serializable.generate("Point", ["x", "y", ["z", "Vec2"]])
-a = a.deserialize(data)
-System.print("x=%(a.x), y=%(a.y), z=%(a.z)")
-System.print(a.serialize())
-*/
+		while(true) {
+			var entry = f.call()
+			if(f.isDone) break
+
+			if(entry is List) {
+				result[iter.call()] = entry[0].serialize()
+			} else {
+				result[iter.call()] = entry
+			}
+		}
+		return result
+	}
+  
+	deserialize(obj) { 
+		var iter = Serializable.iterProperties(type)
+		var f = getProperty()
+		var f2 = setProperty()
+
+		var args = []
+
+		while(true) {
+			var entry = f.call()
+			var i = iter.call()
+			if(f.isDone) break
+
+			if(entry is List) {
+				args.add(entry[1].default.deserialize(obj[i]))
+			} else {
+				args.add(obj[i])
+			}
+		}
+
+		f2.call(Fiber.new { 
+			for(a in args) {
+				Fiber.yield(a)
+			}
+		})
+
+		return this
+	}
+  
+	static iterProperties(t) {
+		var props = t.attributes.methods
+		var len = props.count
+		var i = 0
+		return Fiber.new {
+			while(i < len) {
+				for(prop in props) {
+					if(prop.value[prop.value.keys.toList[0]]["ord"][0] == i) {
+						Fiber.yield(prop.value.keys.toList[0])
+						i = i+1
+						break
+					}
+				}
+			}
+		}
+	}
+}
 
 //Json Parser for wren
 //Credit: ruby0x1

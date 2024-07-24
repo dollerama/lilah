@@ -1,8 +1,8 @@
 import "math" for Vec2
-import "app" for Lilah
+import "app" for Lilah, GameObjectRef
 import "io" for Serializable
 
-class Behaviour {
+class Behaviour is Serializable {
     static data { __data }
     static data=(v) { __data = v }
 
