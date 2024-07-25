@@ -1,6 +1,6 @@
 # Game
 ### Classes
-> - [Behaviour](Behaviour)
+> - [Behaviour](## Behaviour)
 ## Behaviour
 > Inherits from Serializable
 ### ``data``

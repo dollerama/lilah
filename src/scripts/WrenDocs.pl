@@ -23,7 +23,7 @@ sub create_doc {
             if($ident_name[0] eq "class") {
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)/g)[1];
                 $output .= "## $ident_sig\n";
-                push(@all_classes, "> - [$ident_sig]($ident_sig)");
+                push(@all_classes, "> - [$ident_sig](## $ident_sig)");
             } elsif($ident_name[0] eq "module") {
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)/g)[1];
                 $module .= "# $ident_sig\n";
