@@ -71,7 +71,7 @@ sub create_doc {
 
     my $result .= $module."### Classes\n".join("\n", @all_classes)."\n".$output_final;
     if(@all_in_class-0 == 1) {
-        $result .= $output_header.@all_in_class."\n".$output;
+        $result .= $output_header."@all_in_class"."\n".$output;
     } else {
         $result .= $output_header.join("\n", @all_in_class).$output;
     }

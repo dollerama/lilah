@@ -84,18 +84,31 @@ foreign class Component {}
 foreign class Text {
     ///{constructor} new(text: String, font: String) -> Text
     construct new(text, font) {}
-    foreign as_component
+    ///{foreign getter} as_component -> Component
+    foreign as_component 
+    ///{foreign getter} text -> String
     foreign text
+    ///{foreign getter} font -> String
     foreign font
+    ///{foreign getter} font_size -> Num
     foreign font_size
+    ///{foreign setter} text = v: String
     foreign text=(v)
+    ///{foreign setter} font = v: String
     foreign font=(v)
+    ///{foreign setter} font_size = v: Num
     foreign font_size=(v)
+    ///{foreign static method} get_text(go: GameObject) -> String
     foreign static get_text(go)
+    ///{foreign static method} get_font(go: GameObject) -> String
     foreign static get_font(go)
+    ///{foreign static method} get_font_size(go: GameObject) -> Num
     foreign static get_font_size(go)
+    ///{foreign static method} set_text(go: GameObject, text: String) -> Null
     foreign static set_text(go, text)
+    ///{foreign static method} set_font(go: GameObject, font: String) -> Null
     foreign static set_font(go, font)
+    ///{foreign static method} set_font_size(go: GameObject, fs: Num) -> Null
     foreign static set_font_size(go, fs)
 }
 

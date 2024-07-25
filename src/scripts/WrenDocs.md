@@ -59,6 +59,44 @@ method returns ``Null``
 ## Component
 > Rust dyn obj that all components derive from
 ## Text
-1
-### ``new(text: String, font: String)``
+> - [new(text: String, font: String)](###``new(text: String, font: String)``)
+> - [as_component](###``as_component``)
+> - [text](###``text``)
+> - [font](###``font``)
+> - [font_size](###``font_size``)
+> - [](###````)
+> - [](###````)
+> - [](###````)
+> - [get_text(go: GameObject)](###``get_text(go: GameObject)``)
+> - [get_font(go: GameObject)](###``get_font(go: GameObject)``)
+> - [get_font_size(go: GameObject)](###``get_font_size(go: GameObject)``)
+> - [set_text(go: GameObject, text: String)](###``set_text(go: GameObject, text: String)``)
+> - [set_font(go: GameObject, font: String)](###``set_font(go: GameObject, font: String)``)
+> - [set_font_size(go: GameObject, fs: Num)](###``set_font_size(go: GameObject, fs: Num)``)### ``new(text: String, font: String)``
 constructor with arity(2) and returns ``Text``
+### ``as_component``
+foreign getter returns ``Component``
+### ``text``
+foreign getter returns ``String``
+### ``font``
+foreign getter returns ``String``
+### ``font_size``
+foreign getter returns ``Num``
+### ````
+foreign setter returns ````
+### ````
+foreign setter returns ````
+### ````
+foreign setter returns ````
+### ``get_text(go: GameObject)``
+foreign static method with arity(1) and returns ``String``
+### ``get_font(go: GameObject)``
+foreign static method with arity(1) and returns ``String``
+### ``get_font_size(go: GameObject)``
+foreign static method with arity(1) and returns ``Num``
+### ``set_text(go: GameObject, text: String)``
+foreign static method with arity(2) and returns ``Null``
+### ``set_font(go: GameObject, font: String)``
+foreign static method with arity(2) and returns ``Null``
+### ``set_font_size(go: GameObject, fs: Num)``
+foreign static method with arity(2) and returns ``Null``
