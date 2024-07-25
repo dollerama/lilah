@@ -1,28 +1,43 @@
 import "math" for Vec2
 import "app" for Lilah, GameObjectRef
 import "io" for Serializable
+///{module} Game
 
+///{class} Behaviour
+///Inherits from Serializable
 class Behaviour is Serializable {
+    ///{static getter} data -> Map
     static data { __data }
+    ///{static setter} data = v: Map
     static data=(v) { __data = v }
 
+    ///{static getter} [i: Any] -> Any
     static [i] {
         return __data[i]
     }
 
+    ///{static setter} [i: Any] = v: Any
     static [i] = (v) {
         return __data[i] = v
     }
 
+    ///{getter} frame -> Num
     frame {
         if(_frame == null) {
             _frame = 0
         }
         return _frame
     }
+    ///{setter} frame = v: Num
     frame=(v) {_frame=v}
+    ///{getter} as_behaviour -> ComponentBehaviour
+    ///Example:
+    ///```js
+    ///gameobject.add(ParticleSystem.new(gameobject).as_behaviour)
+    ///```
     as_behaviour { _behaviour }
 
+    ///{constructor} new(g: Gameobject, c: Behaviour) -> Behaviour
     construct new(g, c) {
         if(__data == null) {
             __data = {}
@@ -39,13 +54,24 @@ class Behaviour is Serializable {
         _behaviour = b.as_component
         __data[g.uuid]["%(c)"][b.uuid] = c.new()
     }
-
+    ///{static method} start() -> Null
+    ///Runs the frame after setup.
     static start() {}
+    ///{static method} update() -> Null
+    ///Run every frame.
     static update() {}
+    ///{static method} onCollision() -> Null
+    ///Runs every frame after start that the Behaviour has a collision given a Rigidbody and Transform is attached.
     static onCollision(collision) {}
 
+    ///{method} setup() -> Null
+    ///Runs the first frame regardless of whether or not the Behaviour is attached.
     setup() {}
+    ///{method} start() -> Null
+    ///Runs the second frame regardless of whether or not the Behaviour is attached.
     start() {}
+    ///{method} update() -> Null
+    ///Runs every frame after start regardless of whether or not the Behaviour is attached.
     update() {}
     
 }
