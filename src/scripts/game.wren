@@ -76,9 +76,13 @@ class Behaviour is Serializable {
     
 }
 
+///{class} Component
+///Rust dyn obj that all components derive from
 foreign class Component {}
 
+///{class} Text
 foreign class Text {
+    ///{constructor} new(text: String, font: String) -> Text
     construct new(text, font) {}
     foreign as_component
     foreign text

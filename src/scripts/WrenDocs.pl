@@ -12,18 +12,26 @@ sub create_doc {
         <$fh>;
     };
     
+    my $output_header = "";
     my $output = "";
+    my $output_final = "";
     my @new_source = $source =~ /\/{3}.*/g;
     my $module = "";
     my @all_classes = ();
+    my @all_in_class = ();
     foreach(@new_source) {
         my @ident_name = ($_ =~ /(?<=\{)(.*)(?=\})/g);
         
         if(@ident_name) {
             if($ident_name[0] eq "class") {
+                $output_final .= $output_header.join("\n", @all_in_class).$output;
+                $output = "";
+                $output_header = "";
+
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)/g)[1];
-                $output .= "## $ident_sig\n";
+                $output_header .= "## $ident_sig\n";
                 push(@all_classes, "> - [$ident_sig](##$ident_sig)");
+                @all_in_class = ();
             } elsif($ident_name[0] eq "module") {
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)/g)[1];
                 $module .= "# $ident_sig\n";
@@ -31,6 +39,7 @@ sub create_doc {
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)/g)[1];
                 $output .= "### ``$ident_sig``\n";
                 $output .= "$ident_name[0]\n";
+                push(@all_in_class, "> - [$ident_sig](###$ident_sig)");
             } else {
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)(?=(\s->))/g)[1];
                 my @words = ($ident_sig =~ /(\w+)/g);
@@ -43,20 +52,24 @@ sub create_doc {
                 $output .= "### ``$ident_sig``\n";
 
                 if($w_count != 0) {
-                    $output .= "$ident_name[0] with arity($w_count) and returns $returns\n";
+                    $output .= "$ident_name[0] with arity($w_count) and returns ``$returns``\n";
                 } else {
-                    $output .= "$ident_name[0] returns $returns\n";
+                    $output .= "$ident_name[0] returns ``$returns``\n";
                 }
+
+                push(@all_in_class, "> - [$ident_sig](###$ident_sig)");
             }
         } else {
             my @descr = ($_ =~ /[^\/].*/g);
             $output .= "> $descr[0]\n";
         }
     }
-    
-    print $output;
+
+    my $result .= $module."### Classes\n".join("\n", @all_classes)."\n".$output_final;
+    $result .= $output_header.join("\n", @all_in_class).$output;
+    print $result;
     ##close($fh);
-    return $module."### Classes\n".join("\n", @all_classes)."\n".$output;
+    return $result;
 }
                                        
 my $filename = 'src/scripts/WrenDocs.md';
