@@ -64,9 +64,9 @@ method returns ``Null``
 > - [text](###``text``)
 > - [font](###``font``)
 > - [font_size](###``font_size``)
-> - [](###````)
-> - [](###````)
-> - [](###````)
+> - [text = v: String](###``text = v: String``)
+> - [font = v: String](###``font = v: String``)
+> - [font_size = v: Num](###``font_size = v: Num``)
 > - [get_text(go: GameObject)](###``get_text(go: GameObject)``)
 > - [get_font(go: GameObject)](###``get_font(go: GameObject)``)
 > - [get_font_size(go: GameObject)](###``get_font_size(go: GameObject)``)
@@ -75,28 +75,28 @@ method returns ``Null``
 > - [set_font_size(go: GameObject, fs: Num)](###``set_font_size(go: GameObject, fs: Num)``)### ``new(text: String, font: String)``
 constructor with arity(2) and returns ``Text``
 ### ``as_component``
-foreign getter returns ``Component``
+getter returns ``Component``
 ### ``text``
-foreign getter returns ``String``
+getter returns ``String``
 ### ``font``
-foreign getter returns ``String``
+getter returns ``String``
 ### ``font_size``
-foreign getter returns ``Num``
-### ````
-foreign setter returns ````
-### ````
-foreign setter returns ````
-### ````
-foreign setter returns ````
+getter returns ``Num``
+### ``text = v: String``
+setter
+### ``font = v: String``
+setter
+### ``font_size = v: Num``
+setter
 ### ``get_text(go: GameObject)``
-foreign static method with arity(1) and returns ``String``
+static method with arity(1) and returns ``String``
 ### ``get_font(go: GameObject)``
-foreign static method with arity(1) and returns ``String``
+static method with arity(1) and returns ``String``
 ### ``get_font_size(go: GameObject)``
-foreign static method with arity(1) and returns ``Num``
+static method with arity(1) and returns ``Num``
 ### ``set_text(go: GameObject, text: String)``
-foreign static method with arity(2) and returns ``Null``
+static method with arity(2) and returns ``Null``
 ### ``set_font(go: GameObject, font: String)``
-foreign static method with arity(2) and returns ``Null``
+static method with arity(2) and returns ``Null``
 ### ``set_font_size(go: GameObject, fs: Num)``
-foreign static method with arity(2) and returns ``Null``
+static method with arity(2) and returns ``Null``
