@@ -4,20 +4,20 @@
 > - [Component](##Component)
 > - [Text](##Text)
 ## Behaviour
-> - [data](###data)
-> - [data = v: Map](###data = v: Map)
-> - [[i: Any]](###[i: Any])
-> - [[i: Any] = v: Any](###[i: Any] = v: Any)
-> - [frame](###frame)
-> - [frame = v: Num](###frame = v: Num)
-> - [as_behaviour](###as_behaviour)
-> - [new(g: Gameobject, c: Behaviour)](###new(g: Gameobject, c: Behaviour))
-> - [start()](###start())
-> - [update()](###update())
-> - [onCollision()](###onCollision())
-> - [setup()](###setup())
-> - [start()](###start())
-> - [update()](###update())> Inherits from Serializable
+> - [data](###``data``)
+> - [data = v: Map](###``data = v: Map``)
+> - [[i: Any]](###``[i: Any]``)
+> - [[i: Any] = v: Any](###``[i: Any] = v: Any``)
+> - [frame](###``frame``)
+> - [frame = v: Num](###``frame = v: Num``)
+> - [as_behaviour](###``as_behaviour``)
+> - [new(g: Gameobject, c: Behaviour)](###``new(g: Gameobject, c: Behaviour)``)
+> - [start()](###``start()``)
+> - [update()](###``update()``)
+> - [onCollision()](###``onCollision()``)
+> - [setup()](###``setup()``)
+> - [start()](###``start()``)
+> - [update()](###``update()``)> Inherits from Serializable
 ### ``data``
 static getter returns ``Map``
 ### ``data = v: Map``
@@ -59,5 +59,6 @@ method returns ``Null``
 ## Component
 > Rust dyn obj that all components derive from
 ## Text
-> - [new(text: String, font: String)](###new(text: String, font: String))### ``new(text: String, font: String)``
+1
+### ``new(text: String, font: String)``
 constructor with arity(2) and returns ``Text``

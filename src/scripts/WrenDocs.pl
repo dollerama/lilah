@@ -24,7 +24,11 @@ sub create_doc {
         
         if(@ident_name) {
             if($ident_name[0] eq "class") {
-                $output_final .= $output_header.join("\n", @all_in_class).$output;
+                if(@all_in_class-0 == 1) {
+                    $output_final .= $output_header.@all_in_class."\n".$output;
+                } else {
+                    $output_final .= $output_header.join("\n", @all_in_class).$output;
+                }
                 $output = "";
                 $output_header = "";
 
@@ -39,7 +43,7 @@ sub create_doc {
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)/g)[1];
                 $output .= "### ``$ident_sig``\n";
                 $output .= "$ident_name[0]\n";
-                push(@all_in_class, "> - [$ident_sig](###$ident_sig)");
+                push(@all_in_class, "> - [$ident_sig](###``$ident_sig``)");
             } else {
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)(?=(\s->))/g)[1];
                 my @words = ($ident_sig =~ /(\w+)/g);
@@ -57,7 +61,7 @@ sub create_doc {
                     $output .= "$ident_name[0] returns ``$returns``\n";
                 }
 
-                push(@all_in_class, "> - [$ident_sig](###$ident_sig)");
+                push(@all_in_class, "> - [$ident_sig](###``$ident_sig``)");
             }
         } else {
             my @descr = ($_ =~ /[^\/].*/g);
@@ -66,7 +70,11 @@ sub create_doc {
     }
 
     my $result .= $module."### Classes\n".join("\n", @all_classes)."\n".$output_final;
-    $result .= $output_header.join("\n", @all_in_class).$output;
+    if(@all_in_class-0 == 1) {
+        $result .= $output_header.@all_in_class."\n".$output;
+    } else {
+        $result .= $output_header.join("\n", @all_in_class).$output;
+    }
     print $result;
     ##close($fh);
     return $result;
