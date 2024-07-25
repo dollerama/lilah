@@ -1,23 +1,24 @@
 # Game
 ### Classes
-> - [Behaviour](##Behaviour)
-> - [Component](##Component)
-> - [Text](##Text)
+> - [Behaviour](##behaviour)
+> - [Component](##component)
+> - [Text](##text)
 ## Behaviour
-> - [data](###``data``)
-> - [data = v: Map](###``data = v: Map``)
-> - [[i: Any]](###``[i: Any]``)
-> - [[i: Any] = v: Any](###``[i: Any] = v: Any``)
-> - [frame](###``frame``)
-> - [frame = v: Num](###``frame = v: Num``)
-> - [as_behaviour](###``as_behaviour``)
-> - [new(g: Gameobject, c: Behaviour)](###``new(g: Gameobject, c: Behaviour)``)
-> - [start()](###``start()``)
-> - [update()](###``update()``)
-> - [onCollision()](###``onCollision()``)
-> - [setup()](###``setup()``)
-> - [start()](###``start()``)
-> - [update()](###``update()``)> Inherits from Serializable
+> - data
+> - data = v: Map
+> - [i: Any]
+> - [i: Any] = v: Any
+> - frame
+> - frame = v: Num
+> - as_behaviour
+> - new(g: Gameobject, c: Behaviour)
+> - start()
+> - update()
+> - onCollision()
+> - setup()
+> - start()
+> - update()
+> Inherits from Serializable
 ### ``data``
 static getter returns ``Map``
 ### ``data = v: Map``
@@ -59,20 +60,21 @@ method returns ``Null``
 ## Component
 > Rust dyn obj that all components derive from
 ## Text
-> - [new(text: String, font: String)](###``new(text: String, font: String)``)
-> - [as_component](###``as_component``)
-> - [text](###``text``)
-> - [font](###``font``)
-> - [font_size](###``font_size``)
-> - [text = v: String](###``text = v: String``)
-> - [font = v: String](###``font = v: String``)
-> - [font_size = v: Num](###``font_size = v: Num``)
-> - [get_text(go: GameObject)](###``get_text(go: GameObject)``)
-> - [get_font(go: GameObject)](###``get_font(go: GameObject)``)
-> - [get_font_size(go: GameObject)](###``get_font_size(go: GameObject)``)
-> - [set_text(go: GameObject, text: String)](###``set_text(go: GameObject, text: String)``)
-> - [set_font(go: GameObject, font: String)](###``set_font(go: GameObject, font: String)``)
-> - [set_font_size(go: GameObject, fs: Num)](###``set_font_size(go: GameObject, fs: Num)``)### ``new(text: String, font: String)``
+> - new(text: String, font: String)
+> - as_component
+> - text
+> - font
+> - font_size
+> - text = v: String
+> - font = v: String
+> - font_size = v: Num
+> - get_text(go: GameObject)
+> - get_font(go: GameObject)
+> - get_font_size(go: GameObject)
+> - set_text(go: GameObject, text: String)
+> - set_font(go: GameObject, font: String)
+> - set_font_size(go: GameObject, fs: Num)
+### ``new(text: String, font: String)``
 constructor with arity(2) and returns ``Text``
 ### ``as_component``
 getter returns ``Component``
