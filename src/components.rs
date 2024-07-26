@@ -790,7 +790,7 @@ impl Rigidbody {
     fn wren_colliding_getter(&mut self, vm: &VM) {
         if let Some(coll) = self.colliding.clone() {
             vm.set_slot_new_map(0);
-            vm.set_slot_string(1, "id");
+            vm.set_slot_string(1, "name");
             vm.set_slot_string(2, coll.name.clone());
             vm.set_map_value(0, 1, 2);
             vm.set_slot_string(1, "uuid");
@@ -806,7 +806,7 @@ impl Rigidbody {
             Some(comp) => {
                 if let Some(coll) = comp.get::<Rigidbody>().colliding.clone() {
                     vm.set_slot_new_map(0);
-                    vm.set_slot_string(2, "id");
+                    vm.set_slot_string(2, "name");
                     vm.set_slot_string(3, coll.name.clone());
                     vm.set_map_value(0, 2, 3);
                     vm.set_slot_string(2, "uuid");

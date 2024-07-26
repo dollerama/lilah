@@ -35,8 +35,13 @@ sub create_doc {
                 $output = "";
                 $output_header = "";
 
-                my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)/g)[1];
-                $output_header .= "## $ident_sig\n";
+                my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)(?=(\s:))/g)[1] || ($_ =~ /(?<=(\}\s))(.*)/g)[1];
+                my $ident_inherit = ($_ =~ /(?<=(:\s))(.*)/g)[1] || "";
+                if($ident_inherit ne "") {
+                    $ident_inherit = "\nInherits from ``$ident_inherit``";
+                }
+                $output_header .= "## $ident_sig$ident_inherit\n";
+
                 my $ident_sig_lc = lc($ident_sig);
                 push(@all_classes, "> - [$ident_sig](##$ident_sig_lc)");
                 @all_in_class = ();
@@ -94,7 +99,7 @@ sub create_doc {
     return $result;
 }
                                        
-my $filename = 'src/scripts/WrenDocs.md';
+my $filename = 'src/scripts/game.md';
 unlink($filename);
 open(my $fh, '>>', $filename) or die "Could not open file '$filename' $!";
 print $fh create_doc("src/scripts/game.wren");
