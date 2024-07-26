@@ -43,7 +43,7 @@ sub create_doc {
                 $output_header .= "## $ident_sig$ident_inherit\n";
 
                 my $ident_sig_lc = lc($ident_sig);
-                push(@all_classes, "> - [$ident_sig](##$ident_sig_lc)");
+                push(@all_classes, "> - [$ident_sig](#$ident_sig_lc)");
                 @all_in_class = ();
                 $prev_class = 1;
             } elsif($ident_name[0] eq "module") {

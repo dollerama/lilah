@@ -1,16 +1,16 @@
 # Game
 ### Classes
-> - [Behaviour](##behaviour)
-> - [Component](##component)
-> - [Text](##text)
-> - [Sprite](##sprite)
-> - [Scene](##scene)
-> - [Rigidbody](##rigidbody)
-> - [Animator](##animator)
-> - [Transform](##transform)
-> - [GameObject](##gameobject)
-> - [Sfx](##sfx)
-> - [ComponentBehaviour](##componentbehaviour)
+> - [Behaviour](#behaviour)
+> - [Component](#component)
+> - [Text](#text)
+> - [Sprite](#sprite)
+> - [Scene](#scene)
+> - [Rigidbody](#rigidbody)
+> - [Animator](#animator)
+> - [Transform](#transform)
+> - [GameObject](#gameobject)
+> - [Sfx](#sfx)
+> - [ComponentBehaviour](#componentbehaviour)
 ## Behaviour
 Inherits from ``Serializable``
 > - data
