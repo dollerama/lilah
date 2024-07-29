@@ -200,8 +200,6 @@ impl Scripting {
             mod_name
         );
 
-        println!("{}", src);
-
         self.modules.insert(mod_name.clone(), src.clone());
 
         match self.vm.interpret(mod_name.clone(), src) {
