@@ -2224,7 +2224,7 @@ create_module! (
     }
 
     class("GameObject") crate::gameobject::GameObject => go {
-        instance(fn "get", 1) wren_get_component,
+        instance(fn "getComponent", 1) wren_get_component,
         instance(fn "add", 1) wren_add_component,
         instance(fn "set", 2) wren_set_component,
         instance(getter "id") wren_getter_id,

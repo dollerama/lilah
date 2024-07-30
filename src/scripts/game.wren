@@ -313,8 +313,12 @@ foreign class GameObject {
     construct new(name) {}
     ///{method} add(x: Component) -> null
     foreign add(x)
-    ///{method} get(x: String) -> Component
-    foreign get(x)
+    ///{method} getComponent(x: String) -> Component
+    foreign getComponent(x)
+    ///{method} set(x: Type, y: Component) -> null
+    get(x) {
+        return getComponent("%(x)")
+    }
     ///{method} set(x: String, y: Component) -> null
     foreign set(x, y)
     ///{getter} id -> Map

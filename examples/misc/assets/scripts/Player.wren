@@ -52,7 +52,7 @@ class Player is Behaviour {
             Animator.stop(gameobject.ref)
         }
         
-        if(gameobject.ref.get("Rigidbody").colliding != null) {
+        if(gameobject.ref.get(Rigidbody).colliding != null) {
             //Sfx.play(gameobject.ref, "sfx")
             Sprite.set_tint(gameobject.ref, [1,0,0,1])
         } else {
@@ -66,15 +66,16 @@ class Player is Behaviour {
         Transform.set_position(
             Lilah.camera.ref, 
             Vec2.lerp(
-                Lilah.camera.ref.get("Transform").position, 
-                gameobject.ref.get("Transform").position, Lilah.delta_time * 10
+                Lilah.camera.ref.get(Transform).position, 
+                gameobject.ref.get(Transform).position, Lilah.delta_time * 10
             )
         )
 
         if(Input.key_down("Space")) {
-            gameobject.data["pos"] = gameobject.ref.get("Transform").position
-            var p = Serializable.serialize(gameobject.data)
-            Fs.write("examples/misc/pos.json", Json.stringify(p))
+            // gameobject.data["pos"] = gameobject.ref.get("Transform").position
+            // var p = Serializable.serialize(gameobject.data)
+            // Fs.write("examples/misc/pos.json", Json.stringify(p))
+            gameobject.behaviourData(ParticleSystem).toggle()
         }
     }
 }

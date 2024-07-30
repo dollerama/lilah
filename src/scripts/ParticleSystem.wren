@@ -96,9 +96,25 @@ class ParticleSystem is Behaviour {
     parts {_parts}
     parts=(v) {_parts = v}
 
+    play() {
+        _playing = true
+    }
+
+    stop() {
+        _playing = false
+    }
+
+    toggle() {
+        _playing = !_playing
+    }
+
+    isPlaying() {
+        return _playing
+    }
+
     construct new() {
         var random = Random.new()
-
+        
         lifeSpan = ParticleField.new(0.5)
         speed = ParticleField.new([500, 0], Curve.inOutQuart)
         direction = ParticleField.new(Fn.new { Vec2.new(random.float(-1.0, 1.0), random.float(-1.0, 1.0)) })
@@ -106,6 +122,7 @@ class ParticleSystem is Behaviour {
         scale = ParticleField.new([Vec2.new(1,1), Vec2.new(0,0)])
         rate = ParticleField.new(100)
         rotation = ParticleField.new(10)
+        _playing = false
 
         internal_time = 0
         parts = []
@@ -124,7 +141,10 @@ class ParticleSystem is Behaviour {
 
     static update() {
         gamebehaviour.parts = gamebehaviour.parts.where {|v| v.ref != null }.toList
-        gamebehaviour.internal_time = gamebehaviour.internal_time + Lilah.delta_time
+
+        if(gamebehaviour.isPlaying()) {
+            gamebehaviour.internal_time = gamebehaviour.internal_time + Lilah.delta_time
+        }
 
         if(gamebehaviour.internal_time > gamebehaviour.rate.value/1000) {
             gamebehaviour.internal_time = 0

@@ -3,6 +3,9 @@ import "app" for Lilah, Input, GameObjectRef, UI, Tween, Curve
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Scene
 
 class Player2 is Behaviour {
+    dead { _dead }
+    dead=(v) {_dead = v}
+
     construct new() {
     }
 
@@ -21,7 +24,7 @@ class Player2 is Behaviour {
         scene.add(Transform.new(Vec2.new(0,0)))
         scene.add(Scene.new("assets/Untitled.json"))
         scene.add(Rigidbody.new())
-        Lilah.instantiate(scene, {})
+        Lilah.instantiate(scene)
     }
 
     static start() {
@@ -33,12 +36,11 @@ class Player2 is Behaviour {
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         Sprite.set_sort(gameobject.ref, 2)
         Rigidbody.set_rotation(gameobject.ref, 4)
-
-        gameobject["dead"] = false
+        gamebehaviour.dead = false
     }
 
     static update() {
-        if(gameobject.ref.get("Rigidbody").velocity.magnitude() > 0.0) {
+        if(gameobject.ref.get(Rigidbody).velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
         } else {
             Animator.stop(gameobject.ref)
@@ -46,9 +48,9 @@ class Player2 is Behaviour {
     }
 
     static onCollision(c) {
-        if(!gameobject["dead"]) {
+        if(!gamebehaviour.dead) {
             Rigidbody.set_solid(gameobject.ref, false)
-            gameobject["dead"] = true
+            gamebehaviour.dead = true
 
             Tween.new(Vec2.one, Vec2.zero)
             .time(2)
