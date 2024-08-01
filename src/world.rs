@@ -1,5 +1,6 @@
-use crate::components::Scene;
+use crate::components::{Debug, Scene};
 use crate::gameobject::GameObject;
+use crate::renderer::Color;
 use crate::{
     application::{App, Scripting},
     components::{Rigidbody, SceneData, Sprite, Text, Transform},
@@ -497,6 +498,12 @@ impl<'a> World<'a> {
                         .draw(i.1 as usize, app, &self.state.textures, i.0.get::<Transform>());
                 }
             }
+        }
+        unsafe {
+            for line in crate::application::LINES.iter() {
+                Debug::draw_line(line.0, line.1, line.2.clone());
+            }
+            crate::application::LINES.clear();
         }
     }
 

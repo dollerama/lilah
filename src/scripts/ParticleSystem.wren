@@ -5,6 +5,7 @@ import "game" for Behaviour, GameObject, Transform, Sprite
 import "random" for Random
 
 class ParticleField {
+    raw { _value }
     value { 
         if(_value is Fn) {
             return _value.call()
@@ -91,10 +92,24 @@ class ParticleSystem is Behaviour {
     color { _color }
     color=(v) { _color = v }
 
+    #!distance(ord = 0)
+    distance { _distance }
+    distance=(v) { _distance = v }
+
+    #!partSetup(ord = 0)
+    partSetup { _partSetup }
+    partSetup=(v) { _partSetup = v }
+
+    #!partStart(ord = 0)
+    partStart { _partStart }
+    partStart=(v) { _partStart = v }
+
     internal_time {_internal_time}
     internal_time=(v) {_internal_time = v}
     parts {_parts}
     parts=(v) {_parts = v}
+    internal_pos {_internal_pos}
+    internal_pos=(v) {_internal_pos = v}
 
     play() {
         _playing = true
@@ -122,19 +137,22 @@ class ParticleSystem is Behaviour {
         scale = ParticleField.new([Vec2.new(1,1), Vec2.new(0,0)])
         rate = ParticleField.new(100)
         rotation = ParticleField.new(10)
+        distance = ParticleField.new(0)
         _playing = false
 
         internal_time = 0
+        internal_pos = Vec2.new(0,0)
         parts = []
     }
 
     static emit() {
+
         var p = GameObject.new("p_sys")
         p.add(Transform.new(gameobject.ref.get("Transform").position))
-        p.add(Sprite.new("assets/test.png"))
+        gamebehaviour.partSetup.raw.call(p)
 
         var pp = Lilah.instantiate(p, {"life": gamebehaviour.lifeSpan.value, "direction": gamebehaviour.direction.value})
-        Sprite.cut_sprite_sheet(pp.ref, Vec2.new(0, 0), Vec2.new(3, 3))
+        gamebehaviour.partStart.raw.call(pp)
         Sprite.set_tint(pp.ref, gamebehaviour.color[1])
         gamebehaviour.parts.add(pp)
     }
@@ -148,6 +166,11 @@ class ParticleSystem is Behaviour {
 
         if(gamebehaviour.internal_time > gamebehaviour.rate.value/1000) {
             gamebehaviour.internal_time = 0
+            ParticleSystem.emit()
+        }
+
+        if((gamebehaviour.internal_pos-gameobject.ref.get(Transform).position).magnitude() > gamebehaviour.distance.value) {
+            gamebehaviour.internal_pos = gameobject.ref.get(Transform).position
             ParticleSystem.emit()
         }
         

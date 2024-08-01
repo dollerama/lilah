@@ -1,12 +1,25 @@
 import "math" for Vec2
 import "app" for Lilah, Input, GameObjectRef, Audio
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
+import "ParticleSystem" for ParticleSystem, ParticleField
+import "random" for Random
 
 class Ball is Behaviour {
     construct new() {}
 
     static start() {
         Rigidbody.set_velocity_x(gameobject.ref, -200)
+        
+        gameobject.behaviourData(ParticleSystem).distance.value = 20
+        gameobject.behaviourData(ParticleSystem).direction = ParticleField.new(Vec2.new(0,0))
+        gameobject.behaviourData(ParticleSystem).color = ParticleField.new([[1,1,1,0.25], [1,1,1,0]])
+        gameobject.behaviourData(ParticleSystem).partSetup = ParticleField.new(Fn.new { |p|
+            p.add(Sprite.new("assets/ball.png"))
+        })
+
+        gameobject.behaviourData(ParticleSystem).partStart = ParticleField.new(Fn.new { |p|
+            Sprite.cut_sprite_sheet(p.ref, Vec2.new(0, 0), Vec2.new(1, 1))
+        })
     }
     
     static update() {

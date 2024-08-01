@@ -1,4 +1,5 @@
 import "meta" for Meta
+import "random" for Random
 
 foreign class Fs {
 	foreign static read(file)

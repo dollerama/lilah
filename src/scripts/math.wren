@@ -1,4 +1,5 @@
 import "io" for Serializable
+import "random" for Random
 
 class Util {
     static lerp(a, b, t) {

@@ -11,6 +11,7 @@
 > - [GameObject](#gameobject)
 > - [Sfx](#sfx)
 > - [ComponentBehaviour](#componentbehaviour)
+> - [Debug](#debug)
 ## Behaviour
 Inherits from ``Serializable``
 > - data
@@ -360,7 +361,8 @@ static method with arity(2) and returns ``null``
 ## GameObject
 > - new(name: String)
 > - add(x: Component)
-> - get(x: String)
+> - getComponent(x: String)
+> - set(x: Type, y: Component)
 > - set(x: String, y: Component)
 > - id
 > - uuid
@@ -370,8 +372,10 @@ static method with arity(2) and returns ``null``
 constructor with arity(1) and returns ``Gameobject``
 ### ``add(x: Component)``
 method with arity(1) and returns ``null``
-### ``get(x: String)``
+### ``getComponent(x: String)``
 method with arity(1) and returns ``Component``
+### ``set(x: Type, y: Component)``
+method with arity(2) and returns ``null``
 ### ``set(x: String, y: Component)``
 method with arity(2) and returns ``null``
 ### ``id``
@@ -427,3 +431,7 @@ constructor with arity(1) and returns ``ComponentBehaviour``
 getter returns ``Component``
 ### ``uuid``
 getter returns ``String``
+## Debug
+> - drawLine(start: Vec2, end: Vec2, color: [num])
+### ``drawLine(start: Vec2, end: Vec2, color: [num])``
+static method with arity(3) and returns ``null``

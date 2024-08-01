@@ -1,6 +1,7 @@
 import "math" for Vec2
-import "app" for Lilah, GameObjectRef
+import "app" for Lilah, GameObjectRef, Tween
 import "io" for Serializable
+import "random" for Random
 ///{module} Game
 
 ///{class} Behaviour : Serializable
@@ -366,4 +367,18 @@ foreign class ComponentBehaviour {
     foreign as_component
     ///{getter} uuid -> String
     foreign uuid
+}
+
+///{class} Debug
+foreign class Debug {
+    ///{static method} drawLine(start: Vec2, end: Vec2, color: [num]) -> null
+    foreign static drawLine(start, end, color)
+
+    static printFrameInfo() {
+        System.print("Delta Time: %(Lilah.delta_time)")
+        System.print("Gameobjects: %(Lilah.gameobjects.count)")
+        System.print("Data: %(Lilah.data)")
+        System.print("Tween: %(Tween.tweenCount)")
+        System.print("Fibers: %(Lilah.fiberCount)")
+    }
 }

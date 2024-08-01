@@ -1,4 +1,5 @@
 import "math" for Vec2, Util
+import "random" for Random
 
 class GameObjectRef {
     static create_ref(id) {
@@ -127,6 +128,14 @@ class Lilah {
 
     static screen_size { __screen_size }
     static screen_size=(v) { __screen_size = v }
+
+    static fiberCount {
+        if(__fibers == null) {
+            return 0
+        } else {
+            return __fibers.count
+        }
+    }
 
     static tick_fibers() {
         if(Tween.tweens != null) {
@@ -616,6 +625,14 @@ class Curve {
 class Tween {
     static tweens { __tweens }
     static tweens=(v) { __tweens = v }
+
+    static tweenCount {
+        if(__tweens == null) {
+            return 0
+        } else {
+            return __tweens.count
+        }
+    }
 
     static insert_tween(t) {
         if(__tweens == null) {

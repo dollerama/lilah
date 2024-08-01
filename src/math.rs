@@ -2,7 +2,7 @@ use std::{ops, hash::Hasher, hash::Hash};
 use glam::{Mat4, Quat, Vec3, Vec4};
 use ruwren::{Class, VM, create_module, ModuleLibrary};
 use std::f64::consts::PI;
-use crate::{LilahError, LilahPanic, LilahTypeError, components::Rigidbody, application::App};
+use crate::{application::App, components::Rigidbody, renderer::{Shader, ShaderProgram}, LilahError, LilahPanic, LilahTypeError};
 
 lazy_mut! {
     pub static mut VIEW_MATRIX: Mat4 = Mat4::IDENTITY;

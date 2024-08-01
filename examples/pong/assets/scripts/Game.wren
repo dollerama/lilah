@@ -3,6 +3,7 @@ import "app" for Lilah, Input, GameObjectRef, Audio
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
 import "Paddle" for Paddle
 import "Ball" for Ball
+import "ParticleSystem" for ParticleSystem, ParticleField
 
 class Game is Behaviour {
     construct new() { }
@@ -28,6 +29,7 @@ class Game is Behaviour {
         ball.add(Sprite.new("assets/ball.png"))  
         ball.add(Rigidbody.new())
         ball.add(Ball.new(ball).as_behaviour)
+        ball.add(ParticleSystem.new(ball).as_behaviour)
 
         var line = GameObject.new("line")
         line.add(Transform.new(Vec2.new((0)-4, 0)))
@@ -37,10 +39,12 @@ class Game is Behaviour {
         var score_1 = GameObject.new("Score1")
         score_1.add(Transform.new(Vec2.new(-(400/4), 270)))
         score_1.add(Text.new("0", "assets/Lora-Regular.ttf"))
+        Text.set_font_size(score_1, 32)
 
         var score_2 = GameObject.new("Score2")
         score_2.add(Transform.new(Vec2.new((400/4), 270)))
         score_2.add(Text.new("0", "assets/Lora-Regular.ttf"))
+        Text.set_font_size(score_2, 32)
 
         Lilah.instantiate(player1, {"controls": "Vertical1", "score": 0})
         Lilah.instantiate(player2, {"controls": "Vertical2", "score": 0})

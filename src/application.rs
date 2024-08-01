@@ -24,6 +24,11 @@ use sdl2::pixels::Color;
 use sdl2::video::{FullscreenType, GLContext, GLProfile, SwapInterval, Window};
 use sdl2::{AudioSubsystem, EventPump, Sdl};
 
+lazy_mut! {
+    pub static mut DEBUG_PROGRAM: Option<ShaderProgram> = None;
+    pub static mut LINES: Vec<(Vec2, Vec2, crate::renderer::Color)> = Vec::new();
+}
+
 #[macro_export]
 macro_rules! embed_script {
     ($path: expr, $scripting:ident) => {
@@ -449,6 +454,26 @@ impl App {
     }
     "#;
 
+    pub const DEBUG_VERT: &'static str = r#"
+    #version 330
+    in vec2 position;
+    uniform mat4 mvp;
+
+    void main() {
+        gl_Position = mvp * vec4(position, 0.0, 1.0);
+    }
+    "#;
+
+    pub const DEBUG_FRAG: &'static str = r#"
+    #version 330
+    out vec4 FragColor;
+    uniform vec4 tint;
+
+    void main() {
+        FragColor = tint;
+    }
+    "#;
+
     pub fn new(window_title: &str, window_size: Vec2) -> Self {
         let sdl_ctx: Sdl = sdl2::init().unwrap();
         let audio_context = sdl_ctx.audio().unwrap();
@@ -495,6 +520,16 @@ impl App {
         };
 
         unsafe {
+            let debug_program = {
+                let vs = Shader::new(App::DEBUG_VERT, gl::VERTEX_SHADER).unwrap();
+                let fs = Shader::new(App::DEBUG_FRAG, gl::FRAGMENT_SHADER).unwrap();
+                ShaderProgram::new(&[fs, vs]).unwrap()
+            };
+
+            *crate::application::DEBUG_PROGRAM = Some(debug_program);
+        }
+
+        unsafe {
             gl::Enable(gl::BLEND);
             //gl::Enable(gl::DEPTH_TEST);
             //gl::DepthFunc(gl::LESS);
@@ -511,6 +546,8 @@ impl App {
                 1000.0,
                 -1000.0,
             );
+
+            *crate::application::LINES = Vec::new();
         }
 
         Self {
@@ -521,7 +558,7 @@ impl App {
             time: Timer::new(),
             _audio_context: audio_context,
             default_program: program,
-            text_program: text_program,
+            text_program: text_program
         }
     }
 

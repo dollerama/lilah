@@ -174,6 +174,8 @@ pub struct Text {
     vertex_array: Option<VertexArray>,
 }
 
+pub struct Debug {}
+
 //component impls
 impl Sfx {
     pub fn new(name: String, file: String) -> Self {
@@ -1868,6 +1870,76 @@ impl Sprite {
     }
 }
 
+impl Debug {
+    pub fn draw_line(start: Vec2, end: Vec2, tint: Color) {
+        let model = Mat4::IDENTITY;
+        let view = unsafe { *crate::math::VIEW_MATRIX };
+        let projection = unsafe { *crate::math::PROJECTION_MATRIX };
+
+        let mvp = projection * view * model;
+
+        unsafe {
+            crate::application::DEBUG_PROGRAM.as_mut().expect("program").apply();
+
+            let vao = VertexArray::new();
+            vao.bind();
+
+            let vbo = Buffer::new(gl::ARRAY_BUFFER);
+            vbo.set_data(&[Vertex([start.x as f32, start.y as f32],  [0 as f32, 0 as f32]), Vertex([end.x as f32, end.y as f32],  [1 as f32, 0 as f32])], gl::DYNAMIC_DRAW);
+
+            let ibo = Buffer::new(gl::ELEMENT_ARRAY_BUFFER);
+            ibo.set_data(&[0, 1], gl::STATIC_DRAW);
+
+            let pos_attrib = crate::application::DEBUG_PROGRAM.as_ref().expect("program").get_attrib_location("position").expect("msg");
+            set_attribute!(vao, pos_attrib, Vertex::0, gl::FLOAT);
+
+            let mat_attr = gl::GetUniformLocation(
+                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
+                CString::new("mvp").unwrap().as_ptr(),
+            );
+            gl::UniformMatrix4fv(mat_attr, 1, gl::FALSE as GLboolean, &mvp.to_cols_array()[0]);
+
+            let tint_attr = gl::GetUniformLocation(
+                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
+                CString::new("tint").unwrap().as_ptr(),
+            );
+            gl::Uniform4f(
+                tint_attr,
+                tint.r,
+                tint.g,
+                tint.b,
+                tint.a,
+            );
+            gl::DrawElements(gl::LINES, 2, gl::UNSIGNED_INT, 0 as *const _);
+        }
+    }
+
+    pub fn wren_draw_line(vm: &VM) {
+        if let Some(start) = vm.get_slot_foreign::<Vec2>(1) {
+            if let Some(end) = vm.get_slot_foreign::<Vec2>(2) {
+                let mut color = Color::new(1.0,1.0,1.0,1.0);
+                vm.get_list_element(3, 0, 4);
+                color.r = vm.get_slot_double(4).unwrap_or(0f64) as f32;
+                vm.get_list_element(3, 1, 4);
+                color.g = vm.get_slot_double(4).unwrap_or(0f64) as f32;
+                vm.get_list_element(3, 2, 4);
+                color.b = vm.get_slot_double(4).unwrap_or(0f64) as f32;
+                vm.get_list_element(3, 3, 4);
+                color.a = vm.get_slot_double(4).unwrap_or(0f64) as f32;
+
+                //Self::draw_line(*start, *end, color);
+                unsafe {
+                    crate::application::LINES.push((*start, *end, color));
+                }
+            } else {
+                LilahTypeError!(Debug, 2, Vec2);
+            }
+        } else {
+            LilahTypeError!(Debug, 1, Vec2);
+        }
+    }
+}
+
 impl ComponentBehaviour {
     pub fn new(s: String) -> Self {
         Self {
@@ -2101,6 +2173,12 @@ impl Class for Box<dyn Component> {
     }
 }
 
+impl Class for Debug {
+    fn initialize(_: &VM) -> Self {
+        LilahPanic!(Debug, "Cannot instantiate static class");
+    }
+}
+
 impl Class for Transform {
     fn initialize(vm: &VM) -> Transform {
         if let Some(pos) = vm.get_slot_foreign::<Vec2>(1) {
@@ -2309,6 +2387,10 @@ create_module! (
         static(fn "get_volume", 2) wren_get_volume_from_gameobject,
         static(fn "set_volume", 3) wren_set_volume_from_gameobject,
         static(fn "play", 2) wren_play_from_gameobject
+    }
+
+    class("Debug") crate::components::Debug => debug {
+        static(fn "drawLine", 3) wren_draw_line
     }
 
     module => game
