@@ -1755,12 +1755,6 @@ impl Sprite {
                 self.tint.a,
             );
 
-            let sort_attr = gl::GetUniformLocation(
-                app.default_program.id,
-                CString::new("sort").unwrap().as_ptr(),
-            );
-            gl::Uniform1f(sort_attr, self.sort as f32);
-
             gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
         }
     }
@@ -2306,6 +2300,7 @@ create_module! (
         instance(fn "add", 1) wren_add_component,
         instance(fn "set", 2) wren_set_component,
         instance(getter "id") wren_getter_id,
+        instance(getter "components") wren_get_components,
         instance(getter "name") wren_getter_name,
         instance(setter "name") wren_setter_name,
         instance(getter "uuid") wren_getter_uuid

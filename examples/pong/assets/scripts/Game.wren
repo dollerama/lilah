@@ -1,6 +1,6 @@
 import "math" for Vec2
 import "app" for Lilah, Input, GameObjectRef, Audio
-import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
+import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx, Debug
 import "Paddle" for Paddle
 import "Ball" for Ball
 import "ParticleSystem" for ParticleSystem, ParticleField
@@ -52,5 +52,9 @@ class Game is Behaviour {
         Lilah.instantiate(line)
         Lilah.instantiate(score_1)
         Lilah.instantiate(score_2)
+    }
+
+    update() {
+        System.print(Lilah.fps)
     }
 }

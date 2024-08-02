@@ -123,6 +123,9 @@ class Lilah {
     static delta_time { __delta_time }
     static delta_time=(v) { __delta_time = v }
 
+    static fps { __fps }
+    static fps=(v) { __fps = v }
+
     static fullscreen { __fullscreen }
     static fullscreen=(v) { __fullscreen = v }
 
@@ -659,6 +662,8 @@ class Tween {
         use_curve = Curve.linear
         duration = 1
     }
+
+    toString { "Tween{from: %(from), to: %(to), curve: %(use_curve), duration: %(duration)}" }
 
     time(t) {
         duration = t

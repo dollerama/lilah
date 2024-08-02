@@ -362,7 +362,7 @@ impl Scripting {
 
     pub fn call_fn_error_silent<'a>(vm: &'a VMWrapper, class: &Rc<Handle<'a>>, function: &str, arity: usize) {
         vm.set_slot_handle(0, &class);
-        if let Err(e) = vm.call(FunctionSignature::new_function(function, arity)) {
+        if let Err(_) = vm.call(FunctionSignature::new_function(function, arity)) {
             return
         }
     }
@@ -402,6 +402,7 @@ pub struct App {
     pub time: Timer,
     pub default_program: ShaderProgram,
     pub text_program: ShaderProgram,
+    pub sort_dirty: bool,
     event_pump: EventPump,
     _audio_context: AudioSubsystem,
     window: Window,
@@ -416,7 +417,6 @@ impl App {
     in vec2 vertexTexCoord;
 
     uniform mat4 mvp;
-    uniform float sort;
 
     void main() {
         gl_Position = mvp * vec4(position, 0.0, 1.0);
@@ -556,6 +556,7 @@ impl App {
             event_pump,
             input: Input::new(),
             time: Timer::new(),
+            sort_dirty: true,
             _audio_context: audio_context,
             default_program: program,
             text_program: text_program
@@ -704,7 +705,7 @@ impl App {
         //::std::thread::sleep(Duration::new(0, ((60.0-self.time.fps())/1000.0) as u32));
         ::std::thread::sleep(Duration::new(
             0,
-            (1_000_000_000u32 / 60) - (self.time.delta_time as u32 * 1_000_000_000u32),
+            (1_000_000_000u32 / 120) - (self.time.delta_time as u32 * 1_000_000_000u32),
         ));
     }
 }
@@ -776,6 +777,12 @@ impl Scripting {
             vm.set_slot_double(1, val);
         });
         Scripting::call_setter(&self.vm, &state_class, "delta_time");
+
+        let val = app.time.fps();
+        self.vm.execute(|vm| {
+            vm.set_slot_double(1, val);
+        });
+        Scripting::call_setter(&self.vm, &state_class, "fps");
     }
 
     pub fn send_state(&self, app: &mut App, state: &mut WorldState) {

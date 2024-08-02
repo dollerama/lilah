@@ -9,11 +9,10 @@ class Player is Behaviour {
     }
 
     setup() {
-        var gameobject = GameObject.new("C")
-
         Input.update_binding("Horizontal", "A", "D")
         Input.update_binding("Vertical", "S", "W")
 
+        var gameobject = GameObject.new("C")
         gameobject.add(Transform.new(Vec2.new(100,100)))
         gameobject.add(Sprite.new("assets/test.png"))
         gameobject.add(Rigidbody.new())
@@ -32,6 +31,13 @@ class Player is Behaviour {
         g.behaviourData(ParticleSystem).partStart = ParticleField.new(Fn.new { |p|
             Sprite.cut_sprite_sheet(p.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         })
+
+        for(i in 0..100) {
+            var gg = GameObject.new("C%(i)")
+            gg.add(Transform.new(Vec2.new(100*i,100)))
+            gg.add(Sprite.new("assets/test.png"))
+            Lilah.instantiate(gg)
+        }
     }
 
     static start() {
@@ -50,7 +56,7 @@ class Player is Behaviour {
     }
 
     static update() {
-        Debug.printFrameInfo()
+        System.print(Lilah.fps)
 
         Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*100)
         gameobject["rot"] = gameobject["rot"] + 0.5 * Lilah.delta_time

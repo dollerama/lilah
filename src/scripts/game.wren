@@ -73,7 +73,6 @@ class Behaviour is Serializable {
     ///{method} update() -> null
     ///Runs every frame after start regardless of whether or not the Behaviour is attached.
     update() {}
-    
 }
 
 ///{class} Component
@@ -331,6 +330,13 @@ foreign class GameObject {
     foreign name
     ///{setter} name = v: String
     foreign name=(v)
+    ///{getter} components -> [Component]
+    foreign components
+
+    toString {
+        var result = "%(id)"
+        return result
+    }
 }
 
 ///{class} Sfx
@@ -374,11 +380,32 @@ foreign class Debug {
     ///{static method} drawLine(start: Vec2, end: Vec2, color: [num]) -> null
     foreign static drawLine(start, end, color)
 
+    // debugRigidbody() {
+    //     for(g in Lilah.gameobjects) {
+    //         var r = g.get(Rigidbody)
+    //         if(r != null) {
+    //             Debug.drawLine(r.)
+    //         }
+    //     }
+    // }
+
     static printFrameInfo() {
-        System.print("Delta Time: %(Lilah.delta_time)")
-        System.print("Gameobjects: %(Lilah.gameobjects.count)")
-        System.print("Data: %(Lilah.data)")
-        System.print("Tween: %(Tween.tweenCount)")
-        System.print("Fibers: %(Lilah.fiberCount)")
+        System.print("Debug {")
+        System.print("\tFps: %(Lilah.fps),")
+        System.print("\tDelta: %(Lilah.delta_time),")
+        System.print("\tGameobjects: %(Lilah.gameobjects.count),")
+        System.print("\tDataCount: %(Lilah.data.count),")
+        System.print("\tTweens: %(Tween.tweenCount),")
+        System.print("\tFibers: %(Lilah.fiberCount),")
+        System.print("\tGameobjects: {")
+        System.print("\t\t%(Lilah.gameobjects)")
+        System.print("\t},")
+        System.print("\tData: {")
+        System.print("\t\t%(Lilah.data)")
+        System.print("\t},")
+        System.print("\tTweens: {")
+        System.print("\t\t%(Tween.tweens)")
+        System.print("\t}")
+        System.print("}")
     }
 }

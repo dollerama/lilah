@@ -466,16 +466,14 @@ impl<'a> World<'a> {
     pub fn draw(&self, app: &mut App) {
         let mut values = vec!();
         for i in &self.state.gameobjects {
-            if i.1.has::<Scene>() {
-                for j in 0..i.1.get::<Scene>().tiles.len() {
+            if let Some(s) = i.1.wrap_component::<Scene>() {
+                for j in 0..s.tiles.len() {
                     values.push((i.1.clone(), j as u32))
                 }
-            }
-            if i.1.has::<Sprite>() {
-                values.push((i.1.clone(), i.1.get::<Sprite>().sort));
-            }
-            if i.1.has::<Text>() {
-                values.push((i.1.clone(), i.1.get::<Text>().sort));
+            } else if let Some(s) = i.1.wrap_component::<Sprite>() {
+                values.push((i.1.clone(), s.sort));
+            } else if let Some(t) = i.1.wrap_component::<Text>() {
+                values.push((i.1.clone(), t.sort));
             }
         }
 
@@ -484,18 +482,15 @@ impl<'a> World<'a> {
         });
 
         for i in values {
-            if i.0.has::<Transform>() {
-                if i.0.has::<Sprite>() {
-                    i.0.get::<Sprite>()
-                        .draw(app, &self.state.textures, i.0.get::<Transform>());
+            if let Some(trans) = i.0.wrap_component::<Transform>() {
+                if let Some(s) = i.0.wrap_component::<Sprite>() {
+                    s.draw(app, &self.state.textures, trans);
                 }
-                if i.0.has::<Text>() {
-                    i.0.get::<Text>()
-                        .draw(app, &self.state.textures, i.0.get::<Transform>());
+                if let Some(t) = i.0.wrap_component::<Text>() {
+                    t.draw(app, &self.state.textures, trans);
                 }
-                if i.0.has::<Scene>() {
-                    i.0.get::<Scene>()
-                        .draw(i.1 as usize, app, &self.state.textures, i.0.get::<Transform>());
+                if let Some(s) = i.0.wrap_component::<Scene>() {
+                    s.draw(i.1 as usize, app, &self.state.textures, trans);
                 }
             }
         }
@@ -524,7 +519,6 @@ impl<'a> World<'a> {
     }
 
     pub fn update(&mut self, mut app: &mut App) {
-        
         let mut collisions: Vec<(GameObjectId, GameObjectId, (bool, Vec2))> =
             Vec::<(GameObjectId, GameObjectId, (bool, Vec2))>::new();
             
@@ -586,21 +580,17 @@ impl<'a> World<'a> {
                 if k != k2 {
                     others = true;
 
-                    if i.has::<Rigidbody>() {
-                        if j.has::<Rigidbody>() {
-                            let check = i
-                                .get::<Rigidbody>()
-                                .check_collision_sat(&j.get::<Rigidbody>(), app);
-                            coll.push((i.id.clone(), j.id.clone(), check));
-                        }
+                    if let (Some(ii), Some(jj)) = (i.wrap_component::<Rigidbody>(), j.wrap_component::<Rigidbody>()) {
+                        let check =
+                            ii
+                            .check_collision_sat(jj, app);
+                        coll.push((i.id.clone(), j.id.clone(), check));
                     }
 
-                    if i.has::<Rigidbody>() {
-                        if j.has::<Scene>() {
-                            for r in &j.get::<Scene>().rigidbodies {
-                                let check = i.get::<Rigidbody>().check_collision_sat(r, app);
-                                coll.push((i.id.clone(), j.id.clone(), check));
-                            }
+                    if let (Some(ii), Some(jj)) = (i.wrap_component::<Rigidbody>(), j.wrap_component::<Scene>()) {
+                        for r in &jj.rigidbodies {
+                            let check = ii.check_collision_sat(r, app);
+                            coll.push((i.id.clone(), j.id.clone(), check));
                         }
                     }
                 }
@@ -613,8 +603,8 @@ impl<'a> World<'a> {
 
     fn update_vel_x(&mut self, dt: f64) {
         for (_, i) in &mut self.state.gameobjects {
-            if i.has::<Rigidbody>() {
-                let body = i.get_mut::<Rigidbody>();
+            if let Some(ii) = i.wrap_component_mut::<Rigidbody>() {
+                let body = ii;
                 body.colliding = None;
                 body.update_vel_x(dt);
             }
@@ -623,8 +613,9 @@ impl<'a> World<'a> {
 
     fn update_vel_y(&mut self, dt: f64) {
         for (_, i) in &mut self.state.gameobjects {
-            if i.has::<Rigidbody>() {
-                let body = i.get_mut::<Rigidbody>();
+            if let Some(ii) = i.wrap_component_mut::<Rigidbody>() {
+                let body = ii;
+                body.colliding = None;
                 body.update_vel_y(dt);
             }
         }

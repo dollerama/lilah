@@ -34,9 +34,15 @@ pub use find;
 #[macro_export]
 macro_rules! tick_component {
     ($a: ty, $b: ty, $s:ident, $app: ident) => {
-        if $s.has::<$a>() && $s.has::<$b>() {
+        // if $s.has::<$a>() && $s.has::<$b>() {
+        //     let c = $s.get::<$b>().clone();
+        //     $s.get_mut::<$a>().tick($app.delta_time(), &c);
+        // }
+        if $s.has::<$b>() {
             let c = $s.get::<$b>().clone();
-            $s.get_mut::<$a>().tick($app.delta_time(), &c);
+            if let Some(aa) = $s.wrap_component_mut::<$a>() {
+                aa.tick($app.delta_time(), &c);
+            }
         }
     };
 }
@@ -404,6 +410,52 @@ impl GameObject {
         }
         LilahNotFoundError!(GameObject, Component, finding);
         vm.set_slot_null(0);
+    }
+
+    pub fn wren_get_components(&self, vm: &VM) {
+        vm.set_slot_new_list(0);
+        let mut list_index = -1;
+        for i in self.components.iter().enumerate() {
+            if let Some(b) = i.1.as_any().downcast_ref::<Transform>() {
+                list_index += 1;
+                b.send_to_wren(1, vm);
+                vm.insert_in_list(0, list_index, 1);
+            }
+            if let Some(b) = i.1.as_any().downcast_ref::<Scene>() {
+                list_index += 1;
+                b.send_to_wren(1, vm);
+                vm.insert_in_list(0, list_index, 1);
+            }
+            if let Some(b) = i.1.as_any().downcast_ref::<Sprite>() {
+                list_index += 1;
+                b.send_to_wren(1, vm);
+                vm.insert_in_list(0, list_index, 1);
+            }
+            if let Some(b) = i.1.as_any().downcast_ref::<Rigidbody>() {
+                list_index += 1;
+                b.send_to_wren(1, vm);
+                vm.insert_in_list(0, list_index, 1);
+            }
+            if let Some(b) = i.1.as_any().downcast_ref::<Animator>() {
+                list_index += 1;
+                b.send_to_wren(1, vm);
+                vm.insert_in_list(0, list_index, 1);
+            }
+            if let Some(b) = i.1.as_any().downcast_ref::<ComponentBehaviour>() {
+                list_index += 1;
+                b.send_to_wren(1, vm);
+                vm.insert_in_list(0, list_index, 1);
+            }
+            if let Some(b) = i.1.as_any().downcast_ref::<Sfx>() {
+                list_index += 1;
+                b.send_to_wren(1, vm);
+                vm.insert_in_list(0, list_index, 1);
+            }
+        }
+
+        if list_index == -1 {
+            vm.set_slot_null(0)
+        }
     }
 
     pub fn wren_set_component(&mut self, vm: &VM) {
