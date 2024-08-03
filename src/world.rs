@@ -615,7 +615,7 @@ impl<'a> World<'a> {
         for (_, i) in &mut self.state.gameobjects {
             if let Some(ii) = i.wrap_component_mut::<Rigidbody>() {
                 let body = ii;
-                body.colliding = None;
+                //body.colliding = None;
                 body.update_vel_y(dt);
             }
         }
