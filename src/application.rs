@@ -701,12 +701,6 @@ impl App {
     /// Draws canvas and sleeps until next frame
     pub fn present_frame(&mut self) {
         self.window.gl_swap_window();
-        //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-        //::std::thread::sleep(Duration::new(0, ((60.0-self.time.fps())/1000.0) as u32));
-        ::std::thread::sleep(Duration::new(
-            0,
-            (1_000_000_000u32 / 120) - (self.time.delta_time as u32 * 1_000_000_000u32),
-        ));
     }
 }
 

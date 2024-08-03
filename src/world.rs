@@ -18,6 +18,7 @@ use serde_json;
 use std::cmp::Ordering;
 use std::fs::File;
 use std::io::Read;
+use std::time::{Duration, Instant};
 use std::{collections::HashMap, path::Path};
 
 #[macro_export]
@@ -373,6 +374,7 @@ impl<'a> World<'a> {
         scripting.send_state(app, &mut self.state);
 
         'running: loop {
+            let frame_time = Instant::now();
             if app.pre_frame() {
                 break 'running;
             }
@@ -416,6 +418,11 @@ impl<'a> World<'a> {
 
             self.draw(app);
             app.present_frame();
+
+            ::std::thread::sleep(Duration::new(
+                0,
+                ((1_000_000_000f64 / 60.0) - (frame_time.elapsed().as_secs_f64() * 1_000_000_000f64)) as u32,
+            ));
         }
 
         self
