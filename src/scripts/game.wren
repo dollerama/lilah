@@ -142,6 +142,24 @@ foreign class Scene {
     construct new(i) {}
     ///{getter} as_component -> Component
     foreign as_component
+    ///{getter} markers -> [{String: Vec2}]
+    foreign markers
+    ///{method} getMarker(index: String) -> [Vec2] | Vec2
+    ///either returns the Vec2 that is mapped to the String or a list of Vec2's if the String has multiple mappings.
+    getMarker(index) {
+        var result = []
+        for(i in markers) {
+            if(i[index] != null) {
+                result.add( i[index] )
+            }
+        }
+
+        if(result.count == 1) {
+            return result[0]
+        } else {
+            return result
+        }
+    }
 }
 
 ///{class} Rigidbody

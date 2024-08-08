@@ -1,3 +1,5 @@
+use std::env;
+
 use lilah::application::*;
 use lilah::math::Vec2;
 use lilah::world::*;
@@ -14,6 +16,7 @@ fn setup(app: &mut App, state: &mut WorldState, scripting: &mut Scripting) {
 }
 
 pub fn main() {
+    env::set_var("RUST_BACKTRACE", "1");
     let mut app = App::new("Misc", Vec2::new(800.0,600.0));
     let mut scripting = Scripting::new();
 

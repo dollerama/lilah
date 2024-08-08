@@ -146,10 +146,17 @@ method with arity(2) and returns ``null``
 ## Scene
 > - new(i: String)
 > - as_component
+> - markers
+> - getMarker(index: String)
 ### ``new(i: String)``
 constructor with arity(1) and returns ``Scene``
 ### ``as_component``
 getter returns ``Component``
+### ``markers``
+getter} markers -> [{String: Vec2 returns ``[{String: Vec2}]``
+### ``getMarker(index: String)``
+method with arity(1) and returns ``[Vec2] | Vec2``
+> either returns the Vec2 that is mapped to the String or a list of Vec2's if the String has multiple mappings.
 ## Rigidbody
 > - new()
 > - as_component
@@ -368,6 +375,7 @@ static method with arity(2) and returns ``null``
 > - uuid
 > - name
 > - name = v: String
+> - components
 ### ``new(name: String)``
 constructor with arity(1) and returns ``Gameobject``
 ### ``add(x: Component)``
@@ -387,6 +395,8 @@ getter returns ``String``
 getter returns ``String``
 ### ``name = v: String``
 setter
+### ``components``
+getter returns ``[Component]``
 ## Sfx
 > - new(name: String, file: String)
 > - as_component

@@ -113,11 +113,18 @@ pub struct Tile {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Marker {
+    pub position: [f32; 2],
+    pub name: String
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SceneData {
     pub name: String,
     pub path: String,
     pub tile_sheets: Vec<TileSheet>,
     pub layers: Vec<Layer>,
+    pub markers: Vec<Marker>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -133,6 +140,7 @@ pub struct TileSheet {
 pub struct Scene {
     pub file: String,
     pub tiles: Vec<Vec<Sprite>>,
+    pub markers: Vec<Marker>,
     pub transforms: Vec<Vec<Transform>>,
     pub rigidbodies: Vec<Rigidbody>,
 }
@@ -303,6 +311,7 @@ impl Scene {
             tiles: vec![],
             transforms: vec![],
             rigidbodies: vec![],
+            markers: vec![]
         }
     }
 
@@ -313,9 +322,12 @@ impl Scene {
         scenes: &HashMap<String, SceneData>,
     ) {
         let this_scene = &scenes[self.file.clone().as_str()];
+        self.markers = this_scene.markers.clone();
+
         for layer in &this_scene.layers {
             let mut current_tiles = vec![];
             let mut current_trans = vec![];
+
             for tile in &layer.tiles {
                 let mut current_sheet = "".to_string();
                 let mut current_sheet_id = 0;
@@ -371,18 +383,30 @@ impl Scene {
         if sort > self.tiles.len() {
             return;
         }
-        //for i in 0..self.tiles.len() {
-            for j in 0..self.tiles[sort].len() {
-                let trans = &self.transforms[sort][j];
-                let new_trans = Transform::new(trans.position + t.position);
-                self.tiles[sort][j].draw(app, textures, &new_trans);
-            }
-        //}
+
+        for j in 0..self.tiles[sort].len() {
+            let trans = &self.transforms[sort][j];
+            let new_trans = Transform::new(trans.position + t.position);
+            self.tiles[sort][j].draw(app, textures, &new_trans);
+        }
     }
 
     //for wren
     fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "game", "Scene", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    fn wren_markers(&self, vm: &VM) {
+        vm.set_slot_new_list(0);
+        for i in self.markers.iter().enumerate() {
+            vm.set_slot_new_map(1);
+
+            vm.set_slot_string(2, i.1.name.clone());
+            vm.set_slot_new_foreign_scratch("math", "Vec2", Vec2::new(i.1.position[0] as f64, i.1.position[1] as f64), 3, 4);
+            vm.set_map_value(1, 2, 3);
+
+            vm.insert_in_list(0, 0 as i32, 1);
+        }
     }
 }
 
@@ -2292,7 +2316,8 @@ create_module! (
     }
 
     class("Scene") crate::components::Scene => scene {
-        instance(getter "as_component") wren_as_component
+        instance(getter "as_component") wren_as_component,
+        instance(getter "markers") wren_markers
     }
 
     class("GameObject") crate::gameobject::GameObject => go {

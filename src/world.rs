@@ -247,6 +247,7 @@ impl<'a> WorldState<'a> {
                     path: "".to_string(),
                     tile_sheets: vec![],
                     layers: vec![],
+                    markers: vec![]
                 }
             }
         };
@@ -266,6 +267,7 @@ impl<'a> WorldState<'a> {
                     path: "".to_string(),
                     tile_sheets: vec![],
                     layers: vec![],
+                    markers: vec![]
                 }
             }
         };
@@ -375,6 +377,7 @@ impl<'a> World<'a> {
 
         'running: loop {
             let frame_time = Instant::now();
+            app.time.start();
             if app.pre_frame() {
                 break 'running;
             }
@@ -419,6 +422,7 @@ impl<'a> World<'a> {
             self.draw(app);
             app.present_frame();
 
+            app.time.capture();
             ::std::thread::sleep(Duration::new(
                 0,
                 ((1_000_000_000f64 / 60.0) - (frame_time.elapsed().as_secs_f64() * 1_000_000_000f64)) as u32,
@@ -588,10 +592,12 @@ impl<'a> World<'a> {
                     others = true;
 
                     if let (Some(ii), Some(jj)) = (i.wrap_component::<Rigidbody>(), j.wrap_component::<Rigidbody>()) {
-                        let check =
-                            ii
-                            .check_collision_sat(jj, app);
-                        coll.push((i.id.clone(), j.id.clone(), check));
+                        if let (None,  None) = (i.wrap_component::<Scene>(), j.wrap_component::<Scene>()) {
+                            let check =
+                                ii
+                                .check_collision_sat(jj, app);
+                            coll.push((i.id.clone(), j.id.clone(), check));
+                        }
                     }
 
                     if let (Some(ii), Some(jj)) = (i.wrap_component::<Rigidbody>(), j.wrap_component::<Scene>()) {

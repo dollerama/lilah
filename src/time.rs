@@ -20,8 +20,11 @@ impl Timer {
         1.0/self.delta_time
     }
 
-    pub fn update(&mut self) {
-        self.delta_time = self.time.elapsed().as_secs_f64();
+    pub fn start(&mut self) {
         self.time = Instant::now();
+    }
+
+    pub fn capture(&mut self) {
+        self.delta_time = self.time.elapsed().as_secs_f64();
     }
 }

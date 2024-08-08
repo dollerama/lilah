@@ -691,7 +691,6 @@ impl App {
 
     /// Performs time update, canvas clear, and handles input.
     pub fn pre_frame(&mut self) -> bool {
-        self.time.update();
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }

@@ -1,6 +1,6 @@
 import "math" for Vec2
 import "app" for Lilah, Input, GameObjectRef, Audio, Tween
-import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx, Debug
+import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx, Debug, Scene
 import "ParticleSystem" for ParticleSystem, ParticleField
 import "io" for Fs, Json, Serializable
 
@@ -31,13 +31,6 @@ class Player is Behaviour {
         g.behaviourData(ParticleSystem).partStart = ParticleField.new(Fn.new { |p|
             Sprite.cut_sprite_sheet(p.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         })
-
-        for(i in 0..100) {
-            var gg = GameObject.new("C%(i)")
-            gg.add(Transform.new(Vec2.new(100*i,100)))
-            gg.add(Sprite.new("assets/test.png"))
-            Lilah.instantiate(gg)
-        }
     }
 
     static start() {
@@ -47,20 +40,18 @@ class Player is Behaviour {
         Animator.set_state(gameobject.ref, "Row1")
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
-        Sprite.set_sort(gameobject.ref, 2)
+        Sprite.set_sort(gameobject.ref, 10)
         
         gameobject.data = Json.parse(Fs.read("examples/misc/pos.json"))
         Rigidbody.set_position(gameobject.ref, Serializable.wrapper({"math": "Vec2"}, "data", [["pos", Vec2]]).deserialize(gameobject.data).pos)
 
-        gameobject["rot"] = 0
+        gameobject["rot"] = 0        
     }
 
     static update() {
-        System.print(Lilah.fps)
-
-        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*100)
+        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*120)
         gameobject["rot"] = gameobject["rot"] + 0.5 * Lilah.delta_time
-        Rigidbody.set_rotation(gameobject.ref, gameobject["rot"])
+        //Rigidbody.set_rotation(gameobject.ref, gameobject["rot"])
 
         if(gameobject.ref.get(Rigidbody).velocity.magnitude() > 0.0) {
             Animator.play(gameobject.ref)
@@ -93,7 +84,8 @@ class Player is Behaviour {
             // gameobject.data["pos"] = gameobject.ref.get("Transform").position
             // var p = Serializable.serialize(gameobject.data)
             // Fs.write("examples/misc/pos.json", Json.stringify(p))
-            gameobject.behaviourData(ParticleSystem).toggle()
+            //gameobject.behaviourData(ParticleSystem).toggle()
+            Rigidbody.set_position(gameobject.ref, Lilah.find("scene").ref.get(Scene).getMarker("Start"))
         }
     }
 }

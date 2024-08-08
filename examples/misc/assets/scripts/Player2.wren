@@ -34,7 +34,7 @@ class Player2 is Behaviour {
         Animator.set_state(gameobject.ref, "Row1")
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
-        Sprite.set_sort(gameobject.ref, 2)
+        Sprite.set_sort(gameobject.ref, 10)
         Rigidbody.set_rotation(gameobject.ref, 4)
         gamebehaviour.dead = false
     }
