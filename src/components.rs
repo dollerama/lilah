@@ -89,6 +89,7 @@ pub struct Sprite {
     pub tint: Color,
 
     pub sort: u32,
+    pub sort_dirty: bool,
 
     vertex_buffer: Option<Buffer>,
     vertex_array: Option<VertexArray>,
@@ -176,7 +177,8 @@ pub struct Text {
 
     pub color: Color,
 
-    pub sort: u32,
+    sort: u32,
+    sort_dirty: bool,
 
     vertex_buffer: Option<Buffer>,
     vertex_array: Option<VertexArray>,
@@ -1325,8 +1327,18 @@ impl Text {
             vertex_array: None,
             vertex_buffer: None,
             color: Color::new(1.0, 1.0, 1.0, 1.0),
+            sort_dirty: true,
             sort: 1000,
         }
+    }
+
+    pub fn set_sort(&mut self, s: u32) {
+        self.sort_dirty = true;
+        self.sort = s;
+    }
+
+    pub fn get_sort(&self) -> u32 {
+        self.sort
     }
 
     pub fn get_text(&self) -> &String {
@@ -1357,6 +1369,11 @@ impl Text {
     }
 
     pub fn load(&mut self, app: &mut App, fonts: &HashMap<String, Font>) -> StateUpdateContainer {
+        if self.sort_dirty {
+            self.sort_dirty = false;
+            app.sort_dirty = true;
+        }
+        
         if self.vertex_array.is_none() {
             unsafe {
                 let vao = VertexArray::new();
@@ -1632,6 +1649,25 @@ impl Sprite {
             vertex_buffer: None,
             tint: Color::WHITE,
             sort: 0,
+            sort_dirty: true
+        }
+    }
+
+    pub fn set_sort(&mut self, s: u32) {
+        self.sort_dirty = true;
+        self.sort = s;
+    }
+
+    pub fn get_sort(&self) -> u32 {
+        self.sort
+    }
+
+    pub fn check_dirty(&mut self) -> bool {
+        if self.sort_dirty {
+            self.sort_dirty = false;
+            true
+        } else {
+            false
         }
     }
 
@@ -1736,18 +1772,18 @@ impl Sprite {
         }
     }
 
-    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
+    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform)  {
         let model = Mat4::IDENTITY
-            * Mat4::from_scale_rotation_translation(
-                Vec3::new(self.get_size().0 as f32, self.get_size().1 as f32,0.0)
-                    * Vec3::new(t.scale.x as f32, t.scale.y as f32, 0.0),
-                Quat::from_rotation_z(t.rotation),
-                Vec3::new(
-                    t.position.x as f32 + t.pivot.x as f32,
-                    t.position.y as f32 + t.pivot.y as f32,
-                    0.0,
-                )
-            );
+        * Mat4::from_scale_rotation_translation(
+            Vec3::new(self.get_size().0 as f32, self.get_size().1 as f32,0.0)
+                * Vec3::new(t.scale.x as f32, t.scale.y as f32, 0.0),
+            Quat::from_rotation_z(t.rotation),
+            Vec3::new(
+                t.position.x as f32 + t.pivot.x as f32,
+                t.position.y as f32 + t.pivot.y as f32,
+                0.0,
+            )
+        );
 
         let view = unsafe { *crate::math::VIEW_MATRIX };
         let projection = unsafe { *crate::math::PROJECTION_MATRIX };
@@ -1857,7 +1893,7 @@ impl Sprite {
     fn wren_set_sort_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             if let Some(sort) = vm.get_slot_double(2) {
-                comp.get_mut::<Sprite>().sort = sort as u32;
+                comp.get_mut::<Sprite>().set_sort(sort as u32);
             } else {
                 LilahTypeError!(Sprite, 2, float);
             }

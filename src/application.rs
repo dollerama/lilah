@@ -611,11 +611,11 @@ impl App {
     }
 
     pub fn delta_time(&self) -> f64 {
-        self.time.delta_time
+        self.time.delta_time_scaled()
     }
 
-    pub fn fixed_delta_time(&self) -> f64 {
-        0.021f64
+    pub fn smooth_delta_time(&self) -> f64 {
+        self.time.smooth_delta_time
     }
 
     pub fn handle_input(&mut self) -> bool {

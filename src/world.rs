@@ -18,6 +18,7 @@ use serde_json;
 use std::cmp::Ordering;
 use std::fs::File;
 use std::io::Read;
+use std::rc::Rc;
 use std::time::{Duration, Instant};
 use std::{collections::HashMap, path::Path};
 
@@ -177,7 +178,7 @@ impl<'a> WorldState<'a> {
 
         unsafe {
             new_texture.set_wrapping(gl::REPEAT);
-            new_texture.set_filtering(gl::LINEAR);
+            new_texture.set_filtering(gl::NEAREST);
         }
 
         unsafe {
@@ -200,7 +201,7 @@ impl<'a> WorldState<'a> {
 
         unsafe {
             new_texture.set_wrapping(gl::REPEAT);
-            new_texture.set_filtering(gl::LINEAR);
+            new_texture.set_filtering(gl::NEAREST);
         }
 
         self.textures.insert(name.to_string(), new_texture);
@@ -308,6 +309,7 @@ pub struct World<'a> {
     pub setup_callback: Option<Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>>,
     pub start_callback: Option<Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>>,
     pub update_callback: Option<Box<dyn Fn(&mut App, &mut WorldState, &mut Scripting)>>,
+    sort_fudge: Vec<(String, u32)>
 }
 
 impl<'a> World<'a> {
@@ -325,6 +327,7 @@ impl<'a> World<'a> {
             setup_callback: None,
             start_callback: None,
             update_callback: None,
+            sort_fudge: vec!()
         }
     }
 
@@ -443,6 +446,10 @@ impl<'a> World<'a> {
                 &self.state.scenes,
             ));
             i.update(&mut app);
+
+            if let Some(spr) = i.wrap_component_mut::<Sprite>() {
+                app.sort_dirty = spr.check_dirty();
+            }
         }
 
         for su in state_updates {
@@ -456,7 +463,7 @@ impl<'a> World<'a> {
                         let mut nt = LilahTexture::new();
 
                         nt.set_wrapping(gl::REPEAT);
-                        nt.set_filtering(gl::LINEAR);
+                        nt.set_filtering(gl::NEAREST);
 
                         let _ = nt.load_as_dyn(ftu.1);
                         nt
@@ -474,34 +481,41 @@ impl<'a> World<'a> {
         }
     }
 
-    pub fn draw(&self, app: &mut App) {
-        let mut values = vec!();
-        for i in &self.state.gameobjects {
-            if let Some(s) = i.1.wrap_component::<Scene>() {
-                for j in 0..s.tiles.len() {
-                    values.push((i.1.clone(), j as u32))
+    pub fn draw(&mut self, app: &mut App) {
+        if app.sort_dirty {
+            self.sort_fudge = vec!();
+            for i in &self.state.gameobjects {
+                if let Some(s) = i.1.wrap_component::<Scene>() {
+                    for j in 0..s.tiles.len() {
+                        self.sort_fudge.push((i.0.clone(), j as u32));
+                    }
+                } else 
+                if let Some(s) = i.1.wrap_component::<Sprite>() {
+                    self.sort_fudge.push((i.0.clone(), s.get_sort()));
                 }
-            } else if let Some(s) = i.1.wrap_component::<Sprite>() {
-                values.push((i.1.clone(), s.sort));
-            } else if let Some(t) = i.1.wrap_component::<Text>() {
-                values.push((i.1.clone(), t.sort));
+                 else if let Some(t) = i.1.wrap_component::<Text>() {
+                    self.sort_fudge.push((i.0.clone(), t.get_sort()));
+                }
             }
+            self.sort_fudge.sort_by(|a, b| {
+                a.1.cmp(&b.1)
+            });
+            app.sort_dirty = false;
         }
 
-        values.sort_by(|a, b| {
-            a.1.cmp(&b.1)
-        });
-
-        for i in values {
-            if let Some(trans) = i.0.wrap_component::<Transform>() {
-                if let Some(s) = i.0.wrap_component::<Sprite>() {
-                    s.draw(app, &self.state.textures, trans);
-                }
-                if let Some(t) = i.0.wrap_component::<Text>() {
-                    t.draw(app, &self.state.textures, trans);
-                }
-                if let Some(s) = i.0.wrap_component::<Scene>() {
-                    s.draw(i.1 as usize, app, &self.state.textures, trans);
+        for index in self.sort_fudge.iter() {
+            let i = self.state.gameobjects.get(&index.0);
+            if let Some(i) = i {
+                if let Some(trans) = i.wrap_component::<Transform>() {
+                    if let Some(s) = i.wrap_component::<Sprite>() {
+                        s.draw(app, &self.state.textures, trans);
+                    }
+                    if let Some(t) = i.wrap_component::<Text>() {
+                        t.draw(app, &self.state.textures, trans);
+                    }
+                    if let Some(s) = i.wrap_component::<Scene>() {
+                        s.draw(index.1 as usize, app, &self.state.textures, trans);
+                    }
                 }
             }
         }
@@ -545,7 +559,7 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.position.x -= ((body.velocity * app.fixed_delta_time()) * 100 * coll.2.1.magnitude()).x;
+                            body.position.x -= ((body.velocity * app.smooth_delta_time()) * 100 * coll.2.1.magnitude()).x;
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
@@ -567,7 +581,7 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.position.y -= ((body.velocity * app.fixed_delta_time()) * 100 * coll.2.1.magnitude()).y;
+                            body.position.y -= ((body.velocity * app.smooth_delta_time()) * 100 * coll.2.1.magnitude()).y;
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
@@ -628,7 +642,6 @@ impl<'a> World<'a> {
         for (_, i) in &mut self.state.gameobjects {
             if let Some(ii) = i.wrap_component_mut::<Rigidbody>() {
                 let body = ii;
-                //body.colliding = None;
                 body.update_vel_y(dt);
             }
         }

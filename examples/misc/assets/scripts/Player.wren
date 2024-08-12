@@ -40,7 +40,7 @@ class Player is Behaviour {
         Animator.set_state(gameobject.ref, "Row1")
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
-        Sprite.set_sort(gameobject.ref, 10)
+        Sprite.set_sort(gameobject.ref, 0)
         
         gameobject.data = Json.parse(Fs.read("examples/misc/pos.json"))
         Rigidbody.set_position(gameobject.ref, Serializable.wrapper({"math": "Vec2"}, "data", [["pos", Vec2]]).deserialize(gameobject.data).pos)
