@@ -776,6 +776,12 @@ impl Scripting {
             vm.set_slot_double(1, val);
         });
         Scripting::call_setter(&self.vm, &state_class, "fps");
+
+        let val = app.time.time();
+        self.vm.execute(|vm| {
+            vm.set_slot_double(1, val);
+        });
+        Scripting::call_setter(&self.vm, &state_class, "time");
     }
 
     pub fn send_state(&self, app: &mut App, state: &mut WorldState) {

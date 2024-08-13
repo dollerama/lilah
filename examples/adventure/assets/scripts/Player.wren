@@ -36,6 +36,8 @@ class Player is Behaviour {
     }
 
     static update() {
+        System.print(Lilah.time)
+
         Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*120)
         
 

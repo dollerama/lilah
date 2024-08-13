@@ -123,6 +123,9 @@ class Lilah {
     static delta_time { __delta_time }
     static delta_time=(v) { __delta_time = v }
 
+    static time { __time }
+    static time=(v) { __time = v }
+
     static fps { __fps }
     static fps=(v) { __fps = v }
 

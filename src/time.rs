@@ -6,6 +6,7 @@ pub struct Timer {
     pub smooth_delta_time: f64,
     total_delta_time: f64,
     time: Instant,
+    total: Instant,
     pub time_last_frame: f64,
     frames: i32
 }
@@ -14,6 +15,7 @@ impl Timer {
     pub fn new() -> Self {
         Self {
             time: Instant::now(),
+            total: Instant::now(),
             delta_time: 0.0,
             time_last_frame: 0.0,
             smooth_delta_time: 0.0,
@@ -26,6 +28,10 @@ impl Timer {
         1.0/self.delta_time
     }
 
+    pub fn time(&self) -> f64 {
+        self.total.elapsed().as_secs_f64()
+    }
+ 
     pub fn start(&mut self) {
         self.time = Instant::now();
     }
