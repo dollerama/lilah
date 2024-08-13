@@ -330,12 +330,20 @@ foreign class GameObject {
     ///{constructor} new(name: String) -> Gameobject
     construct new(name) {}
     ///{method} add(x: Component) -> null
-    foreign add(x)
+    foreign addComponent(x)
     ///{method} getComponent(x: String) -> Component
     foreign getComponent(x)
     ///{method} set(x: Type, y: Component) -> null
     get(x) {
         return getComponent("%(x)")
+    }
+
+    add(x) {
+        if(x.toString.contains("instance")) {
+            addComponent(x)
+        } else {
+            addComponent(x.new(this).as_behaviour)
+        }
     }
     ///{method} set(x: String, y: Component) -> null
     foreign set(x, y)

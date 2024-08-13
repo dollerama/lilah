@@ -16,20 +16,20 @@ class Game is Behaviour {
         player1.add(Transform.new(Vec2.new(-400+16,0))) 
         player1.add(Sprite.new("assets/paddle.png"))  
         player1.add(Rigidbody.new())
-        player1.add(Paddle.new(player1).as_behaviour)
+        player1.add(Paddle)
 
         var player2 = GameObject.new("P2")
         player2.add(Transform.new(Vec2.new(400-16,0)))
         player2.add(Sprite.new("assets/paddle.png"))  
         player2.add(Rigidbody.new())
-        player2.add(Paddle.new(player2).as_behaviour)
+        player2.add(Paddle)
 
         var ball = GameObject.new("Ball")
         ball.add(Transform.new(Vec2.new(0, 0)))
         ball.add(Sprite.new("assets/ball.png"))  
         ball.add(Rigidbody.new())
-        ball.add(Ball.new(ball).as_behaviour)
-        ball.add(ParticleSystem.new(ball).as_behaviour)
+        ball.add(Ball)
+        ball.add(ParticleSystem)
 
         var line = GameObject.new("line")
         line.add(Transform.new(Vec2.new((0)-4, 0)))
@@ -55,6 +55,6 @@ class Game is Behaviour {
     }
 
     update() {
-        System.print(Lilah.fps)
+        //System.print(Lilah.fps)
     }
 }

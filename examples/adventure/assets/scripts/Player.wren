@@ -17,8 +17,8 @@ class Player is Behaviour {
         gameobject.add(Transform.new(Vec2.new(0,0)))
         gameobject.add(Sprite.new("assets/skullboy.png"))
         gameobject.add(Rigidbody.new())
-        gameobject.add(Player.new(gameobject).as_behaviour)
-        gameobject.add(CamFollow.new(gameobject).as_behaviour)
+        gameobject.add(Player)
+        gameobject.add(CamFollow)
 
         var scene = GameObject.new("scene")
         scene.add(Transform.new(Vec2.new(0,0)))

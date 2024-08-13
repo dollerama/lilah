@@ -18,7 +18,7 @@ impl Timer {
             total: Instant::now(),
             delta_time: 0.0,
             time_last_frame: 0.0,
-            smooth_delta_time: 0.0,
+            smooth_delta_time: 0.16,
             total_delta_time: 0.0,
             frames: 0,
         }

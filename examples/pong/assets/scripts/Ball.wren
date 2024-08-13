@@ -5,12 +5,17 @@ import "ParticleSystem" for ParticleSystem, ParticleField
 import "random" for Random
 
 class Ball is Behaviour {
-    construct new() {}
+    speed { _speed }
+    speed=(v) { _speed = v }
+
+    construct new() {
+        speed = 200
+    }
 
     static start() {
-        Rigidbody.set_velocity_x(gameobject.ref, -200)
+        Rigidbody.set_velocity_x(gameobject.ref, -gamebehaviour.speed)
         
-        gameobject.behaviourData(ParticleSystem).distance.value = 20
+        gameobject.behaviourData(ParticleSystem).distance.value = 10
         gameobject.behaviourData(ParticleSystem).direction = ParticleField.new(Vec2.new(0,0))
         gameobject.behaviourData(ParticleSystem).color = ParticleField.new([[1,1,1,0.25], [1,1,1,0]])
         gameobject.behaviourData(ParticleSystem).partSetup = ParticleField.new(Fn.new { |p|
@@ -23,6 +28,8 @@ class Ball is Behaviour {
     }
     
     static update() {
+        //System.print(Lilah.fps)
+
         if(gameobject.ref.get("Transform").position.y > 300-10 || gameobject.ref.get("Transform").position.y < -300+10) {
             Rigidbody.set_velocity_y(gameobject.ref, gameobject.ref.get("Rigidbody").velocity.y*-1)
         }

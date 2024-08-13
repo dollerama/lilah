@@ -765,7 +765,7 @@ impl Scripting {
 
     pub fn handle_timer(&self, app: &mut App, _state: &mut WorldState) {
         let state_class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
-        let val = app.time.delta_time as f64;
+        let val = app.delta_time() as f64;
         self.vm.execute(|vm| {
             vm.set_slot_double(1, val);
         });
@@ -778,7 +778,7 @@ impl Scripting {
         Scripting::call_setter(&self.vm, &state_class, "fps");
 
         let val = app.time.time();
-        self.vm.execute(|vm| {
+            self.vm.execute(|vm| {
             vm.set_slot_double(1, val);
         });
         Scripting::call_setter(&self.vm, &state_class, "time");

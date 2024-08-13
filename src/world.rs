@@ -424,11 +424,12 @@ impl<'a> World<'a> {
 
             self.draw(app);
             app.present_frame();
-
+            
             app.time.capture();
+            //println!("{}", 1.0/60.0-frame_time.elapsed().as_secs_f64());
             ::std::thread::sleep(Duration::new(
-                0,
-                ((1_000_000_000f64 / 60.0) - (frame_time.elapsed().as_secs_f64() * 1_000_000_000f64)) as u32,
+                (0.01666 - frame_time.elapsed().as_secs_f64()) as u64,
+                0u32,
             ));
         }
 
@@ -559,7 +560,7 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.position.x -= ((body.velocity * app.smooth_delta_time()) * 100 * coll.2.1.magnitude()).x;
+                            body.position.x -= ((body.velocity * app.delta_time()) * 100 * coll.2.1.magnitude()).x;
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
@@ -581,7 +582,7 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.position.y -= ((body.velocity * app.smooth_delta_time()) * 100 * coll.2.1.magnitude()).y;
+                            body.position.y -= ((body.velocity * app.delta_time()) * 100 * coll.2.1.magnitude()).y;
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();

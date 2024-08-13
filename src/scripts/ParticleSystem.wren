@@ -146,7 +146,6 @@ class ParticleSystem is Behaviour {
     }
 
     static emit() {
-
         var p = GameObject.new("p_sys")
         p.add(Transform.new(gameobject.ref.get("Transform").position))
         gamebehaviour.partSetup.raw.call(p)
