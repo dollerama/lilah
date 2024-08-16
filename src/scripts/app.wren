@@ -113,6 +113,7 @@ class Lilah {
         return __camera 
     }
     static destroy { __destroy }
+    static destroy_internal { __destroy_int }
 
     static gameobjects { __gameobjects }
     static gameobjects=(v) { __gameobjects=v }
@@ -212,6 +213,9 @@ class Lilah {
         if(__destroy == null) {
             __destroy = []
         }
+        if(__destroy_int == null) {
+            __destroy_int = []
+        }
 
         var d = null
         var j = 0
@@ -234,7 +238,7 @@ class Lilah {
 
         if(d != null) {
             __destroy.add(d.ref)
-            __data[d.ref.uuid] = null
+            __data.remove(d.ref.uuid)
             __gameobjects.removeAt(j)
         }
     }

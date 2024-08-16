@@ -1,7 +1,7 @@
 import "math" for Vec2, Util
 import "app" for Lilah, GameObjectRef, Curve
 import "io" for Serializable
-import "game" for Behaviour, GameObject, Transform, Sprite
+import "game" for Behaviour, GameObject, Transform, Sprite, Debug
 import "random" for Random
 
 class ParticleField {
@@ -142,7 +142,7 @@ class ParticleSystem is Behaviour {
 
         internal_time = 0
         internal_pos = Vec2.new(0,0)
-        parts = []
+        parts = {}
     }
 
     static emit() {
@@ -150,15 +150,17 @@ class ParticleSystem is Behaviour {
         p.add(Transform.new(gameobject.ref.get("Transform").position))
         gamebehaviour.partSetup.raw.call(p)
 
-        var pp = Lilah.instantiate(p, {"life": gamebehaviour.lifeSpan.value, "direction": gamebehaviour.direction.value})
+        var pp = Lilah.instantiate(p)
         gamebehaviour.partStart.raw.call(pp)
         Sprite.set_tint(pp.ref, gamebehaviour.color[1])
-        gamebehaviour.parts.add(pp)
+        gamebehaviour.parts[pp.ref.uuid] = {
+            "obj": pp,
+            "life": gamebehaviour.lifeSpan.value,
+            "dir":gamebehaviour.direction.value 
+        }
     }
 
     static update() {
-        gamebehaviour.parts = gamebehaviour.parts.where {|v| v.ref != null }.toList
-
         if(gamebehaviour.isPlaying()) {
             gamebehaviour.internal_time = gamebehaviour.internal_time + Lilah.delta_time
         }
@@ -172,20 +174,32 @@ class ParticleSystem is Behaviour {
             gamebehaviour.internal_pos = gameobject.ref.get(Transform).position
             ParticleSystem.emit()
         }
-        
+
+        var remove_from = [] 
         for(i in gamebehaviour.parts) {
-            var t = 1-(i["life"]/gamebehaviour.lifeSpan.value)
+            var t = 1-(i.value["life"]/gamebehaviour.lifeSpan.value)
 
-            i["life"] = i["life"] - Lilah.delta_time
-            Transform.update_position(i.ref, i["direction"] * gamebehaviour.speed[t] * Lilah.delta_time)
-            Transform.set_scale(i.ref, gamebehaviour.scale[t])
-            Transform.update_rotation(i.ref, gamebehaviour.rotation[t] * Lilah.delta_time)
-            Sprite.set_tint(i.ref, gamebehaviour.color[t])
+            i.value["life"] = i.value["life"] - Lilah.delta_time
 
-            if(i["life"] < 0) {
-                Lilah.destroy(i)
+            if(i.value["life"] < 0) {
+                remove_from.add(i.key)
+                continue
             }
+
+            Transform.update_position(i.value["obj"].ref, i.value["dir"] * gamebehaviour.speed[t] * Lilah.delta_time)
+            Transform.set_scale(i.value["obj"].ref, gamebehaviour.scale[t])
+            Transform.update_rotation(i.value["obj"].ref, gamebehaviour.rotation[t] * Lilah.delta_time)
+            Sprite.set_tint(i.value["obj"].ref, gamebehaviour.color[t])
+
+            
         }
+
+        for(i in remove_from) {
+            gamebehaviour.parts.remove(i)
+            Lilah.destroy(i)
+        }
+
+        //System.print(gamebehaviour.parts)
     }
 }
 

@@ -15,8 +15,9 @@ class Ball is Behaviour {
     static start() {
         Rigidbody.set_velocity_x(gameobject.ref, -gamebehaviour.speed)
         
-        gameobject.behaviourData(ParticleSystem).distance.value = 10
-        gameobject.behaviourData(ParticleSystem).direction = ParticleField.new(Vec2.new(0,0))
+        gameobject.behaviourData(ParticleSystem).distance.value = 0
+        //gameobject.behaviourData(ParticleSystem).play()
+        //gameobject.behaviourData(ParticleSystem).direction = ParticleField.new(Vec2.new(0,0))
         gameobject.behaviourData(ParticleSystem).color = ParticleField.new([[1,1,1,0.25], [1,1,1,0]])
         gameobject.behaviourData(ParticleSystem).partSetup = ParticleField.new(Fn.new { |p|
             p.add(Sprite.new("assets/ball.png"))

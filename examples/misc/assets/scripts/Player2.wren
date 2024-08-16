@@ -56,7 +56,7 @@ class Player2 is Behaviour {
             .time(2)
             .curve(Curve.inOutElastic)
             .onComplete {
-                Lilah.destroy(gameobject.ref)
+                Lilah.destroy(gameobject)
             }
             .play { |v|
                 Transform.set_scale(gameobject.ref, v)

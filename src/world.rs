@@ -379,6 +379,8 @@ impl<'a> World<'a> {
         scripting.send_state(app, &mut self.state);
 
         'running: loop {
+            println!("{}", self.state.gameobjects.len());
+
             let frame_time = Instant::now();
             app.time.start();
             if app.pre_frame() {
@@ -415,6 +417,8 @@ impl<'a> World<'a> {
             }
 
             scripting.tick(app, &mut self.state);
+            
+
             if self.update_callback.is_some() {
                 self.update_callback.as_mut().unwrap()(app, &mut self.state, scripting);
             }
@@ -483,7 +487,7 @@ impl<'a> World<'a> {
     }
 
     pub fn draw(&mut self, app: &mut App) {
-        if app.sort_dirty {
+        if app.sort_dirty || self.state.gameobjects.len() > self.sort_fudge.len() {
             self.sort_fudge = vec!();
             for i in &self.state.gameobjects {
                 if let Some(s) = i.1.wrap_component::<Scene>() {

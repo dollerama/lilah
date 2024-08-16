@@ -1,0 +1,175 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'lilah'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lilah"
+                ],
+                "filter": {
+                    "name": "lilah",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'misc'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=misc",
+                    "--package=lilah"
+                ],
+                "filter": {
+                    "name": "misc",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'misc'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=misc",
+                    "--package=lilah"
+                ],
+                "filter": {
+                    "name": "misc",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'multi'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=multi",
+                    "--package=lilah"
+                ],
+                "filter": {
+                    "name": "multi",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'multi'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=multi",
+                    "--package=lilah"
+                ],
+                "filter": {
+                    "name": "multi",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'adventure'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=adventure",
+                    "--package=lilah"
+                ],
+                "filter": {
+                    "name": "adventure",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'adventure'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=adventure",
+                    "--package=lilah"
+                ],
+                "filter": {
+                    "name": "adventure",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'pong'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=pong",
+                    "--package=lilah"
+                ],
+                "filter": {
+                    "name": "pong",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'pong'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=pong",
+                    "--package=lilah"
+                ],
+                "filter": {
+                    "name": "pong",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
