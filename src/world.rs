@@ -532,7 +532,7 @@ impl<'a> World<'a> {
             }
             crate::application::LINES.clear();
 
-            //Debug::draw_multi_line(vec![Vec2::new(0.0, 0.0), Vec2::new(200.0, 200.0), Vec2::new(400.0, -400.0), Vec2::new(600.0, 300.0), Vec2::new(800.0, 0.0)], 15.0, Color::new(1.0, 1.0, 0.0, 1.0));
+            Debug::draw_multi_line(vec![Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0), Vec2::new(200.0, -200.0), Vec2::new(300.0, 100.0), Vec2::new(400.0, 0.0)], 15.0, Color::new(1.0, 1.0, 0.0, 1.0));
         }
     }
 

@@ -609,8 +609,8 @@ pub fn make_multi_line(lines: &Vec<Vec2>, thickness: f64) -> (Vec<[Vec2; 3]>, Ve
             }
         }
 
-        result_lines.push([lines_tmp[i-1][2], lines_tmp[i-1][0], lines_tmp[i][1]]);
-        result_lines.push([lines_tmp[i][3], lines_tmp[i][0], lines_tmp[i-1][2]]);
+        result_lines.push([lines_tmp[i-1][0], lines_tmp[i][1], lines_tmp[i-1][3]]);
+        result_lines.push([lines_tmp[i][1], lines_tmp[i][2], lines_tmp[i-1][3]]);
         
         
         for k in curves_tmp.iter() {

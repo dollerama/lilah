@@ -1950,9 +1950,6 @@ impl Debug {
 
             let vbo = Buffer::new(gl::ARRAY_BUFFER);
             vbo.set_data(vertex_buff.as_slice(), gl::DYNAMIC_DRAW);
- 
-            let ibo = Buffer::new(gl::ELEMENT_ARRAY_BUFFER);
-            ibo.set_data(line_mesh.1.as_slice(), gl::STATIC_DRAW);
 
             let pos_attrib = crate::application::DEBUG_PROGRAM.as_ref().expect("program").get_attrib_location("position").expect("msg");
             set_attribute!(vao, pos_attrib, Vertex::0, gl::FLOAT);
@@ -1974,7 +1971,40 @@ impl Debug {
                 tint.b,
                 tint.a,
             );
-            gl::DrawElements(gl::TRIANGLES, line_mesh.1.len() as i32 * 3, gl::UNSIGNED_INT, 0 as *const _);
+
+            let width_attr = gl::GetUniformLocation(
+                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
+                CString::new("lineWidth").unwrap().as_ptr(),
+            );
+
+            gl::Uniform1d(width_attr, thickness);
+
+            let feather_attr = gl::GetUniformLocation(
+                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
+                CString::new("feather").unwrap().as_ptr(),
+            );
+
+            gl::Uniform1d(feather_attr, 1.0);
+
+            let segments_attr = gl::GetUniformLocation(
+                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
+                CString::new("segments").unwrap().as_ptr(),
+            );
+
+            let segments_len_attr = gl::GetUniformLocation(
+                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
+                CString::new("segmentCount").unwrap().as_ptr(),
+            );
+
+            let flat_segments: Vec<GLfloat> = points.iter()
+            .flat_map(|v| vec![v.x as f32, v.y as f32])
+            .collect();
+
+            // Send the data to the shader
+            gl::Uniform2fv(segments_attr, points.len() as GLsizei, flat_segments.as_ptr());
+            gl::Uniform1i(segments_len_attr, points.len() as GLsizei);
+
+            gl::DrawArrays(gl::TRIANGLES, 0, line_mesh.1.len() as i32 * 3);
         } 
     }
 

@@ -469,21 +469,64 @@ impl App {
 
     pub const DEBUG_VERT: &'static str = r#"
     #version 330
+
     in vec2 position;
     uniform mat4 mvp;
 
+    out vec2 fragPos;
+
     void main() {
+        fragPos = position;
         gl_Position = mvp * vec4(position, 0.0, 1.0);
     }
     "#;
 
     pub const DEBUG_FRAG: &'static str = r#"
     #version 330
+
+    in vec2 fragPos;
     out vec4 FragColor;
     uniform vec4 tint;
+    uniform float lineWidth;
+    uniform float feather; // Controls the smoothness of the edges
+
+    // Uniforms for the polyline segments
+    uniform int segmentCount;  // Number of segments
+    uniform vec2 segments[100]; // Array of segment endpoints, assuming max 50 segments
+
+    // Function to calculate the distance from a point to a line segment
+    float distToSegment(vec2 P, vec2 A, vec2 B, float lineWidth) {
+        vec2 AB = B - A;
+        vec2 AP = P - A;
+        
+        float lenSq = dot(AB, AB);  // Length squared of AB
+        
+        // Compute the projection factor (clamped between 0 and 1)
+        float t = clamp(dot(AP, AB) / lenSq, 0.0, 1.0); 
+        
+        // Calculate the projection point on the segment
+        vec2 projection = A + t * AB;
+        
+        // Return the perpendicular distance from P to the line segment, minus the line width
+        return length(P - projection) - lineWidth * 0.5;
+    }
 
     void main() {
-        FragColor = tint;
+        float minDist = 1e10; // Initialize with a large value
+        
+        // Loop over all segments to find the minimum distance
+        for (int i = 0; i < segmentCount; i += 2) {
+            vec2 A = segments[i];
+            vec2 B = segments[i + 1];
+            float dist = distToSegment(fragPos, A, B, lineWidth);
+            minDist = min(minDist, dist);
+        }
+
+        // Smooth the alpha value based on the distance
+        float alpha = 1.0 - smoothstep(lineWidth/2.0, lineWidth/2.0 + 10.0, minDist);
+        
+        // Set the fragment color with the calculated alpha
+        FragColor = vec4(tint.rgb, tint.a);// * alpha);
     }
     "#;
 
@@ -547,6 +590,7 @@ impl App {
             gl::Enable(gl::BLEND);
             gl::Disable(gl::CULL_FACE);
             gl::Disable(gl::DEPTH_TEST);
+            gl::Enable(gl::MULTISAMPLE);
             //gl::Enable(gl::DEPTH_TEST);
             //gl::DepthFunc(gl::LESS);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
