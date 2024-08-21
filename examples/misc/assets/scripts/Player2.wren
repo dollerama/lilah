@@ -12,22 +12,23 @@ class Player2 is Behaviour {
     setup() {
         var gameobject = GameObject.new("D")
 
-        gameobject.add(Transform.new(Vec2.new(100,100)))
+        gameobject.add(Transform.new(Vec2.new(200,-200)))
         gameobject.add(Sprite.new("assets/test.png"))
         gameobject.add(Rigidbody.new())
         gameobject.add(Animator.new())
-        gameobject.add(Player2.new(gameobject).as_behaviour)
+        gameobject.add(Player2)
 
         Lilah.instantiate(gameobject, {})
 
-        var scene = GameObject.new("scene")
-        scene.add(Transform.new(Vec2.new(0,0)))
-        scene.add(Scene.new("assets/Untitled.json"))
-        scene.add(Rigidbody.new())
-        Lilah.instantiate(scene)
+        //var scene = GameObject.new("scene")
+        //scene.add(Transform.new(Vec2.new(0,0)))
+        //scene.add(Scene.new("assets/Untitled.json"))
+        //scene.add(Rigidbody.new())
+        //Lilah.instantiate(scene)
     }
 
     static start() {
+        System.print("1")
         Animator.insert_state(gameobject.ref, "Row0", Vec2.new(3, 0))
         Animator.insert_state(gameobject.ref, "Row1", Vec2.new(3, 2))
         Animator.set_speed(gameobject.ref, 2)
@@ -57,6 +58,16 @@ class Player2 is Behaviour {
             .curve(Curve.inOutElastic)
             .onComplete {
                 Lilah.destroy(gameobject)
+
+                var gg = GameObject.new("DD")
+
+                gg.add(Transform.new(Vec2.new(200,-200)))
+                gg.add(Sprite.new("assets/test.png"))
+                gg.add(Rigidbody.new())
+                gg.add(Animator.new())
+                gg.add(Player2)
+
+                Lilah.instantiate(gg, {}) 
             }
             .play { |v|
                 Transform.set_scale(gameobject.ref, v)

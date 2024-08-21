@@ -130,14 +130,14 @@ class ParticleSystem is Behaviour {
     construct new() {
         var random = Random.new()
         
-        lifeSpan = ParticleField.new(0.5)
+        lifeSpan = ParticleField.new(1.5)
         speed = ParticleField.new([500, 0], Curve.inOutQuart)
         direction = ParticleField.new(Fn.new { Vec2.new(random.float(-1.0, 1.0), random.float(-1.0, 1.0)) })
         color = ParticleField.new([[1,1,1,1], [1,1,1,0]])
         scale = ParticleField.new([Vec2.new(1,1), Vec2.new(0,0)])
         rate = ParticleField.new(100)
         rotation = ParticleField.new(10)
-        distance = ParticleField.new(0)
+        distance = ParticleField.new(-1)
         _playing = false
 
         internal_time = 0
@@ -147,20 +147,42 @@ class ParticleSystem is Behaviour {
 
     static emit() {
         var p = GameObject.new("p_sys")
-        p.add(Transform.new(gameobject.ref.get("Transform").position))
+        p.add(Transform.new(gameobject.ref.get(Transform).position))
         gamebehaviour.partSetup.raw.call(p)
 
         var pp = Lilah.instantiate(p)
         gamebehaviour.partStart.raw.call(pp)
         Sprite.set_tint(pp.ref, gamebehaviour.color[1])
-        gamebehaviour.parts[pp.ref.uuid] = {
-            "obj": pp,
+        gamebehaviour.parts[pp.ref.uuid] = { 
             "life": gamebehaviour.lifeSpan.value,
-            "dir":gamebehaviour.direction.value 
+            "dir": gamebehaviour.direction.value 
         }
     }
 
     static update() {
+        var remove_from = [] 
+        for(i in gamebehaviour.parts) {
+            i.value["life"] = i.value["life"] - Lilah.delta_time
+            if(i.value["life"] < 0) {
+                remove_from.add(i.key)
+                continue
+            }
+
+            var t = 1-(i.value["life"]/gamebehaviour.lifeSpan.value)
+
+            var part = GameObjectRef.new(i.key)
+
+            Transform.update_position(part.ref, i.value["dir"] * gamebehaviour.speed[t] * Lilah.delta_time)
+            Transform.set_scale(part.ref, gamebehaviour.scale[t])
+            Transform.update_rotation(part.ref, gamebehaviour.rotation[t] * Lilah.delta_time)
+            Sprite.set_tint(part.ref, gamebehaviour.color[t])
+        }
+
+        for(i in remove_from) {
+            Lilah.destroy(i)
+            gamebehaviour.parts.remove(i)
+        }
+
         if(gamebehaviour.isPlaying()) {
             gamebehaviour.internal_time = gamebehaviour.internal_time + Lilah.delta_time
         }
@@ -170,36 +192,10 @@ class ParticleSystem is Behaviour {
             ParticleSystem.emit()
         }
 
-        if((gamebehaviour.internal_pos-gameobject.ref.get(Transform).position).magnitude() > gamebehaviour.distance.value) {
+        if(gamebehaviour.distance.value > 0 && (gamebehaviour.internal_pos-gameobject.ref.get(Transform).position).magnitude() > gamebehaviour.distance.value) {
             gamebehaviour.internal_pos = gameobject.ref.get(Transform).position
             ParticleSystem.emit()
         }
-
-        var remove_from = [] 
-        for(i in gamebehaviour.parts) {
-            var t = 1-(i.value["life"]/gamebehaviour.lifeSpan.value)
-
-            i.value["life"] = i.value["life"] - Lilah.delta_time
-
-            if(i.value["life"] < 0) {
-                remove_from.add(i.key)
-                continue
-            }
-
-            Transform.update_position(i.value["obj"].ref, i.value["dir"] * gamebehaviour.speed[t] * Lilah.delta_time)
-            Transform.set_scale(i.value["obj"].ref, gamebehaviour.scale[t])
-            Transform.update_rotation(i.value["obj"].ref, gamebehaviour.rotation[t] * Lilah.delta_time)
-            Sprite.set_tint(i.value["obj"].ref, gamebehaviour.color[t])
-
-            
-        }
-
-        for(i in remove_from) {
-            gamebehaviour.parts.remove(i)
-            Lilah.destroy(i)
-        }
-
-        //System.print(gamebehaviour.parts)
     }
 }
 

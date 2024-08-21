@@ -9,15 +9,15 @@ class Ball is Behaviour {
     speed=(v) { _speed = v }
 
     construct new() {
-        speed = 200
+        speed = 250
     }
 
     static start() {
         Rigidbody.set_velocity_x(gameobject.ref, -gamebehaviour.speed)
         
-        gameobject.behaviourData(ParticleSystem).distance.value = 0
+        gameobject.behaviourData(ParticleSystem).distance.value = 30
         //gameobject.behaviourData(ParticleSystem).play()
-        //gameobject.behaviourData(ParticleSystem).direction = ParticleField.new(Vec2.new(0,0))
+        gameobject.behaviourData(ParticleSystem).direction = ParticleField.new(Vec2.new(0,0))
         gameobject.behaviourData(ParticleSystem).color = ParticleField.new([[1,1,1,0.25], [1,1,1,0]])
         gameobject.behaviourData(ParticleSystem).partSetup = ParticleField.new(Fn.new { |p|
             p.add(Sprite.new("assets/ball.png"))
@@ -59,8 +59,8 @@ class Ball is Behaviour {
 
                 Fiber.yield(1)
 
-                if(p2_side) Rigidbody.set_velocity(gameobject.ref, Vec2.new(-200, 0))
-                if(p1_side) Rigidbody.set_velocity(gameobject.ref, Vec2.new(200, 0))
+                if(p2_side) Rigidbody.set_velocity(gameobject.ref, Vec2.new(-gamebehaviour.speed, 0))
+                if(p1_side) Rigidbody.set_velocity(gameobject.ref, Vec2.new(gamebehaviour.speed, 0))
             })
         }
     }
@@ -74,6 +74,6 @@ class Ball is Behaviour {
         var dist = (ball_pos-paddle_pos).normalized()
 
         var dot = Vec2.dot(Vec2.up, dist)
-        Rigidbody.set_velocity_y(gameobject.ref, dot*200)
+        Rigidbody.set_velocity_y(gameobject.ref, dot*gamebehaviour.speed)
     }
 }

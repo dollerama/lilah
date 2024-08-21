@@ -1,6 +1,7 @@
 use crate::components::{Debug, Scene};
 use crate::gameobject::GameObject;
 use crate::renderer::Color;
+use crate::time::Timer;
 use crate::{
     application::{App, Scripting},
     components::{Rigidbody, SceneData, Sprite, Text, Transform},
@@ -162,14 +163,8 @@ impl<'a> WorldState<'a> {
         }
     }
 
-    pub fn insert_wren(&mut self, g: GameObject) {
-        let g2 = g.clone();
-        self.gameobjects.insert(g2.id.uuid.clone(), g2);
-    }
-
-    pub fn insert(&mut self, g: GameObject) {
+    pub fn insert(&mut self, g: &GameObject) {
         let mut g2 = g.clone();
-        g2.wren_id = self.gameobjects.keys().len();
         self.gameobjects.insert(g2.id.uuid.clone(), g2);
     }
 
@@ -349,7 +344,7 @@ impl<'a> World<'a> {
     pub fn run(mut self, app: &mut App, scripting: &mut Scripting) -> World<'a> {
         let mut camera_pos = Vec2::new(-1.0, -1000.0);
         self.state.insert(
-            GameObject::new("Camera".to_string())
+            &GameObject::new("Camera".to_string())
                 .with_specific::<Transform>(Transform::new(Vec2::new(0f64, 0f64)))
                 .build(),
         );
@@ -380,7 +375,6 @@ impl<'a> World<'a> {
 
         'running: loop {
             println!("{}", self.state.gameobjects.len());
-
             let frame_time = Instant::now();
             app.time.start();
             if app.pre_frame() {
@@ -416,13 +410,17 @@ impl<'a> World<'a> {
                 }
             }
 
+            //let a = Instant::now();
             scripting.tick(app, &mut self.state);
-            
+            //println!("tick ->{}", a.elapsed().as_secs_f64());
 
             if self.update_callback.is_some() {
                 self.update_callback.as_mut().unwrap()(app, &mut self.state, scripting);
             }
+
             self.update(app);
+
+            self.update_go(app);
 
             scripting.send_state(app, &mut self.state);
 
@@ -431,10 +429,12 @@ impl<'a> World<'a> {
             
             app.time.capture();
             //println!("{}", 1.0/60.0-frame_time.elapsed().as_secs_f64());
-            ::std::thread::sleep(Duration::new(
-                (0.01666 - frame_time.elapsed().as_secs_f64()) as u64,
-                0u32,
-            ));
+            if (0.01666 - frame_time.elapsed().as_secs_f64()) > 0.0 {
+                ::std::thread::sleep(Duration::new(
+                    (0.01666 - frame_time.elapsed().as_secs_f64()) as u64,
+                    0u32,
+                ));
+            }
         }
 
         self
@@ -487,7 +487,7 @@ impl<'a> World<'a> {
     }
 
     pub fn draw(&mut self, app: &mut App) {
-        if app.sort_dirty || self.state.gameobjects.len() > self.sort_fudge.len() {
+        if app.sort_dirty || self.state.gameobjects.len() != self.sort_fudge.len() {
             self.sort_fudge = vec!();
             for i in &self.state.gameobjects {
                 if let Some(s) = i.1.wrap_component::<Scene>() {
@@ -496,7 +496,9 @@ impl<'a> World<'a> {
                     }
                 } else 
                 if let Some(s) = i.1.wrap_component::<Sprite>() {
-                    self.sort_fudge.push((i.0.clone(), s.get_sort()));
+                    if i.1.start {
+                        self.sort_fudge.push((i.0.clone(), s.get_sort()));
+                    }
                 }
                  else if let Some(t) = i.1.wrap_component::<Text>() {
                     self.sort_fudge.push((i.0.clone(), t.get_sort()));
@@ -529,6 +531,8 @@ impl<'a> World<'a> {
                 Debug::draw_line(line.0, line.1, line.2.clone());
             }
             crate::application::LINES.clear();
+
+            //Debug::draw_multi_line(vec![Vec2::new(0.0, 0.0), Vec2::new(200.0, 200.0), Vec2::new(400.0, -400.0), Vec2::new(600.0, 300.0), Vec2::new(800.0, 0.0)], 15.0, Color::new(1.0, 1.0, 0.0, 1.0));
         }
     }
 
@@ -564,7 +568,10 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.position.x -= ((body.velocity * app.delta_time()) * 100 * coll.2.1.magnitude()).x;
+                            body.position.x -= ((body.velocity) * 1.5 * coll.2.1.magnitude()).x;
+                            unsafe {
+                                crate::application::LINES.push((body.position, body.position-((body.velocity) * coll.2.1.magnitude()), Color::WHITE));
+                            }  
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
@@ -586,7 +593,10 @@ impl<'a> World<'a> {
                         let body = self.state.get_mut(&coll.0.uuid).get_mut::<Rigidbody>();
                         body.colliding = Some(coll.1.clone());
                         if g2_is_solid {
-                            body.position.y -= ((body.velocity * app.delta_time()) * 100 * coll.2.1.magnitude()).y;
+                            body.position.y -= ((body.velocity) * 1.5 * coll.2.1.magnitude()).y;
+                            unsafe {
+                                crate::application::LINES.push((body.position, body.position-((body.velocity) * 1.1 * coll.2.1.magnitude()), Color::WHITE));
+                            }  
                         }
 
                         let body2 = self.get_mut(&coll.1.uuid).get_mut::<Rigidbody>();
@@ -595,8 +605,6 @@ impl<'a> World<'a> {
                 }
             }
         }
-
-        self.update_go(&mut app);
     }
 
     fn check_collision(

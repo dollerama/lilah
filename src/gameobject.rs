@@ -65,10 +65,10 @@ impl GameObjectId {
 
 pub struct GameObject {
     pub id: GameObjectId,
-    pub wren_id: usize,
     pub components: Vec<Box<dyn Component>>,
     pub init: bool,
     pub start: bool,
+    pub has_behaviour: bool
 }
 
 impl Clone for GameObject {
@@ -76,7 +76,7 @@ impl Clone for GameObject {
         let mut g = Self {
             id: self.id.clone(),
             components: vec![],
-            wren_id: self.wren_id,
+            has_behaviour: self.has_behaviour,
             init: self.init,
             start: self.start,
         };
@@ -104,7 +104,7 @@ impl GameObject {
         Self {
             id: GameObjectId::new(name),
             components: vec![],
-            wren_id: 0,
+            has_behaviour: false,
             init: false,
             start: false,
         }
@@ -149,6 +149,9 @@ impl GameObject {
         state_updates.sfx = Some(sfx_updates);
 
         if self.init {
+            if !self.start {
+                app.sort_dirty = true;
+            }
             self.start = true;
             return state_updates;
         }
@@ -332,6 +335,9 @@ impl GameObject {
 
     pub fn wren_add_component(&mut self, vm: &VM) {
         if let Some(c) = vm.get_slot_foreign::<Box<dyn Component>>(1) {
+            if let Some(_) = c.as_any().downcast_ref::<ComponentBehaviour>() {
+                self.has_behaviour = true;
+            }
             self.components.push(c.clone_dyn());
         } else if let Some(c) = vm.get_slot_foreign::<Transform>(1) {
             self.components.push(Box::new(c.clone()));
@@ -346,6 +352,7 @@ impl GameObject {
         } else if let Some(c) = vm.get_slot_foreign::<Sfx>(1) {
             self.components.push(Box::new(c.clone()));
         } else if let Some(c) = vm.get_slot_foreign::<ComponentBehaviour>(1) {
+            self.has_behaviour = true;
             self.components.push(Box::new(c.clone()));
         } else if let Some(c) = vm.get_slot_foreign::<Scene>(1) {
             self.components.push(Box::new(c.clone()));

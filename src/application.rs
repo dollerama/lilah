@@ -2,7 +2,7 @@ extern crate sdl2;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::str;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::components::{ComponentBehaviour, Rigidbody};
 use crate::gameobject::GameObject;
@@ -220,11 +220,12 @@ impl Scripting {
     pub fn tick(&mut self, app: &mut App, state: &mut WorldState) {
         let state_class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
 
+        let frame_getter = Scripting::get_getter_handle(&self.vm, "frame");
+        let frame_setter = Scripting::get_setter_handle(&self.vm, "frame");
+
         for m in &self.modules {
             let class = Scripting::get_class_handle(&self.vm, &m.0, &m.0.to_lowercase());
-
-            let frame_getter = Scripting::get_getter_handle(&self.vm, "frame");
-            let frame_setter = Scripting::get_setter_handle(&self.vm, "frame");
+            let obj = Scripting::get_class_handle(&self.vm, &m.0, &m.0);
 
             Scripting::call_handle(&self.vm, &class, &frame_getter);
 
@@ -257,12 +258,10 @@ impl Scripting {
                     for g in &mut state.gameobjects {
                         let behaviours = g.1.wrap_all::<ComponentBehaviour>();
                         for b in behaviours {
-                            if b.get_component() == m.0 {
-                                let obj = Scripting::get_class_handle(&self.vm, &m.0, &m.0);
-
+                            if b.get_component() == m.0  {
                                 if g.1.init && !g.1.start {
                                     self.vm.execute(|vm| {
-                                        vm.set_slot_double(1, g.1.wren_id as f64);
+                                        vm.set_slot_string(1, g.0.clone());
                                     });
                                     Scripting::call_setter(&self.vm, &obj, "gameobject");
                                     
@@ -286,16 +285,30 @@ impl Scripting {
                     });
 
                     Scripting::call_handle(&self.vm, &class, &frame_setter);
-
+                    
                     for g in &mut state.gameobjects {
+                        if !g.1.has_behaviour {
+                            continue;
+                        }
+
                         let behaviours = g.1.wrap_all::<ComponentBehaviour>();
                         for b in behaviours {
                             if b.get_component() == m.0 {
-                                let obj = Scripting::get_class_handle(&self.vm, &m.0, &m.0);
+                                if g.1.init && !g.1.start {
+                                    self.vm.execute(|vm| {
+                                        vm.set_slot_string(1, g.0.clone());
+                                    });
+                                    Scripting::call_setter(&self.vm, &obj, "gameobject");
+                                    
+                                    self.vm.execute(|vm| {
+                                        vm.set_slot_string(1, b.uuid.as_str());
+                                    });
+                                    Scripting::call_setter(&self.vm, &obj, "gamebehaviour");
 
-                                if g.1.init && g.1.start {
+                                    Scripting::call_fn_error_silent(&self.vm, &obj, "start", 0);
+                                } else if g.1.start {
                                     self.vm
-                                        .execute(|vm| vm.set_slot_double(1, g.1.wren_id as f64));
+                                        .execute(|vm| vm.set_slot_string(1, g.0.clone()));
                                     Scripting::call_setter(&self.vm, &obj, "gameobject");
 
                                     self.vm.execute(|vm| {
@@ -324,12 +337,12 @@ impl Scripting {
                         }
                     }
                 }
-            }
-
-            self.receive_audio(app, state);
-            self.handle_timer(app, state);
-            self.receive_state(app, state);
+            } 
         }
+
+        self.receive_audio(app, state);
+        self.handle_timer(app, state);
+        self.receive_state(app, state);
     }
 
     pub fn get_class_handle<'a>(vm: &'a VMWrapper, module: &str, class: &str) -> Rc<Handle<'a>> {
@@ -530,7 +543,10 @@ impl App {
         }
 
         unsafe {
+            gl::LineWidth(2.0);
             gl::Enable(gl::BLEND);
+            gl::Disable(gl::CULL_FACE);
+            gl::Disable(gl::DEPTH_TEST);
             //gl::Enable(gl::DEPTH_TEST);
             //gl::DepthFunc(gl::LESS);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
@@ -800,16 +816,12 @@ impl Scripting {
         Scripting::call_setter(&self.vm, &class, "screen_size");
 
         self.vm.execute(|vm| {
-            vm.set_slot_new_list(1);
-
-            for i in 0..state.gameobjects.len() {
-                vm.set_slot_null(2);
-                vm.insert_in_list(1, i as i32, 2);
-            }
+            vm.set_slot_new_map(1);
 
             for i in state.gameobjects.iter().enumerate() {
-                i.1 .1.clone().send_to_wren(2, vm);
-                vm.set_list_element(1, i.1 .1.wren_id as i32, 2);
+                i.1.1.clone().send_to_wren(2, vm);
+                vm.set_slot_string(3, i.1.0.clone());
+                vm.set_map_value(1, 3, 2);
             }
         });
         Scripting::call_setter(&self.vm, &class, "gameobjects");
@@ -967,7 +979,7 @@ impl Scripting {
         let state_class = Scripting::get_class_handle(&self.vm, "app", "Lilah");
         let ui_class = Scripting::get_class_handle(&self.vm, "app", "UI");
 
-        Scripting::call_getter(&self.vm, &state_class, "gameobjects");
+        Scripting::call_getter(&self.vm, &state_class, "gameobjects_values");
 
         self.vm.execute(|vm| {
             if let Some(count) = vm.get_list_count(0) {
@@ -976,9 +988,7 @@ impl Scripting {
 
                     let go = vm.get_slot_foreign::<GameObject>(1);
                     if let Some(g) = go {
-                        let mut g2 = g.clone();
-                        g2.wren_id = i;
-                        state.insert_wren(g2.clone());
+                        state.insert(g);
                     }
                 }
             }
@@ -988,12 +998,16 @@ impl Scripting {
 
         self.vm.execute(|vm| {
             if let Some(count) = vm.get_list_count(0) {
+                if count > 0 {
+                    app.sort_dirty = true;
+                }
+
                 for i in 0..count {
                     vm.get_list_element(0, i as i32, 1);
 
-                    let go = vm.get_slot_foreign::<GameObject>(1);
+                    let go = vm.get_slot_string(1);
                     if let Some(g) = go {
-                        state.gameobjects.remove(&g.id.uuid);
+                        state.gameobjects.remove(&g);
                     }
                 }
             }

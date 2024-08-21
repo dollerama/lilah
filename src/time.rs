@@ -36,6 +36,10 @@ impl Timer {
         self.time = Instant::now();
     }
 
+    pub fn check_capture(&self) -> f64 {
+        self.time.elapsed().as_secs_f64() 
+    }
+
     pub fn capture(&mut self) {
         self.delta_time = self.time.elapsed().as_secs_f64();
         self.frames += 1;
@@ -44,6 +48,6 @@ impl Timer {
     }
 
     pub fn delta_time_scaled(&self) -> f64 {
-        self.delta_time.clamp(0.0, 0.16)
+        self.delta_time.clamp(0.0, 0.032)
     }
 }

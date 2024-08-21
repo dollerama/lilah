@@ -6,10 +6,7 @@ class GameObjectRef {
         return GameObjectRef.new(id)
     }
 
-    ref { 
-        if(_ref < 0 || _ref >= Lilah.gameobjects.count) {
-            return null
-        }
+    ref {
         return Lilah.gameobjects[_ref] 
     }
 
@@ -60,51 +57,6 @@ class GameObjectRef {
     }
 }
 
-class Audio {
-    static music { __music }
-    static command { __command }
-    static dirty { __dirty }
-    static volume { __volume }
-    static fade { __fade }
-    static volume=(v) { 
-        __dirty = true
-        __volume = v 
-    }
-
-    static play(file) {
-        __command = "start"
-        __music = file
-        __dirty = true
-    }
-
-    static play(file, fade_in_ms) {
-        __command = "start_fade"
-        __music = file
-        __fade = fade_in_ms
-        __dirty = true
-    }
-
-    static play() {
-        __command = "play"
-        __dirty = true
-    }
-
-    static pause() {
-        __command = "pause"
-        __dirty = true
-    }
-
-    static pause(fade_out_ms) {
-        __command = "pause_fade"
-        __fade = fade_out_ms
-        __dirty = true
-    }
-
-    static clear() {
-        __dirty = false
-    }
-}
-
 class Lilah {
     static camera { 
         if(__camera == null) {
@@ -117,6 +69,7 @@ class Lilah {
 
     static gameobjects { __gameobjects }
     static gameobjects=(v) { __gameobjects=v }
+    static gameobjects_values { __gameobjects.values.toList }
 
     static data { __data }
     static data=(v) { __data=v }
@@ -178,30 +131,30 @@ class Lilah {
 
     static instantiate(go, d) {
         if(__gameobjects == null) {
-            __gameobjects = []
+            __gameobjects = {}
         }
 
         if(__data == null) {
             __data = {}
         }
 
-        __gameobjects.add(go)
+        __gameobjects[go.uuid] = go
         __data[go.uuid] = d
-        return GameObjectRef.new(__gameobjects.count-1)
+        return GameObjectRef.new(go.uuid)
     }
 
     static instantiate(go) {
         if(__gameobjects == null) {
-            __gameobjects = []
+            __gameobjects = {} 
         }
 
         if(__data == null) {
             __data = {}
         }
 
-        __gameobjects.add(go)
+        __gameobjects[go.uuid] = go
         __data[go.uuid] = {}
-        return GameObjectRef.new(__gameobjects.count-1)
+        return GameObjectRef.new(go.uuid)
     }
 
     static clear() {
@@ -213,45 +166,74 @@ class Lilah {
         if(__destroy == null) {
             __destroy = []
         }
-        if(__destroy_int == null) {
-            __destroy_int = []
+        var j = null
+        if(key is GameObjectRef) {
+            j = key.ref.uuid
+        } else if(key is String) {
+            j = key
         }
 
-        var d = null
-        var j = 0
-        for(i in (0..__gameobjects.count-1)) {
-            var id = __gameobjects[i].id
-            if(key is GameObjectRef) {
-                if(id["uuid"] == key.ref.uuid) {
-                    d = GameObjectRef.new(i)
-                    j=i
-                    break
-                }
-            } else if(key is String) {
-                if(id["uuid"] == key || id["name"] == key) {
-                    d = GameObjectRef.new(i)
-                    j=i
-                    break
-                }
-            }
-        }
-
-        if(d != null) {
-            __destroy.add(d.ref)
-            __data.remove(d.ref.uuid)
-            __gameobjects.removeAt(j)
+        if(j != null) {
+            __destroy.add(j)
+            __data.remove(j)
+            __gameobjects.remove(j)
         }
     }
 
     static find(key) {
         if(__gameobjects == null) return null 
-        for(i in (0..__gameobjects.count)) {
-            var id = __gameobjects[i].id
+        for(i in __gameobjects) {
+            var id = i.value.id
             if(id["uuid"] == key || id["name"] == key) {
-                return GameObjectRef.new(i)
+                return GameObjectRef.new(id["uuid"])
             }
         }
         return null
+    }
+}
+
+class Audio {
+    static music { __music }
+    static command { __command }
+    static dirty { __dirty }
+    static volume { __volume }
+    static fade { __fade }
+    static volume=(v) { 
+        __dirty = true
+        __volume = v 
+    }
+
+    static play(file) {
+        __command = "start"
+        __music = file
+        __dirty = true
+    }
+
+    static play(file, fade_in_ms) {
+        __command = "start_fade"
+        __music = file
+        __fade = fade_in_ms
+        __dirty = true
+    }
+
+    static play() {
+        __command = "play"
+        __dirty = true
+    }
+
+    static pause() {
+        __command = "pause"
+        __dirty = true
+    }
+
+    static pause(fade_out_ms) {
+        __command = "pause_fade"
+        __fade = fade_out_ms
+        __dirty = true
+    }
+
+    static clear() {
+        __dirty = false
     }
 }
 

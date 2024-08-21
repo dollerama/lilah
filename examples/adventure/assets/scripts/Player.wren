@@ -36,9 +36,9 @@ class Player is Behaviour {
     }
 
     static update() {
-        System.print(Lilah.time)
+        //System.print(Lilah.time)
 
-        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*120)
+        Rigidbody.set_velocity(gameobject.ref, Input.binding2D("Horizontal", "Vertical")*50)
         
 
         if(Input.key_down("Space")) {

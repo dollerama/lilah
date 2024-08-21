@@ -19,8 +19,8 @@ class Player is Behaviour {
         gameobject.add(Animator.new())
         gameobject.add(Text.new("Hello Lilah!", "assets/Lora-Regular.ttf"))
         gameobject.add(Sfx.new("sfx", "assets/sfx.wav"))
-        gameobject.add(Player.new(gameobject).as_behaviour)
-        gameobject.add(ParticleSystem.new(gameobject).as_behaviour)
+        gameobject.add(Player)
+        gameobject.add(ParticleSystem)
 
         var g = Lilah.instantiate(gameobject)
 
@@ -31,6 +31,8 @@ class Player is Behaviour {
         g.behaviourData(ParticleSystem).partStart = ParticleField.new(Fn.new { |p|
             Sprite.cut_sprite_sheet(p.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         })
+
+        g.behaviourData(ParticleSystem).play()
     }
 
     static start() {

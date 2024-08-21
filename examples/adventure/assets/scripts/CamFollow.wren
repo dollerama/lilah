@@ -26,13 +26,13 @@ class CamFollow is Behaviour {
             )
         )
 
-        Transform.set_position_x(
-            Lilah.camera.ref, 
-            Lilah.camera.ref.get(Transform).position.x.round()
-        )
-        Transform.set_position_y(
-            Lilah.camera.ref, 
-            Lilah.camera.ref.get(Transform).position.y.round()
-        )
+        // Transform.set_position_x(
+        //     Lilah.camera.ref, 
+        //     Lilah.camera.ref.get(Transform).position.x.round()
+        // )
+        // Transform.set_position_y(
+        //     Lilah.camera.ref, 
+        //     Lilah.camera.ref.get(Transform).position.y.round()
+        // )
     }
 }

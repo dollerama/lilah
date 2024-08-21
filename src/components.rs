@@ -1925,6 +1925,59 @@ impl Sprite {
 }
 
 impl Debug {
+    pub fn draw_multi_line(points: Vec<Vec2>, thickness: f64, tint: Color) {
+        let line_mesh = crate::math::make_multi_line(&points, thickness);
+
+        let mut vertex_buff = vec!();
+
+        for i in 0..line_mesh.0.len() {
+            vertex_buff.push(Vertex([line_mesh.0[i][0].x as f32, line_mesh.0[i][0].y as f32], [0.0, 0.0]));
+            vertex_buff.push(Vertex([line_mesh.0[i][1].x as f32, line_mesh.0[i][1].y as f32], [0.0, 0.0]));
+            vertex_buff.push(Vertex([line_mesh.0[i][2].x as f32, line_mesh.0[i][2].y as f32], [0.0, 0.0]));
+        }
+
+        let model = Mat4::IDENTITY;
+        let view = unsafe { *crate::math::VIEW_MATRIX };
+        let projection = unsafe { *crate::math::PROJECTION_MATRIX };
+
+        let mvp = projection * view * model;
+
+        unsafe {
+            crate::application::DEBUG_PROGRAM.as_mut().expect("program").apply();
+
+            let vao = VertexArray::new();
+            vao.bind();
+
+            let vbo = Buffer::new(gl::ARRAY_BUFFER);
+            vbo.set_data(vertex_buff.as_slice(), gl::DYNAMIC_DRAW);
+ 
+            let ibo = Buffer::new(gl::ELEMENT_ARRAY_BUFFER);
+            ibo.set_data(line_mesh.1.as_slice(), gl::STATIC_DRAW);
+
+            let pos_attrib = crate::application::DEBUG_PROGRAM.as_ref().expect("program").get_attrib_location("position").expect("msg");
+            set_attribute!(vao, pos_attrib, Vertex::0, gl::FLOAT);
+
+            let mat_attr = gl::GetUniformLocation(
+                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
+                CString::new("mvp").unwrap().as_ptr(),
+            );
+            gl::UniformMatrix4fv(mat_attr, 1, gl::FALSE as GLboolean, &mvp.to_cols_array()[0]);
+
+            let tint_attr = gl::GetUniformLocation(
+                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
+                CString::new("tint").unwrap().as_ptr(),
+            );
+            gl::Uniform4f(
+                tint_attr,
+                tint.r,
+                tint.g,
+                tint.b,
+                tint.a,
+            );
+            gl::DrawElements(gl::TRIANGLES, line_mesh.1.len() as i32 * 3, gl::UNSIGNED_INT, 0 as *const _);
+        } 
+    }
+
     pub fn draw_line(start: Vec2, end: Vec2, tint: Color) {
         let model = Mat4::IDENTITY;
         let view = unsafe { *crate::math::VIEW_MATRIX };

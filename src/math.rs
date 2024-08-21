@@ -1,4 +1,4 @@
-use std::{ops, hash::Hasher, hash::Hash};
+use std::{collections::HashMap, hash::{Hash, Hasher}, mem, ops};
 use glam::{Mat4, Quat, Vec3, Vec4};
 use ruwren::{Class, VM, create_module, ModuleLibrary};
 use std::f64::consts::PI;
@@ -65,11 +65,30 @@ impl Class for Vec2 {
     }
 }
 
-/// Hash uses i64 which has side effect of only having unique hashes for Vectors with whole numbers
+fn integer_decode(val: f64) -> (u64, i16, i8) {
+    let bits: u64 = unsafe { mem::transmute(val) };
+    let sign: i8 = if bits >> 63 == 0 { 1 } else { -1 };
+    let mut exponent: i16 = ((bits >> 52) & 0x7ff) as i16;
+    let mantissa = if exponent == 0 {
+        (bits & 0xfffffffffffff) << 1
+    } else {
+        (bits & 0xfffffffffffff) | 0x10000000000000
+    };
+
+    exponent -= 1023 + 52;
+    (mantissa, exponent, sign)
+}
+
 impl Hash for Vec2 {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        (self.x as i64).hash(state);
-        (self.y as i64).hash(state);
+        let a = integer_decode(self.x);
+        let b = integer_decode(self.y);
+        a.0.hash(state);
+        a.1.hash(state);
+        a.2.hash(state);
+        b.0.hash(state);
+        b.1.hash(state);
+        b.2.hash(state);
     }
 }
 
@@ -129,6 +148,11 @@ impl Vec2 {
         }
     }
 
+    /// Perpendicular Vector
+    pub fn perp(a: Vec2) -> Vec2 {
+        Vec2::new(a.y, -a.x)
+    }
+
     /// Applies normalization to Vec
     pub fn normalize(&mut self) {
         let a = self.normalized();
@@ -139,6 +163,23 @@ impl Vec2 {
     /// interpolation between two Vecs with t between 0, 1
     pub fn lerp(a: Vec2, b: Vec2, t: f64) -> Vec2 {
         Vec2 {x: (a.x + (b.x - a.x) * t), y: (a.y + (b.y - a.y) * t) }
+    }
+
+    pub fn get_intersection(a: (Vec2, Vec2), b: (Vec2, Vec2)) -> Option<Vec2> {
+        let xdiff = Vec2::new(a.0.x-a.1.x, b.0.x-b.1.x);
+        let ydiff = Vec2::new(a.0.y-a.1.y, b.0.y-b.1.y); 
+        
+        let div = Vec2::cross(xdiff, ydiff);
+        
+        if div == 0.0 {
+            None
+        } else {
+            let d = Vec2::new(Vec2::cross(a.0, a.1), Vec2::cross(b.0, b.1));
+            let x = Vec2::cross(d, xdiff) / div;
+            let y = Vec2::cross(d, ydiff) / div;
+            
+            Some(Vec2::new(x, y))
+        }
     }
 
     //for wren
@@ -406,6 +447,202 @@ impl std::fmt::Display for Vec2 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "(x={}, y={})", self.x, self.y)
     }
+}
+
+pub fn make_line(start: Vec2, end: Vec2, thickness: f64, output: bool) -> [Vec2; 4] {
+    let offset = Vec2::perp(end-start).normalized() * thickness;
+    let a = Vec2::new(start.x, start.y) + offset;
+    let b = Vec2::new(end.x, end.y) + offset;
+    let c = Vec2::new(end.x, end.y) - offset;
+    let d = Vec2::new(start.x, start.y) - offset;
+    
+    if output {
+        println!("[{}, {}, {}, {}, {}]", a, b, c, d, a);
+    }
+    [a, b, c, d]
+}
+
+pub fn make_multi_line(lines: &Vec<Vec2>, thickness: f64) -> (Vec<[Vec2; 3]>, Vec<i32>) {
+    let mut point = 0;
+    
+    let mut lines_tmp = vec!();
+    let mut curves_tmp = vec!();
+    
+    loop {
+        if point > lines.len()-1 {
+            break;
+        }
+        if point == 0 {
+            point += 1;
+            continue;
+        }
+        
+        if point == 1 {
+            point += 1;
+            continue;
+        }
+        
+        let pp = (lines[point-2], lines[point-1], lines[point]);
+        
+        let a = make_line(pp.0, pp.1, thickness, false);
+        let b = make_line(pp.1, pp.2, thickness, false);
+        
+        let angle = Vec2::dot(Vec2::perp(pp.1-pp.0).normalized(), (pp.2-pp.1).normalized());
+
+        let inter = Vec2::get_intersection((a[3], a[2]), (b[3], b[2])).unwrap();
+        let correct = (inter-a[2]).magnitude();
+        let lines_gen = if angle < 0.0 {
+            ( 
+                make_line(pp.0, pp.1 - (pp.1-pp.0).normalized() * correct, thickness, false),
+                make_line(pp.1 + (pp.2 - pp.1).normalized() * correct, pp.2, thickness, false)
+            )
+        } else {
+            (
+                make_line(pp.0, pp.1 - (pp.1-pp.0).normalized() * correct, thickness, false),
+                make_line(pp.1 + (pp.2 - pp.1).normalized() * correct, pp.2, thickness, false)
+            )
+        };
+        
+        //start cap
+        if point == 2 {
+            let center = pp.0;
+            let mut prev = lines_gen.0[3];
+            let correct = lines_gen.0[3]-pp.0;
+            let mut angle = (correct.y).atan2(correct.x);
+            
+            for i in 0..=5 {
+                let next = Vec2::new(center.x+angle.cos() as f64*correct.magnitude(), center.y+angle.sin() as f64*correct.magnitude()); 
+                curves_tmp.push(([prev, next, center], 0));
+                angle += std::f64::consts::PI/5.0;
+                prev = next;
+            }
+        }
+        //end cap
+        if point == lines.len()-1 {
+            let center = pp.2;
+            let mut prev = lines_gen.1[2];
+            let correct = lines_gen.1[2]-pp.2;
+            let mut angle = (correct.y).atan2(correct.x);
+            
+            for i in 0..=5 {
+                let next = Vec2::new(center.x+angle.cos() as f64*correct.magnitude(), center.y+angle.sin() as f64*correct.magnitude()); 
+                curves_tmp.push(([prev, next, center], point));
+                angle -= std::f64::consts::PI/5.0;
+                prev = next;
+            }
+        }
+
+        lines_tmp.push(lines_gen.0);
+        lines_tmp.push(lines_gen.1);
+    
+        let angle2 = Vec2::dot((lines_gen.0[1]-lines_gen.0[2]).normalized(), (lines_gen.1[0]-lines_gen.0[2]).normalized())*2.0;
+        
+        if angle2 < 0.0 {
+            let angle2 = Vec2::dot((lines_gen.0[2]-lines_gen.0[1]).normalized(), (lines_gen.1[0]-lines_gen.0[1]).normalized())*2.0;
+            let test = lines_gen.0[1] - lines_gen.0[2];
+            let mut start_angle = (test.y).atan2(test.x)+angle2/4.0 as f64;//+angle2;
+            let correct2 = (lines_gen.0[2]-lines_gen.0[1]); 
+            let mut prev = lines_gen.0[1];
+
+            for i in 0..=3 {
+                let mid_curve = Vec2::new(lines_gen.0[2].x+(start_angle).cos() as f64*correct2.magnitude(), lines_gen.0[2].y+(start_angle).sin() as f64*correct2.magnitude());
+                curves_tmp.push(([prev, mid_curve, lines_gen.0[2]], point-1));
+                prev = mid_curve;
+                
+                start_angle += angle2/4.0 as f64;
+            }
+            curves_tmp.push(([lines_gen.0[2], lines_gen.1[0], prev], point-1));
+        } else {
+            let angle2 = Vec2::dot((lines_gen.0[2]-lines_gen.0[1]).normalized(), (lines_gen.1[3]-lines_gen.0[2]).normalized())*2.0;
+            let test = lines_gen.0[2] - lines_gen.0[1];
+            let mut start_angle = (test.y).atan2(test.x)+(angle2);
+            let correct2 = (lines_gen.1[3]-lines_gen.0[1]); 
+            let mut prev = lines_gen.1[3];
+            
+            for i in 0..=3 {
+                let mid_curve = Vec2::new(lines_gen.0[1].x+(start_angle).cos() as f64*correct2.magnitude(), lines_gen.0[1].y+(start_angle).sin() as f64*correct2.magnitude());
+                curves_tmp.push(([prev, mid_curve, lines_gen.1[0]], point-1));
+                prev = mid_curve;
+                
+                start_angle -= angle2/4.0 as f64;
+            }
+            curves_tmp.push(([lines_gen.0[1], prev, lines_gen.0[2]], point-1));
+        }
+        
+        point += 1;
+    }
+    
+    let mut result_lines = vec![];
+    
+    for i in curves_tmp.iter() {
+        if i.1 == 0 {
+            result_lines.push(i.0);
+        } else {
+            break;
+        }
+    }
+    
+    result_lines.push([lines_tmp[0][2], lines_tmp[0][0], lines_tmp[0][1]]);
+    result_lines.push([lines_tmp[0][3], lines_tmp[0][0], lines_tmp[0][2]]);
+
+    let mut i = 2;
+    let mut j = 2;
+    loop {
+        if i >= lines_tmp.len()-1 {
+            result_lines.push(
+                [lines_tmp[lines_tmp.len()-1][2], lines_tmp[lines_tmp.len()-1][0], lines_tmp[lines_tmp.len()-1][1]]
+            );
+            result_lines.push(
+                [lines_tmp[lines_tmp.len()-1][3], lines_tmp[lines_tmp.len()-1][0], lines_tmp[lines_tmp.len()-1][2]]
+            );
+            
+            for i in curves_tmp.iter() {
+                if i.1 == lines.len()-1 {
+                    result_lines.push(i.0);
+                }
+            }
+            break;
+        }
+        for k in curves_tmp.iter() {
+            if k.1 == j-1 {
+                result_lines.push(k.0);
+            }
+        }
+
+        result_lines.push([lines_tmp[i-1][2], lines_tmp[i-1][0], lines_tmp[i][1]]);
+        result_lines.push([lines_tmp[i][3], lines_tmp[i][0], lines_tmp[i-1][2]]);
+        
+        
+        for k in curves_tmp.iter() {
+            if k.1 == j {
+                result_lines.push(k.0);
+            }
+        }
+        i += 2;
+        j += 1;
+    }
+    
+    let mut indices = vec!();
+    let mut check = HashMap::new();
+    for k in result_lines.iter() {
+        for vert in k {
+            if let Some(ind) = check.get(vert) {
+                indices.push(*ind);  
+            } else {
+                if check.len() == 0 {
+                    let num = 0;
+                    indices.push(num);  
+                    check.insert(vert, num);
+                } else {
+                    let num = check.len() as i32;
+                    check.insert(vert, num);
+                    indices.push(num);  
+                }
+            }
+        }
+    }
+
+    (result_lines, indices)
 }
 
 pub struct Rect {
