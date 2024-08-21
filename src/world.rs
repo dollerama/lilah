@@ -25,8 +25,8 @@ use std::{collections::HashMap, path::Path};
 
 #[macro_export]
 macro_rules! embed_texture {
-    ($path: expr, $state:ident, $app:ident) => {
-        $state.load_texture_bytes($path, include_bytes!($path), $app);
+    ($path: expr, $wrap: expr, $filter: expr, $state:ident, $app:ident) => {
+        $state.load_texture_bytes($path, include_bytes!($path), $wrap, $filter, $app);
     };
 }
 pub use embed_texture;
@@ -60,8 +60,8 @@ pub use embed_sfx;
 
 #[macro_export]
 macro_rules! load_texture {
-    ($path: expr, $state:ident, $app:ident) => {
-        $state.load_texture($path, $app);
+    ($path: expr, $wrap: expr, $filter: expr, $state:ident, $app:ident) => {
+        $state.load_texture($path, $wrap, $filter, $app);
     };
 }
 pub use load_texture;
@@ -168,12 +168,12 @@ impl<'a> WorldState<'a> {
         self.gameobjects.insert(g2.id.uuid.clone(), g2);
     }
 
-    pub fn load_texture(&mut self, file: &str, _app: &App) {
+    pub fn load_texture(&mut self, file: &str, wrap: u32, filter: u32, _app: &App) {
         let mut new_texture = unsafe { LilahTexture::new() };
 
         unsafe {
-            new_texture.set_wrapping(gl::REPEAT);
-            new_texture.set_filtering(gl::NEAREST);
+            new_texture.set_wrapping(wrap);
+            new_texture.set_filtering(filter);
         }
 
         unsafe {
@@ -186,7 +186,7 @@ impl<'a> WorldState<'a> {
         debug_println!("Texture loaded: {}", file);
     }
 
-    pub fn load_texture_bytes(&mut self, name: &str, source: &[u8], _app: &App) {
+    pub fn load_texture_bytes(&mut self, name: &str, source: &[u8], wrap: u32, filter: u32, _app: &App) {
         let mut new_texture = unsafe { LilahTexture::new() };
         unsafe {
             if let Err(e) = new_texture.load_as_bytes(source) {
@@ -195,8 +195,8 @@ impl<'a> WorldState<'a> {
         }
 
         unsafe {
-            new_texture.set_wrapping(gl::REPEAT);
-            new_texture.set_filtering(gl::NEAREST);
+            new_texture.set_wrapping(wrap);
+            new_texture.set_filtering(filter);
         }
 
         self.textures.insert(name.to_string(), new_texture);

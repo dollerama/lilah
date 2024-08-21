@@ -8,8 +8,8 @@ fn setup(app: &mut App, state: &mut WorldState, scripting: &mut Scripting) {
     embed_script!("assets/scripts/CamFollow.wren", scripting);
     embed_script!("assets/scripts/Player.wren", scripting);
     embed_scene_data!("assets/Untitled.json", state);
-    embed_texture!("assets/skullboy.png", state, app);
-    embed_texture!("assets/tiles.png", state, app);
+    embed_texture!("assets/skullboy.png", gl::REPEAT, gl::NEAREST, state, app);
+    embed_texture!("assets/tiles.png", gl::REPEAT, gl::NEAREST, state, app);
 }
 
 pub fn main() {

@@ -6,9 +6,9 @@ fn setup(app : &mut App, state : &mut WorldState, scripting : &mut Scripting) {
     embed_script!("assets/scripts/Paddle.wren", scripting);
     embed_script!("assets/scripts/Ball.wren", scripting);
     embed_script!("assets/scripts/Game.wren", scripting);
-    embed_texture!("assets/paddle.png", state, app);
-    embed_texture!("assets/ball.png", state, app);
-    embed_texture!("assets/line.png", state, app);
+    embed_texture!("assets/paddle.png", gl::REPEAT, gl::NEAREST, state, app);
+    embed_texture!("assets/ball.png", gl::REPEAT, gl::NEAREST, state, app);
+    embed_texture!("assets/line.png", gl::REPEAT, gl::NEAREST, state, app);
     embed_font!("assets/Lora-Regular.ttf", state);
 }
 
