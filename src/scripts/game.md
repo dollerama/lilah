@@ -10,6 +10,7 @@
 > - [Transform](#transform)
 > - [GameObject](#gameobject)
 > - [Sfx](#sfx)
+> - [Line](#line)
 > - [ComponentBehaviour](#componentbehaviour)
 > - [Debug](#debug)
 ## Behaviour
@@ -21,7 +22,7 @@ Inherits from ``Serializable``
 > - frame
 > - frame = v: Num
 > - as_behaviour
-> - new(g: Gameobject, c: Behaviour)
+> - new(g: GameObject, c: Behaviour)
 > - start()
 > - update()
 > - onCollision()
@@ -46,7 +47,7 @@ getter returns ``ComponentBehaviour``
 > ```js
 > gameobject.add(ParticleSystem.new(gameobject).as_behaviour)
 > ```
-### ``new(g: Gameobject, c: Behaviour)``
+### ``new(g: GameObject, c: Behaviour)``
 constructor with arity(2) and returns ``Behaviour``
 ### ``start()``
 static method returns ``null``
@@ -119,9 +120,9 @@ static method with arity(2) and returns ``null``
 > - current_index
 > - tint
 > - cut_sprite_sheet(i: Vec2, j: Vec2)
-> - cut_sprite_sheet(go: Gameobject, i: Vec2, j: Vec2)
-> - set_sort(go: Gameobject, i: Num)
-> - set_tint(go: Gameobject, color: List)
+> - cut_sprite_sheet(go: GameObject, i: Vec2, j: Vec2)
+> - set_sort(go: GameObject, i: Num)
+> - set_tint(go: GameObject, color: List)
 ### ``new(id: String)``
 constructor with arity(1) and returns ``Sprite``
 ### ``as_component``
@@ -137,11 +138,11 @@ getter returns ``List``
 > Returns in the form [r,g,b,a]
 ### ``cut_sprite_sheet(i: Vec2, j: Vec2)``
 method with arity(2) and returns ``null``
-### ``cut_sprite_sheet(go: Gameobject, i: Vec2, j: Vec2)``
+### ``cut_sprite_sheet(go: GameObject, i: Vec2, j: Vec2)``
 method with arity(3) and returns ``null``
-### ``set_sort(go: Gameobject, i: Num)``
+### ``set_sort(go: GameObject, i: Num)``
 method with arity(2) and returns ``null``
-### ``set_tint(go: Gameobject, color: List)``
+### ``set_tint(go: GameObject, color: List)``
 method with arity(2) and returns ``null``
 ## Scene
 > - new(i: String)
@@ -166,18 +167,18 @@ method with arity(1) and returns ``[Vec2] | Vec2``
 > - solid
 > - solid = value: bool
 > - colliding
-> - colliding(go: Gameobject)
-> - set_solid(go: Gameobject, solid: bool)
-> - set_position(go: Gameobject, new_pos: Vec2)
-> - set_position_x(go: Gameobject, new_x: Num)
-> - set_position_y(go: Gameobject, new_y: Num)
-> - set_velocity(go: Gameobject, vel: Vec2)
-> - set_velocity_x(go: Gameobject, new_x: Num)
-> - set_velocity_y(go: Gameobject, new_y: Num)
-> - update_velocity(go: Gameobject, vel: Vec2)
-> - update_velocity_x(go: Gameobject, new_x: Num)
-> - set_velocity(go: Gameobject, new_y: Num)
-> - set_rotation(go: Gameobject, new_rot: Num)
+> - colliding(go: GameObject)
+> - set_solid(go: GameObject, solid: bool)
+> - set_position(go: GameObject, new_pos: Vec2)
+> - set_position_x(go: GameObject, new_x: Num)
+> - set_position_y(go: GameObject, new_y: Num)
+> - set_velocity(go: GameObject, vel: Vec2)
+> - set_velocity_x(go: GameObject, new_x: Num)
+> - set_velocity_y(go: GameObject, new_y: Num)
+> - update_velocity(go: GameObject, vel: Vec2)
+> - update_velocity_x(go: GameObject, new_x: Num)
+> - set_velocity(go: GameObject, new_y: Num)
+> - set_rotation(go: GameObject, new_rot: Num)
 ### ``new()``
 constructor returns ``Rigidbody``
 ### ``as_component``
@@ -195,30 +196,30 @@ setter
 ### ``colliding``
 getter returns ``Map/null``
 > returns a map in the form "name": _, "uuid": _ or null if no collision
-### ``colliding(go: Gameobject)``
+### ``colliding(go: GameObject)``
 static method with arity(1) and returns ``Map/null``
 > returns a map in the form "name": _, "uuid": _ or null if no collision
-### ``set_solid(go: Gameobject, solid: bool)``
+### ``set_solid(go: GameObject, solid: bool)``
 static method with arity(2) and returns ``null``
-### ``set_position(go: Gameobject, new_pos: Vec2)``
+### ``set_position(go: GameObject, new_pos: Vec2)``
 static method with arity(2) and returns ``null``
-### ``set_position_x(go: Gameobject, new_x: Num)``
+### ``set_position_x(go: GameObject, new_x: Num)``
 static method with arity(2) and returns ``null``
-### ``set_position_y(go: Gameobject, new_y: Num)``
+### ``set_position_y(go: GameObject, new_y: Num)``
 static method with arity(2) and returns ``null``
-### ``set_velocity(go: Gameobject, vel: Vec2)``
+### ``set_velocity(go: GameObject, vel: Vec2)``
 static method with arity(2) and returns ``null``
-### ``set_velocity_x(go: Gameobject, new_x: Num)``
+### ``set_velocity_x(go: GameObject, new_x: Num)``
 static method with arity(2) and returns ``null``
-### ``set_velocity_y(go: Gameobject, new_y: Num)``
+### ``set_velocity_y(go: GameObject, new_y: Num)``
 static method with arity(2) and returns ``null``
-### ``update_velocity(go: Gameobject, vel: Vec2)``
+### ``update_velocity(go: GameObject, vel: Vec2)``
 static method with arity(2) and returns ``null``
-### ``update_velocity_x(go: Gameobject, new_x: Num)``
+### ``update_velocity_x(go: GameObject, new_x: Num)``
 static method with arity(2) and returns ``null``
-### ``set_velocity(go: Gameobject, new_y: Num)``
+### ``set_velocity(go: GameObject, new_y: Num)``
 static method with arity(2) and returns ``null``
-### ``set_rotation(go: Gameobject, new_rot: Num)``
+### ``set_rotation(go: GameObject, new_rot: Num)``
 static method with arity(2) and returns ``null``
 ## Animator
 > - new()
@@ -233,13 +234,13 @@ static method with arity(2) and returns ``null``
 > - get_state(s: String)
 > - set_state(s: String)
 > - insert_state(s: String, i: Vec2)
-> - play(go: Gameobject)
-> - stop(go: Gameobject)
-> - set_state(go: Gameobject, s: String)
-> - get_state(go: Gameobject, s: String)
-> - insert_state(go: Gameobject, s: String, i: Vec2)
-> - set_speed(go: Gameobject, s: Num)
-> - set_frame(go: Gameobject, f: Num)
+> - play(go: GameObject)
+> - stop(go: GameObject)
+> - set_state(go: GameObject, s: String)
+> - get_state(go: GameObject, s: String)
+> - insert_state(go: GameObject, s: String, i: Vec2)
+> - set_speed(go: GameObject, s: Num)
+> - set_frame(go: GameObject, f: Num)
 ### ``new()``
 constructor returns ``Animator``
 ### ``as_component``
@@ -265,19 +266,19 @@ method with arity(1) and returns ``Map``
 method with arity(1) and returns ``null``
 ### ``insert_state(s: String, i: Vec2)``
 method with arity(2) and returns ``null``
-### ``play(go: Gameobject)``
+### ``play(go: GameObject)``
 static method with arity(1) and returns ``null``
-### ``stop(go: Gameobject)``
+### ``stop(go: GameObject)``
 static method with arity(1) and returns ``null``
-### ``set_state(go: Gameobject, s: String)``
+### ``set_state(go: GameObject, s: String)``
 static method with arity(2) and returns ``null``
-### ``get_state(go: Gameobject, s: String)``
+### ``get_state(go: GameObject, s: String)``
 static method with arity(2) and returns ``String``
-### ``insert_state(go: Gameobject, s: String, i: Vec2)``
+### ``insert_state(go: GameObject, s: String, i: Vec2)``
 static method with arity(3) and returns ``null``
-### ``set_speed(go: Gameobject, s: Num)``
+### ``set_speed(go: GameObject, s: Num)``
 static method with arity(2) and returns ``null``
-### ``set_frame(go: Gameobject, f: Num)``
+### ``set_frame(go: GameObject, f: Num)``
 static method with arity(2) and returns ``null``
 ## Transform
 Inherits from ``Serializable``
@@ -294,21 +295,21 @@ Inherits from ``Serializable``
 > - default
 > - getProperty()
 > - setProperty()
-> - set_pivot(go: Gameobject, new_pivot: Vec2)
-> - set_position(go: Gameobject, new_pos: Vec2)
-> - set_position_x(go: Gameobject, new_x: Num)
-> - set_position_y(go: Gameobject, new_y: Num)
-> - update_position(go: Gameobject, new_pos: Vec2)
-> - update_position_x(go: Gameobject, new_x: Num)
-> - update_position_y(go: Gameobject, new_y: Num)
-> - set_scale(go: Gameobject, new_scale: Vec2)
-> - set_scale_x(go: Gameobject, new_x: Num)
-> - set_scale_y(go: Gameobject, new_y: Num)
-> - update_scale(go: Gameobject, new_scale: Vec2)
-> - update_scale_x(go: Gameobject, new_x: Num)
-> - update_scale_y(go: Gameobject, new_y: Num)
-> - set_rotation(go: Gameobject, new_rot: Num)
-> - update_rotation(go: Gameobject, new_rot: Num)
+> - set_pivot(go: GameObject, new_pivot: Vec2)
+> - set_position(go: GameObject, new_pos: Vec2)
+> - set_position_x(go: GameObject, new_x: Num)
+> - set_position_y(go: GameObject, new_y: Num)
+> - update_position(go: GameObject, new_pos: Vec2)
+> - update_position_x(go: GameObject, new_x: Num)
+> - update_position_y(go: GameObject, new_y: Num)
+> - set_scale(go: GameObject, new_scale: Vec2)
+> - set_scale_x(go: GameObject, new_x: Num)
+> - set_scale_y(go: GameObject, new_y: Num)
+> - update_scale(go: GameObject, new_scale: Vec2)
+> - update_scale_x(go: GameObject, new_x: Num)
+> - update_scale_y(go: GameObject, new_y: Num)
+> - set_rotation(go: GameObject, new_rot: Num)
+> - update_rotation(go: GameObject, new_rot: Num)
 ### ``new(p: Vec2)``
 constructor with arity(1) and returns ``Transform``
 ### ``as_component``
@@ -335,56 +336,53 @@ static getter returns ``Transform``
 method returns ``List/Fn``
 ### ``setProperty()``
 method returns ``null``
-### ``set_pivot(go: Gameobject, new_pivot: Vec2)``
+### ``set_pivot(go: GameObject, new_pivot: Vec2)``
 static method with arity(2) and returns ``null``
-### ``set_position(go: Gameobject, new_pos: Vec2)``
+### ``set_position(go: GameObject, new_pos: Vec2)``
 static method with arity(2) and returns ``null``
-### ``set_position_x(go: Gameobject, new_x: Num)``
+### ``set_position_x(go: GameObject, new_x: Num)``
 static method with arity(2) and returns ``null``
-### ``set_position_y(go: Gameobject, new_y: Num)``
+### ``set_position_y(go: GameObject, new_y: Num)``
 static method with arity(2) and returns ``null``
-### ``update_position(go: Gameobject, new_pos: Vec2)``
+### ``update_position(go: GameObject, new_pos: Vec2)``
 static method with arity(2) and returns ``null``
-### ``update_position_x(go: Gameobject, new_x: Num)``
+### ``update_position_x(go: GameObject, new_x: Num)``
 static method with arity(2) and returns ``null``
-### ``update_position_y(go: Gameobject, new_y: Num)``
+### ``update_position_y(go: GameObject, new_y: Num)``
 static method with arity(2) and returns ``null``
-### ``set_scale(go: Gameobject, new_scale: Vec2)``
+### ``set_scale(go: GameObject, new_scale: Vec2)``
 static method with arity(2) and returns ``null``
-### ``set_scale_x(go: Gameobject, new_x: Num)``
+### ``set_scale_x(go: GameObject, new_x: Num)``
 static method with arity(2) and returns ``null``
-### ``set_scale_y(go: Gameobject, new_y: Num)``
+### ``set_scale_y(go: GameObject, new_y: Num)``
 static method with arity(2) and returns ``null``
-### ``update_scale(go: Gameobject, new_scale: Vec2)``
+### ``update_scale(go: GameObject, new_scale: Vec2)``
 static method with arity(2) and returns ``null``
-### ``update_scale_x(go: Gameobject, new_x: Num)``
+### ``update_scale_x(go: GameObject, new_x: Num)``
 static method with arity(2) and returns ``null``
-### ``update_scale_y(go: Gameobject, new_y: Num)``
+### ``update_scale_y(go: GameObject, new_y: Num)``
 static method with arity(2) and returns ``null``
-### ``set_rotation(go: Gameobject, new_rot: Num)``
+### ``set_rotation(go: GameObject, new_rot: Num)``
 static method with arity(2) and returns ``null``
-### ``update_rotation(go: Gameobject, new_rot: Num)``
+### ``update_rotation(go: GameObject, new_rot: Num)``
 static method with arity(2) and returns ``null``
 ## GameObject
 > - new(name: String)
 > - add(x: Component)
 > - getComponent(x: String)
 > - set(x: Type, y: Component)
-> - set(x: String, y: Component)
 > - id
 > - uuid
 > - name
 > - name = v: String
 > - components
 ### ``new(name: String)``
-constructor with arity(1) and returns ``Gameobject``
+constructor with arity(1) and returns ``GameObject``
 ### ``add(x: Component)``
 method with arity(1) and returns ``null``
 ### ``getComponent(x: String)``
 method with arity(1) and returns ``Component``
 ### ``set(x: Type, y: Component)``
-method with arity(2) and returns ``null``
-### ``set(x: String, y: Component)``
 method with arity(2) and returns ``null``
 ### ``id``
 getter returns ``Map``
@@ -406,9 +404,9 @@ getter returns ``[Component]``
 > - volume = v: Num
 > - file
 > - play()
-> - get_volume(go: Gameobject, name: String)
-> - get_volume(go: Gameobject, name: String, amt: Num)
-> - play(go: Gameobject, name: String)
+> - get_volume(go: GameObject, name: String)
+> - get_volume(go: GameObject, name: String, amt: Num)
+> - play(go: GameObject, name: String)
 ### ``new(name: String, file: String)``
 constructor with arity(2) and returns ``Sfx``
 ### ``as_component``
@@ -425,12 +423,61 @@ setter
 getter returns ``String``
 ### ``play()``
 method returns ``null``
-### ``get_volume(go: Gameobject, name: String)``
+### ``get_volume(go: GameObject, name: String)``
 static method with arity(2) and returns ``Num``
-### ``get_volume(go: Gameobject, name: String, amt: Num)``
+### ``get_volume(go: GameObject, name: String, amt: Num)``
 static method with arity(3) and returns ``null``
-### ``play(go: Gameobject, name: String)``
+### ``play(go: GameObject, name: String)``
 static method with arity(2) and returns ``null``
+## Line
+> - new()
+> - as_component
+> - color
+> - sort
+> - thickness
+> - points
+> - set_sort(go: GameObject, sort: Num)
+> - get_sort(go: GameObject)
+> - set_thickness(go: GameObject, thickness: [Num])
+> - get_thickness(go: GameObject)
+> - set_color(go: GameObject, color: [Num])
+> - add_point(go: GameObject, point: Vec2)
+> - remove_point(go: GameObject, index: Num)
+> - pop_point(go: GameObject)
+> - insert_point(go: GameObject, point: Vec2, index: Num)
+### ``new()``
+constructor returns ``Line``
+> constructs with no points and default thickness of 10.0
+### ``as_component``
+getter returns ``Component``
+### ``color``
+getter returns ``[Num]``
+> Gets color in form [r,g,b,a]
+### ``sort``
+getter returns ``Num``
+### ``thickness``
+getter returns ``[Num]``
+> Gets line thickness in form [start, end]
+### ``points``
+getter returns ``[Vec2]``
+### ``set_sort(go: GameObject, sort: Num)``
+static method with arity(2) and returns ``null``
+### ``get_sort(go: GameObject)``
+static method with arity(1) and returns ``Num``
+### ``set_thickness(go: GameObject, thickness: [Num])``
+static method with arity(2) and returns ``null``
+### ``get_thickness(go: GameObject)``
+static method with arity(1) and returns ``[Num]``
+### ``set_color(go: GameObject, color: [Num])``
+static method with arity(2) and returns ``null``
+### ``add_point(go: GameObject, point: Vec2)``
+static method with arity(2) and returns ``null``
+### ``remove_point(go: GameObject, index: Num)``
+static method with arity(2) and returns ``null``
+### ``pop_point(go: GameObject)``
+static method with arity(1) and returns ``null``
+### ``insert_point(go: GameObject, point: Vec2, index: Num)``
+static method with arity(3) and returns ``null``
 ## ComponentBehaviour
 > - new(b: String)
 > - as_component

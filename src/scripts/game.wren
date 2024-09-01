@@ -37,7 +37,7 @@ class Behaviour is Serializable {
     ///```
     as_behaviour { _behaviour }
 
-    ///{constructor} new(g: Gameobject, c: Behaviour) -> Behaviour
+    ///{constructor} new(g: GameObject, c: Behaviour) -> Behaviour
     construct new(g, c) {
         if(__data == null) {
             __data = {}
@@ -128,11 +128,11 @@ foreign class Sprite {
     foreign tint
     ///{method} cut_sprite_sheet(i: Vec2, j: Vec2) -> null
     foreign cut_sprite_sheet(i, j)
-    ///{method} cut_sprite_sheet(go: Gameobject, i: Vec2, j: Vec2) -> null
+    ///{method} cut_sprite_sheet(go: GameObject, i: Vec2, j: Vec2) -> null
     foreign static cut_sprite_sheet(go, i, j)
-    ///{method} set_sort(go: Gameobject, i: Num) -> null
+    ///{method} set_sort(go: GameObject, i: Num) -> null
     foreign static set_sort(go, i)
-    ///{method} set_tint(go: Gameobject, color: List) -> null
+    ///{method} set_tint(go: GameObject, color: List) -> null
     foreign static set_tint(go, color)
 }
 
@@ -181,30 +181,30 @@ foreign class Rigidbody {
     ///{getter} colliding -> Map/null
     ///returns a map in the form "name": _, "uuid": _ or null if no collision
     foreign colliding
-    ///{static method} colliding(go: Gameobject) -> Map/null
+    ///{static method} colliding(go: GameObject) -> Map/null
     ///returns a map in the form "name": _, "uuid": _ or null if no collision
     foreign static colliding(go)
-    ///{static method} set_solid(go: Gameobject, solid: bool) -> null
+    ///{static method} set_solid(go: GameObject, solid: bool) -> null
     foreign static set_solid(go, solid)
-    ///{static method} set_position(go: Gameobject, new_pos: Vec2) -> null
+    ///{static method} set_position(go: GameObject, new_pos: Vec2) -> null
     foreign static set_position(go, new_pos)
-    ///{static method} set_position_x(go: Gameobject, new_x: Num) -> null
+    ///{static method} set_position_x(go: GameObject, new_x: Num) -> null
     foreign static set_position_x(go, new_x)
-    ///{static method} set_position_y(go: Gameobject, new_y: Num) -> null
+    ///{static method} set_position_y(go: GameObject, new_y: Num) -> null
     foreign static set_position_y(go, new_y)
-    ///{static method} set_velocity(go: Gameobject, vel: Vec2) -> null
+    ///{static method} set_velocity(go: GameObject, vel: Vec2) -> null
     foreign static set_velocity(go, vel)
-    ///{static method} set_velocity_x(go: Gameobject, new_x: Num) -> null
+    ///{static method} set_velocity_x(go: GameObject, new_x: Num) -> null
     foreign static set_velocity_x(go, new_x)
-    ///{static method} set_velocity_y(go: Gameobject, new_y: Num) -> null
+    ///{static method} set_velocity_y(go: GameObject, new_y: Num) -> null
     foreign static set_velocity_y(go, new_y)
-    ///{static method} update_velocity(go: Gameobject, vel: Vec2) -> null
+    ///{static method} update_velocity(go: GameObject, vel: Vec2) -> null
     foreign static update_velocity(go, vel)
-    ///{static method} update_velocity_x(go: Gameobject, new_x: Num) -> null
+    ///{static method} update_velocity_x(go: GameObject, new_x: Num) -> null
     foreign static update_velocity_x(go, new_x)
-    ///{static method} set_velocity(go: Gameobject, new_y: Num) -> null
+    ///{static method} set_velocity(go: GameObject, new_y: Num) -> null
     foreign static update_velocity_y(go, new_y)
-    ///{static method} set_rotation(go: Gameobject, new_rot: Num) -> null
+    ///{static method} set_rotation(go: GameObject, new_rot: Num) -> null
     foreign static set_rotation(go, new_rot)
 }
 
@@ -235,19 +235,19 @@ foreign class Animator {
     foreign set_state(s)
     ///{method} insert_state(s: String, i: Vec2) -> null
     foreign insert_state(s, i)
-    ///{static method} play(go: Gameobject) -> null
+    ///{static method} play(go: GameObject) -> null
     foreign static play(g)
-    ///{static method} stop(go: Gameobject) -> null
+    ///{static method} stop(go: GameObject) -> null
     foreign static stop(g)
-    ///{static method} set_state(go: Gameobject, s: String) -> null
+    ///{static method} set_state(go: GameObject, s: String) -> null
     foreign static set_state(g, s)
-    ///{static method} get_state(go: Gameobject, s: String) -> String
+    ///{static method} get_state(go: GameObject, s: String) -> String
     foreign static get_state(g, s)
-    ///{static method} insert_state(go: Gameobject, s: String, i: Vec2) -> null
+    ///{static method} insert_state(go: GameObject, s: String, i: Vec2) -> null
     foreign static insert_state(g, s, i)
-    ///{static method} set_speed(go: Gameobject, s: Num) -> null
+    ///{static method} set_speed(go: GameObject, s: Num) -> null
     foreign static set_speed(g, s)
-    ///{static method} set_frame(go: Gameobject, f: Num) -> null
+    ///{static method} set_frame(go: GameObject, f: Num) -> null
     foreign static set_frame(g, f)
 }
 
@@ -293,41 +293,43 @@ foreign class Transform is Serializable {
             this.pivot = v.call()
         }
     }
-    ///{static method} set_pivot(go: Gameobject, new_pivot: Vec2) -> null
+    ///{static method} set_pivot(go: GameObject, new_pivot: Vec2) -> null
     foreign static set_pivot(go, new_pivot)
-    ///{static method} set_position(go: Gameobject, new_pos: Vec2) -> null
+    ///{static method} set_position(go: GameObject, new_pos: Vec2) -> null
     foreign static set_position(go, new_pos)
-    ///{static method} set_position_x(go: Gameobject, new_x: Num) -> null
+    ///{static method} set_position_x(go: GameObject, new_x: Num) -> null
     foreign static set_position_x(go, new_x)
-    ///{static method} set_position_y(go: Gameobject, new_y: Num) -> null
+    ///{static method} set_position_y(go: GameObject, new_y: Num) -> null
     foreign static set_position_y(go, new_y)
-    ///{static method} update_position(go: Gameobject, new_pos: Vec2) -> null
+    ///{static method} update_position(go: GameObject, new_pos: Vec2) -> null
     foreign static update_position(go, new_pos)
-    ///{static method} update_position_x(go: Gameobject, new_x: Num) -> null
+    ///{static method} update_position_x(go: GameObject, new_x: Num) -> null
     foreign static update_position_x(go, new_x)
-    ///{static method} update_position_y(go: Gameobject, new_y: Num) -> null
+    ///{static method} update_position_y(go: GameObject, new_y: Num) -> null
     foreign static update_position_y(go, new_y)
-    ///{static method} set_scale(go: Gameobject, new_scale: Vec2) -> null
+    ///{static method} set_scale(go: GameObject, new_scale: Vec2) -> null
     foreign static set_scale(go, new_scale)
-    ///{static method} set_scale_x(go: Gameobject, new_x: Num) -> null
+    ///{static method} set_scale_x(go: GameObject, new_x: Num) -> null
     foreign static set_scale_x(go, new_x)
-    ///{static method} set_scale_y(go: Gameobject, new_y: Num) -> null
+    ///{static method} set_scale_y(go: GameObject, new_y: Num) -> null
     foreign static set_scale_y(go, new_y)
-    ///{static method} update_scale(go: Gameobject, new_scale: Vec2) -> null
+    ///{static method} update_scale(go: GameObject, new_scale: Vec2) -> null
     foreign static update_scale(go, new_scale)
-    ///{static method} update_scale_x(go: Gameobject, new_x: Num) -> null
+    ///{static method} update_scale_x(go: GameObject, new_x: Num) -> null
     foreign static update_scale_x(go, new_x)
-    ///{static method} update_scale_y(go: Gameobject, new_y: Num) -> null
+    ///{static method} update_scale_y(go: GameObject, new_y: Num) -> null
     foreign static update_scale_y(go, new_y)
-    ///{static method} set_rotation(go: Gameobject, new_rot: Num) -> null
+    ///{static method} set_rotation(go: GameObject, new_rot: Num) -> null
     foreign static set_rotation(go, new_rot)
-    ///{static method} update_rotation(go: Gameobject, new_rot: Num) -> null
+    ///{static method} update_rotation(go: GameObject, new_rot: Num) -> null
     foreign static update_rotation(go, new_rot)
+    ///{static method} inverse_point(go: GameObject, point: Vec2) -> Vec2
+    foreign static inverse_point(go, point)
 }
 
 ///{class} GameObject
 foreign class GameObject {
-    ///{constructor} new(name: String) -> Gameobject
+    ///{constructor} new(name: String) -> GameObject
     construct new(name) {}
     ///{method} add(x: Component) -> null
     foreign addComponent(x)
@@ -345,8 +347,6 @@ foreign class GameObject {
             addComponent(x.new(this).as_behaviour)
         }
     }
-    ///{method} set(x: String, y: Component) -> null
-    foreign set(x, y)
     ///{getter} id -> Map
     ///Returns a map in the form "name": _, "uuid": _
     foreign id
@@ -360,7 +360,7 @@ foreign class GameObject {
     foreign components
 
     toString {
-        var result = "%(id)"
+        var result = "%(id), Component Count: %(components.count)"
         return result
     }
 }
@@ -383,12 +383,51 @@ foreign class Sfx {
     foreign file
     ///{method} play() -> null
     foreign play()
-    ///{static method} get_volume(go: Gameobject, name: String) -> Num
+    ///{static method} get_volume(go: GameObject, name: String) -> Num
     foreign static get_volume(go, name)
-    ///{static method} get_volume(go: Gameobject, name: String, amt: Num) -> null
+    ///{static method} get_volume(go: GameObject, name: String, amt: Num) -> null
     foreign static set_volume(go, name, amt)
-    ///{static method} play(go: Gameobject, name: String) -> null
+    ///{static method} play(go: GameObject, name: String) -> null
     foreign static play(go, name)
+}
+
+///{class} Line
+foreign class Line {
+    ///{constructor} new() -> Line
+    ///constructs with no points and default thickness of 10.0
+    construct new() {}
+    ///{getter} as_component -> Component
+    foreign as_component
+    ///{getter} color -> [Num]
+    ///Gets color in form [r,g,b,a]
+    foreign color
+    ///{getter} sort -> Num
+    foreign sort
+    ///{getter} thickness -> [Num]: 
+    ///Gets line thickness in form [start, end]
+    foreign thickness
+    ///{getter} points -> [Vec2]
+    foreign points
+    ///{static method} set_sort(go: GameObject, sort: Num) -> null
+    foreign static set_sort(go, sort)
+    ///{static method} get_sort(go: GameObject) -> Num
+    foreign static get_sort(go)
+    ///{static method} set_thickness(go: GameObject, thickness: [Num]) -> null
+    foreign static set_thickness(go, thickness)
+    ///{static method} get_thickness(go: GameObject) -> [Num]
+    foreign static get_thickness(go)
+    ///{static method} set_color(go: GameObject, color: [Num]) -> null
+    foreign static set_color(go, color)
+    ///{static method} add_point(go: GameObject, point: Vec2) -> null
+    foreign static add_point(go, point)
+    ///{static method} remove_point(go: GameObject, index: Num) -> null
+    foreign static remove_point(go, index)
+    ///{static method} pop_point(go: GameObject) -> null
+    foreign static pop_point(go)
+    ///{static method} insert_point(go: GameObject, point: Vec2, index: Num) -> null
+    foreign static insert_point(go, point, index)
+    ///{static method} set_point(go: GameObject, index: Num, point: Vec2) -> null
+    foreign static set_point(go, index, point)
 }
 
 ///{class} ComponentBehaviour

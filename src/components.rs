@@ -1,5 +1,5 @@
 use crate::gameobject::GameObjectId;
-use crate::math::Vec2;
+use crate::math::{self, Vec2};
 use crate::renderer::{Buffer, Color, LilahTexture, Vertex, VertexArray};
 use crate::world::StateUpdateContainer;
 use crate::{application::App, gameobject::GameObject};
@@ -8,7 +8,7 @@ use gl::types::*;
 use glam::{Mat4, Quat, Vec3};
 use image::{DynamicImage, Rgba};
 use rusttype::{point, Font, Scale};
-use ruwren::{create_module, send_foreign, Class, ModuleLibrary, VM};
+use ruwren::{create_module, send_foreign, Class, ModuleLibrary, SlotType, VM};
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::ffi::CString;
@@ -116,7 +116,7 @@ pub struct Tile {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Marker {
     pub position: [f32; 2],
-    pub name: String
+    pub name: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -125,7 +125,7 @@ pub struct SceneData {
     pub path: String,
     pub tile_sheets: Vec<TileSheet>,
     pub layers: Vec<Layer>,
-    pub markers: Vec<Marker>
+    pub markers: Vec<Marker>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -185,6 +185,19 @@ pub struct Text {
 }
 
 pub struct Debug {}
+
+#[derive(Clone)]
+pub struct Line {
+    pub points: Vec<Vec2>,
+    pub vertex_count: u32,
+    pub thickness: [f64; 2],
+    pub opacity: [f64; 2],
+    pub color: Color,
+    pub vertex_array: VertexArray,
+    pub vertex_buffer: Buffer,
+    pub sort: u32,
+    pub sort_dirty: bool,
+}
 
 //component impls
 impl Sfx {
@@ -313,7 +326,7 @@ impl Scene {
             tiles: vec![],
             transforms: vec![],
             rigidbodies: vec![],
-            markers: vec![]
+            markers: vec![],
         }
     }
 
@@ -381,7 +394,13 @@ impl Scene {
         }
     }
 
-    pub fn draw(&self, sort: usize, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
+    pub fn draw(
+        &self,
+        sort: usize,
+        app: &mut App,
+        textures: &HashMap<String, LilahTexture>,
+        t: &Transform,
+    ) {
         if sort > self.tiles.len() {
             return;
         }
@@ -404,7 +423,13 @@ impl Scene {
             vm.set_slot_new_map(1);
 
             vm.set_slot_string(2, i.1.name.clone());
-            vm.set_slot_new_foreign_scratch("math", "Vec2", Vec2::new(i.1.position[0] as f64, i.1.position[1] as f64), 3, 4);
+            vm.set_slot_new_foreign_scratch(
+                "math",
+                "Vec2",
+                Vec2::new(i.1.position[0] as f64, i.1.position[1] as f64),
+                3,
+                4,
+            );
             vm.set_map_value(1, 2, 3);
 
             vm.insert_in_list(0, 0 as i32, 1);
@@ -707,6 +732,48 @@ impl Transform {
             }
         }
     }
+
+    fn wren_inverse_transform_point(vm: &VM) {
+        match vm.get_slot_foreign::<GameObject>(1) {
+            Some(comp) => {
+                if let Some(point) = vm.get_slot_foreign::<Vec2>(2) {
+                    let model = Mat4::IDENTITY
+                        * Mat4::from_scale_rotation_translation(
+                            Vec3::new(
+                                comp.get::<Transform>().scale.x as f32,
+                                comp.get::<Transform>().scale.y as f32,
+                                0.0,
+                            ),
+                            Quat::from_rotation_z(comp.get::<Transform>().rotation),
+                            Vec3::new(
+                                comp.get::<Transform>().position.x as f32
+                                    + comp.get::<Transform>().pivot.x as f32,
+                                comp.get::<Transform>().position.y as f32
+                                    + comp.get::<Transform>().pivot.y as f32,
+                                0.0,
+                            ),
+                        );
+
+                    let view = unsafe { *crate::math::VIEW_MATRIX };
+                    let projection = unsafe { *crate::math::PROJECTION_MATRIX };
+
+                    let mvp = projection * view.inverse() * model;
+
+                    let point =
+                        Mat4::from_translation(Vec3::new(point.x as f32, point.y as f32, 0.0));
+
+                    let result_proto = (model.inverse() * point).to_scale_rotation_translation().2;
+                    let result = Vec2::new(result_proto.x as f64, result_proto.y as f64);
+                    vm.set_slot_new_foreign("math", "Vec2", result, 0);
+                } else {
+                    LilahTypeError!(Transform, 2, Vec2);
+                }
+            }
+            None => {
+                LilahTypeError!(Transform, 1, GameObject);
+            }
+        }
+    }
     //for wren
 }
 
@@ -746,7 +813,7 @@ impl Rigidbody {
     }
 
     pub fn update_correct_y(&mut self, dt: f64) {
-        self.position.y -= self.velocity.y  * dt;
+        self.position.y -= self.velocity.y * dt;
     }
 
     pub fn update_correct_x(&mut self, dt: f64) {
@@ -1373,7 +1440,7 @@ impl Text {
             self.sort_dirty = false;
             app.sort_dirty = true;
         }
-        
+
         if self.vertex_array.is_none() {
             unsafe {
                 let vao = VertexArray::new();
@@ -1475,8 +1542,8 @@ impl Text {
                 ) * Vec3::new(t.scale.x as f32, t.scale.y as f32, 1.0),
                 Quat::from_rotation_z(t.rotation),
                 Vec3::new(
-                    t.position.x as f32 + t.pivot.x as f32,// + (textures[&self.texture_id].size.x / 2.0) as f32,
-                    t.position.y as f32 + t.pivot.y as f32,// - (textures[&self.texture_id].size.y / 2.0) as f32,
+                    t.position.x as f32 + t.pivot.x as f32, // + (textures[&self.texture_id].size.x / 2.0) as f32,
+                    t.position.y as f32 + t.pivot.y as f32, // - (textures[&self.texture_id].size.y / 2.0) as f32,
                     0.0,
                 ),
             );
@@ -1649,7 +1716,7 @@ impl Sprite {
             vertex_buffer: None,
             tint: Color::WHITE,
             sort: 0,
-            sort_dirty: true
+            sort_dirty: true,
         }
     }
 
@@ -1772,18 +1839,18 @@ impl Sprite {
         }
     }
 
-    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform)  {
+    pub fn draw(&self, app: &mut App, textures: &HashMap<String, LilahTexture>, t: &Transform) {
         let model = Mat4::IDENTITY
-        * Mat4::from_scale_rotation_translation(
-            Vec3::new(self.get_size().0 as f32, self.get_size().1 as f32,0.0)
-                * Vec3::new(t.scale.x as f32, t.scale.y as f32, 0.0),
-            Quat::from_rotation_z(t.rotation),
-            Vec3::new(
-                t.position.x as f32 + t.pivot.x as f32,
-                t.position.y as f32 + t.pivot.y as f32,
-                0.0,
-            )
-        );
+            * Mat4::from_scale_rotation_translation(
+                Vec3::new(self.get_size().0 as f32, self.get_size().1 as f32, 0.0)
+                    * Vec3::new(t.scale.x as f32, t.scale.y as f32, 0.0),
+                Quat::from_rotation_z(t.rotation),
+                Vec3::new(
+                    t.position.x as f32 + t.pivot.x as f32,
+                    t.position.y as f32 + t.pivot.y as f32,
+                    0.0,
+                ),
+            );
 
         let view = unsafe { *crate::math::VIEW_MATRIX };
         let projection = unsafe { *crate::math::PROJECTION_MATRIX };
@@ -1839,14 +1906,14 @@ impl Sprite {
         vm.set_slot_double(1, self.tint.g as f64);
         vm.set_list_element(0, 1, 1);
         vm.set_slot_double(1, self.tint.b as f64);
-        vm.set_list_element(0,2, 1);
+        vm.set_list_element(0, 2, 1);
         vm.set_slot_double(1, self.tint.a as f64);
         vm.set_list_element(0, 3, 1);
     }
 
     fn wren_set_tint_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            if(comp.has::<Sprite>()) {
+            if (comp.has::<Sprite>()) {
                 let mut spr = comp.get_mut::<Sprite>();
                 vm.get_list_element(2, 0, 3);
                 spr.tint.r = vm.get_slot_double(3).unwrap_or(0f64) as f32;
@@ -1924,9 +1991,367 @@ impl Sprite {
     }
 }
 
+impl Line {
+    pub fn new(points: Vec<Vec2>, thickness: [f64; 2], color: Color) -> Self {
+        let mut res = Self {
+            points,
+            vertex_count: 0,
+            thickness,
+            color,
+            opacity: [0.0, 1.0],
+            vertex_array: unsafe { VertexArray::new() },
+            vertex_buffer: unsafe { Buffer::new(gl::ARRAY_BUFFER) },
+            sort: 0,
+            sort_dirty: true,
+        };
+        //res.generate_mesh();
+        res
+    }
+
+    pub fn get_sort(&self) -> u32 {
+        self.sort
+    }
+
+    pub fn set_sort(&mut self, new_sort: u32) {
+        self.sort = new_sort;
+        self.sort_dirty = true;
+    }
+
+    pub fn check_dirty(&mut self) -> bool {
+        if self.sort_dirty {
+            self.generate_mesh();
+            self.sort_dirty = false;
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn add_point(&mut self, new_point: Vec2) {
+        self.points.push(new_point);
+        self.sort_dirty = true;
+    }
+
+    pub fn set_point(&mut self, index: usize, new_point: Vec2) {
+        if let Some(p) = self.points.get_mut(index) {
+            p.x = new_point.x;
+            p.y = new_point.y;
+            self.sort_dirty = true;
+        }
+    }
+
+    pub fn insert_point(&mut self, new_point: Vec2, index: usize) {
+        if index <= self.points.len() {
+            self.points.insert(index, new_point);
+            self.sort_dirty = true;
+        }
+    }
+
+    pub fn remove_point(&mut self, index: usize) {
+        if index < self.points.len() {
+            self.points.remove(index);
+            self.sort_dirty = true;
+        }
+    }
+
+    pub fn generate_mesh(&mut self) {
+        let line_mesh = if self.points.len() > 2 {
+            crate::math::make_multi_line(&self.points, self.thickness, self.opacity)
+        } else if self.points.len() == 2 {
+            crate::math::make_simple_line(&self.points, self.thickness, self.opacity)
+        } else if self.points.len() == 1 {
+            crate::math::make_simple_line(
+                &vec![self.points[0], self.points[0]],
+                self.thickness,
+                self.opacity,
+            )
+        } else {
+            Vec::new()
+        };
+
+        let mut vertex_buff = vec![];
+
+        for i in 0..line_mesh.len() {
+            vertex_buff.push(Vertex(
+                [line_mesh[i][0].x as f32, line_mesh[i][0].y as f32],
+                [line_mesh[i][3].x as f32, 0.0],
+            ));
+            vertex_buff.push(Vertex(
+                [line_mesh[i][1].x as f32, line_mesh[i][1].y as f32],
+                [line_mesh[i][4].x as f32, 0.0],
+            ));
+            vertex_buff.push(Vertex(
+                [line_mesh[i][2].x as f32, line_mesh[i][2].y as f32],
+                [line_mesh[i][5].x as f32, 0.0],
+            ));
+        }
+        unsafe {
+            crate::application::DEBUG_PROGRAM
+                .as_mut()
+                .expect("program")
+                .apply();
+
+            self.vertex_array.bind();
+
+            self.vertex_buffer
+                .set_data(vertex_buff.as_slice(), gl::DYNAMIC_DRAW);
+
+            let pos_attrib = crate::application::DEBUG_PROGRAM
+                .as_ref()
+                .expect("program")
+                .get_attrib_location("position")
+                .expect("msg");
+            set_attribute!(self.vertex_array, pos_attrib, Vertex::0, gl::FLOAT);
+
+            let o_attrib = crate::application::DEBUG_PROGRAM
+                .as_ref()
+                .expect("program")
+                .get_attrib_location("opacity")
+                .expect("msg");
+            set_attribute!(self.vertex_array, o_attrib, Vertex::1, gl::FLOAT);
+        }
+
+        self.vertex_count = line_mesh.len() as u32 * 3;
+    }
+
+    pub fn draw(&self, t: &Transform) {
+        let model = Mat4::IDENTITY;
+        // * Mat4::from_scale_rotation_translation(
+        //     Vec3::new(t.scale.x as f32, t.scale.y as f32, 0.0),
+        //     Quat::from_rotation_z(t.rotation),
+        //     Vec3::new(
+        //         t.position.x as f32 + t.pivot.x as f32,
+        //         t.position.y as f32 + t.pivot.y as f32,
+        //         0.0,
+        //     ),
+        // );
+        let view = unsafe { *crate::math::VIEW_MATRIX };
+        let projection = unsafe { *crate::math::PROJECTION_MATRIX };
+
+        let mvp = projection * view * model;
+
+        unsafe {
+            crate::application::DEBUG_PROGRAM
+                .as_mut()
+                .expect("program")
+                .apply();
+
+            self.vertex_array.bind();
+
+            let mat_attr = gl::GetUniformLocation(
+                crate::application::DEBUG_PROGRAM
+                    .as_ref()
+                    .expect("program")
+                    .id,
+                CString::new("mvp").unwrap().as_ptr(),
+            );
+            gl::UniformMatrix4fv(mat_attr, 1, gl::FALSE as GLboolean, &mvp.to_cols_array()[0]);
+
+            let tint_attr = gl::GetUniformLocation(
+                crate::application::DEBUG_PROGRAM
+                    .as_ref()
+                    .expect("program")
+                    .id,
+                CString::new("tint").unwrap().as_ptr(),
+            );
+            gl::Uniform4f(
+                tint_attr,
+                self.color.r,
+                self.color.g,
+                self.color.b,
+                self.color.a,
+            );
+
+            gl::DrawArrays(gl::TRIANGLES, 0, self.vertex_count as i32);
+        }
+    }
+
+    //wren
+    fn wren_as_component(&self, vm: &VM) {
+        send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    fn wren_get_points(&self, vm: &VM) {
+        vm.set_slot_new_list(0);
+
+        for i in self.points.iter() {
+            if let Err(e) = vm.set_slot_new_foreign_scratch("math", "Vec2", *i, 1, 2) {
+                panic!("died");
+            }
+
+            vm.insert_in_list(0, -1, 1);
+        }
+    }
+
+    fn wren_set_point_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            if let Some(index) = vm.get_slot_double(2) {
+                if let Some(point) = vm.get_slot_foreign::<Vec2>(3) {
+                    comp.get_mut::<Line>().set_point(index as usize, *point);
+                } else {
+                    LilahTypeError!(Line, 3, Vec2);
+                }
+            } else {
+                LilahTypeError!(Line, 2, f64);
+            }
+        } else {
+            LilahTypeError!(Line, 1, GameObject);
+        }
+    }
+
+    fn wren_add_point_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            if let Some(point) = vm.get_slot_foreign::<Vec2>(2) {
+                comp.get_mut::<Line>().add_point(*point);
+            } else {
+                LilahTypeError!(Line, 2, Vec2);
+            }
+        } else {
+            LilahTypeError!(Line, 1, GameObject);
+        }
+    }
+
+    fn wren_insert_point_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            if let Some(point) = vm.get_slot_foreign::<Vec2>(2) {
+                if let Some(index) = vm.get_slot_double(3) {
+                    if index >= 0.0 {
+                        comp.get_mut::<Line>().insert_point(*point, index as usize);
+                    }
+                } else {
+                    LilahTypeError!(Line, 3, f64);
+                }
+            } else {
+                LilahTypeError!(Line, 2, Vec2);
+            }
+        } else {
+            LilahTypeError!(Line, 1, GameObject);
+        }
+    }
+
+    fn wren_pop_point_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            let mut line = comp.get_mut::<Line>();
+            if line.points.len() != 0 {
+                line.remove_point(line.points.len() - 1);
+            }
+        } else {
+            LilahTypeError!(Line, 1, GameObject);
+        }
+    }
+
+    fn wren_remove_point_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            if let Some(point) = vm.get_slot_double(2) {
+                let mut line = comp.get_mut::<Line>();
+                if line.points.len() != 0 {
+                    let point_clamped = point;
+                    line.remove_point(point_clamped as usize);
+                }
+            } else {
+                LilahTypeError!(Line, 2, Vec2);
+            }
+        } else {
+            LilahTypeError!(Line, 1, GameObject);
+        }
+    }
+
+    fn wren_get_tint(&self, vm: &VM) {
+        vm.set_slot_new_list(0);
+        vm.set_slot_double(1, self.color.r as f64);
+        vm.set_list_element(0, 0, 1);
+        vm.set_slot_double(1, self.color.g as f64);
+        vm.set_list_element(0, 1, 1);
+        vm.set_slot_double(1, self.color.b as f64);
+        vm.set_list_element(0, 2, 1);
+        vm.set_slot_double(1, self.color.a as f64);
+        vm.set_list_element(0, 3, 1);
+    }
+
+    fn wren_set_tint_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            if (comp.has::<Sprite>()) {
+                let mut spr = comp.get_mut::<Sprite>();
+                vm.get_list_element(2, 0, 3);
+                spr.tint.r = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+                vm.get_list_element(2, 1, 3);
+                spr.tint.g = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+                vm.get_list_element(2, 2, 3);
+                spr.tint.b = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+                vm.get_list_element(2, 3, 3);
+                spr.tint.a = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+            }
+        } else {
+            LilahTypeError!(Sprite, 1, GameObject);
+        }
+    }
+
+    fn wren_set_thickness_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            let t = vm.get_slot_type(2);
+            if let SlotType::List = t {
+                vm.get_list_element(2, 0, 3);
+                vm.get_list_element(2, 1, 4);
+                let a = vm.get_slot_double(3);
+                let b = vm.get_slot_double(4);
+                if let (Some(aa), Some(bb)) = (a, b) {
+                    comp.get_mut::<Line>().thickness = [aa, bb];
+                } else {
+                    LilahTypeError!(Line, 2, f64);
+                }
+            }
+        }
+    }
+
+    fn wren_get_thickness_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign::<GameObject>(1) {
+            vm.set_slot_new_list(0);
+            vm.set_slot_double(1, comp.get::<Line>().thickness[0]);
+            vm.set_slot_double(2, comp.get::<Line>().thickness[1]);
+            vm.set_list_element(0, 0, 1);
+            vm.set_list_element(0, 1, 2);
+        } else {
+            LilahTypeError!(Line, 1, GameObject);
+        }
+    }
+
+    fn wren_get_thickness(&self, vm: &VM) {
+        vm.set_slot_new_list(0);
+        vm.set_slot_double(1, self.thickness[0]);
+        vm.set_slot_double(2, self.thickness[1]);
+        vm.set_list_element(0, 0, 1);
+        vm.set_list_element(0, 1, 2);
+    }
+
+    fn wren_get_sort(&self, vm: &VM) {
+        vm.set_slot_double(0, self.sort as f64);
+    }
+
+    fn wren_get_sort_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign::<GameObject>(1) {
+            vm.set_slot_double(0, comp.get::<Line>().sort as f64);
+        } else {
+            LilahTypeError!(Line, 1, GameObject);
+        }
+    }
+
+    fn wren_set_sort_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            if let Some(sort) = vm.get_slot_double(2) {
+                comp.get_mut::<Line>().set_sort(sort as u32);
+            } else {
+                LilahTypeError!(Line, 2, float);
+            }
+        } else {
+            LilahTypeError!(Line, 1, GameObject);
+        }
+    }
+}
+
 impl Debug {
+    /*
     pub fn draw_multi_line(points: Vec<Vec2>, thickness: f64, tint: Color) {
-        let line_mesh = crate::math::make_multi_line(&points, thickness);
+        let line_mesh = crate::math::make_multi_line(&points, [thickness, 0.0]);
 
         let mut vertex_buff = vec!();
 
@@ -2005,8 +2430,9 @@ impl Debug {
             gl::Uniform1i(segments_len_attr, points.len() as GLsizei);
 
             gl::DrawArrays(gl::TRIANGLES, 0, line_mesh.1.len() as i32 * 3);
-        } 
+        }
     }
+    */
 
     pub fn draw_line(start: Vec2, end: Vec2, tint: Color) {
         let model = Mat4::IDENTITY;
@@ -2016,37 +2442,50 @@ impl Debug {
         let mvp = projection * view * model;
 
         unsafe {
-            crate::application::DEBUG_PROGRAM.as_mut().expect("program").apply();
+            crate::application::DEBUG_PROGRAM
+                .as_mut()
+                .expect("program")
+                .apply();
 
             let vao = VertexArray::new();
             vao.bind();
 
             let vbo = Buffer::new(gl::ARRAY_BUFFER);
-            vbo.set_data(&[Vertex([start.x as f32, start.y as f32],  [0 as f32, 0 as f32]), Vertex([end.x as f32, end.y as f32],  [1 as f32, 0 as f32])], gl::DYNAMIC_DRAW);
+            vbo.set_data(
+                &[
+                    Vertex([start.x as f32, start.y as f32], [0 as f32, 0 as f32]),
+                    Vertex([end.x as f32, end.y as f32], [1 as f32, 0 as f32]),
+                ],
+                gl::DYNAMIC_DRAW,
+            );
 
             let ibo = Buffer::new(gl::ELEMENT_ARRAY_BUFFER);
             ibo.set_data(&[0, 1], gl::STATIC_DRAW);
 
-            let pos_attrib = crate::application::DEBUG_PROGRAM.as_ref().expect("program").get_attrib_location("position").expect("msg");
+            let pos_attrib = crate::application::DEBUG_PROGRAM
+                .as_ref()
+                .expect("program")
+                .get_attrib_location("position")
+                .expect("msg");
             set_attribute!(vao, pos_attrib, Vertex::0, gl::FLOAT);
 
             let mat_attr = gl::GetUniformLocation(
-                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
+                crate::application::DEBUG_PROGRAM
+                    .as_ref()
+                    .expect("program")
+                    .id,
                 CString::new("mvp").unwrap().as_ptr(),
             );
             gl::UniformMatrix4fv(mat_attr, 1, gl::FALSE as GLboolean, &mvp.to_cols_array()[0]);
 
             let tint_attr = gl::GetUniformLocation(
-                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
+                crate::application::DEBUG_PROGRAM
+                    .as_ref()
+                    .expect("program")
+                    .id,
                 CString::new("tint").unwrap().as_ptr(),
             );
-            gl::Uniform4f(
-                tint_attr,
-                tint.r,
-                tint.g,
-                tint.b,
-                tint.a,
-            );
+            gl::Uniform4f(tint_attr, tint.r, tint.g, tint.b, tint.a);
             gl::DrawElements(gl::LINES, 2, gl::UNSIGNED_INT, 0 as *const _);
         }
     }
@@ -2054,7 +2493,7 @@ impl Debug {
     pub fn wren_draw_line(vm: &VM) {
         if let Some(start) = vm.get_slot_foreign::<Vec2>(1) {
             if let Some(end) = vm.get_slot_foreign::<Vec2>(2) {
-                let mut color = Color::new(1.0,1.0,1.0,1.0);
+                let mut color = Color::new(1.0, 1.0, 1.0, 1.0);
                 vm.get_list_element(3, 0, 4);
                 color.r = vm.get_slot_double(4).unwrap_or(0f64) as f32;
                 vm.get_list_element(3, 1, 4);
@@ -2081,7 +2520,7 @@ impl ComponentBehaviour {
     pub fn new(s: String) -> Self {
         Self {
             component: s.clone(),
-            uuid: Uuid::new_v4().to_string()
+            uuid: Uuid::new_v4().to_string(),
         }
     }
 
@@ -2269,10 +2708,28 @@ impl Component for Sfx {
     }
 }
 
+impl Component for Line {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn send_to_wren(&self, slot: usize, vm: &VM) {
+        send_foreign!(vm, "game", "Line", self.clone() => slot);
+    }
+
+    fn clone_dyn(&self) -> Box<dyn Component> {
+        Box::new(self.clone())
+    }
+}
+
 impl Tickable<Sprite> for Rigidbody {
     fn tick(&mut self, _: f64, d: &Sprite) {
         let sprite_size = d.get_size();
-        
+
         self.bounds = Vec2::new(sprite_size.0 as f64, sprite_size.1 as f64);
     }
 }
@@ -2388,6 +2845,12 @@ impl Class for Text {
     }
 }
 
+impl Class for Line {
+    fn initialize(vm: &VM) -> Line {
+        Line::new(Vec::new(), [10.0, 10.0], Color::WHITE)
+    }
+}
+
 create_module! (
     class("Transform") crate::components::Transform => transform {
         instance(getter "as_component") wren_as_component,
@@ -2416,7 +2879,8 @@ create_module! (
         static(fn "update_scale_y", 2) wren_update_scale_y_from_gameobject,
 
         static(fn "set_rotation", 2) wren_set_rot_from_gameobject,
-        static(fn "update_rotation", 2) wren_update_rot_from_gameobject
+        static(fn "update_rotation", 2) wren_update_rot_from_gameobject,
+        static(fn "inverse_point", 2) wren_inverse_transform_point
     }
 
     class("Sprite") crate::components::Sprite => sprite {
@@ -2442,7 +2906,6 @@ create_module! (
     class("GameObject") crate::gameobject::GameObject => go {
         instance(fn "getComponent", 1) wren_get_component,
         instance(fn "addComponent", 1) wren_add_component,
-        instance(fn "set", 2) wren_set_component,
         instance(getter "id") wren_getter_id,
         instance(getter "components") wren_get_components,
         instance(getter "name") wren_getter_name,
@@ -2530,6 +2993,24 @@ create_module! (
 
     class("Debug") crate::components::Debug => debug {
         static(fn "drawLine", 3) wren_draw_line
+    }
+
+    class("Line") crate::components::Line => line {
+        instance(getter "as_component") wren_as_component,
+        instance(getter "color") wren_get_tint,
+        instance(getter "sort") wren_get_sort,
+        instance(getter "thickness") wren_get_thickness,
+        instance(getter "points") wren_get_points,
+        static(fn "set_sort", 2) wren_set_sort_from_gameobject,
+        static(fn "get_sort", 1) wren_get_sort_from_gameobject,
+        static(fn "get_thickness", 1) wren_get_thickness_from_gameobject,
+        static(fn "set_thickness", 2) wren_set_thickness_from_gameobject,
+        static(fn "set_color", 2) wren_set_tint_from_gameobject,
+        static(fn "remove_point", 2) wren_remove_point_from_gameobject,
+        static(fn "pop_point", 1) wren_pop_point_from_gameobject,
+        static(fn "add_point", 2) wren_add_point_from_gameobject,
+        static(fn "insert_point", 3) wren_insert_point_from_gameobject,
+        static(fn "set_point", 3) wren_set_point_from_gameobject
     }
 
     module => game

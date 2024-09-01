@@ -27,8 +27,7 @@ class Player2 is Behaviour {
         //Lilah.instantiate(scene)
     }
 
-    static start() {
-        System.print("1")
+    static start() { 
         Animator.insert_state(gameobject.ref, "Row0", Vec2.new(3, 0))
         Animator.insert_state(gameobject.ref, "Row1", Vec2.new(3, 2))
         Animator.set_speed(gameobject.ref, 2)

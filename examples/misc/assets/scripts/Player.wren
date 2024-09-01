@@ -1,7 +1,8 @@
 import "math" for Vec2
 import "app" for Lilah, Input, GameObjectRef, Audio, Tween
-import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx, Debug, Scene
+import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx, Debug, Scene, Line
 import "ParticleSystem" for ParticleSystem, ParticleField
+import "Trail" for Trail
 import "io" for Fs, Json, Serializable
 
 class Player is Behaviour {
@@ -19,8 +20,10 @@ class Player is Behaviour {
         gameobject.add(Animator.new())
         gameobject.add(Text.new("Hello Lilah!", "assets/Lora-Regular.ttf"))
         gameobject.add(Sfx.new("sfx", "assets/sfx.wav"))
+        gameobject.add(Line.new())
         gameobject.add(Player)
         gameobject.add(ParticleSystem)
+        gameobject.add(Trail)
 
         var g = Lilah.instantiate(gameobject)
 
@@ -47,7 +50,7 @@ class Player is Behaviour {
         gameobject.data = Json.parse(Fs.read("examples/misc/pos.json"))
         Rigidbody.set_position(gameobject.ref, Serializable.wrapper({"math": "Vec2"}, "data", [["pos", Vec2]]).deserialize(gameobject.data).pos)
 
-        gameobject["rot"] = 0        
+        gameobject["rot"] = 0   
     }
 
     static update() {
@@ -87,7 +90,8 @@ class Player is Behaviour {
             // var p = Serializable.serialize(gameobject.data)
             // Fs.write("examples/misc/pos.json", Json.stringify(p))
             //gameobject.behaviourData(ParticleSystem).toggle()
-            Rigidbody.set_position(gameobject.ref, Lilah.find("scene").ref.get(Scene).getMarker("Start"))
-        }
+            //Rigidbody.set_position(gameobject.ref, Lilah.find("scene").ref.get(Scene).getMarker("Start"))
+            
+        } 
     }
 }

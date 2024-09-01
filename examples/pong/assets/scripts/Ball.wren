@@ -1,8 +1,10 @@
+
 import "math" for Vec2
 import "app" for Lilah, Input, GameObjectRef, Audio
 import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody, ComponentBehaviour, Text, Sfx
 import "ParticleSystem" for ParticleSystem, ParticleField
 import "random" for Random
+import "Trail" for Trail
 
 class Ball is Behaviour {
     speed { _speed }
@@ -15,6 +17,7 @@ class Ball is Behaviour {
     static start() {
         Rigidbody.set_velocity_x(gameobject.ref, -gamebehaviour.speed)
         
+        /*
         gameobject.behaviourData(ParticleSystem).distance.value = 30
         //gameobject.behaviourData(ParticleSystem).play()
         gameobject.behaviourData(ParticleSystem).direction = ParticleField.new(Vec2.new(0,0))
@@ -26,6 +29,7 @@ class Ball is Behaviour {
         gameobject.behaviourData(ParticleSystem).partStart = ParticleField.new(Fn.new { |p|
             Sprite.cut_sprite_sheet(p.ref, Vec2.new(0, 0), Vec2.new(1, 1))
         })
+        */
     }
     
     static update() {

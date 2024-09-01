@@ -4,6 +4,7 @@ import "game" for GameObject, Animator, Transform, Behaviour, Sprite, Rigidbody,
 import "Paddle" for Paddle
 import "Ball" for Ball
 import "ParticleSystem" for ParticleSystem, ParticleField
+import "Trail" for Trail
 
 class Game is Behaviour {
     construct new() { }
@@ -29,7 +30,8 @@ class Game is Behaviour {
         ball.add(Sprite.new("assets/ball.png"))  
         ball.add(Rigidbody.new())
         ball.add(Ball)
-        ball.add(ParticleSystem)
+        //ball.add(ParticleSystem)
+        ball.add(Trail)
 
         var line = GameObject.new("line")
         line.add(Transform.new(Vec2.new((0)-4, 0)))

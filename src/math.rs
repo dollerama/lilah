@@ -1,18 +1,34 @@
-use std::{collections::HashMap, hash::{Hash, Hasher}, mem, ops};
+use crate::{
+    application::App,
+    components::Rigidbody,
+    renderer::{Shader, ShaderProgram},
+    LilahError, LilahPanic, LilahTypeError,
+};
 use glam::{Mat4, Quat, Vec3, Vec4};
-use ruwren::{Class, VM, create_module, ModuleLibrary};
+use ruwren::{create_module, Class, ModuleLibrary, VM};
 use std::f64::consts::PI;
-use crate::{application::App, components::Rigidbody, renderer::{Shader, ShaderProgram}, LilahError, LilahPanic, LilahTypeError};
+use std::{
+    collections::HashMap,
+    hash::{Hash, Hasher},
+    mem,
+    ops::{self, Add, Mul, Sub},
+};
 
 lazy_mut! {
     pub static mut VIEW_MATRIX: Mat4 = Mat4::IDENTITY;
     pub static mut PROJECTION_MATRIX: Mat4 = Mat4::IDENTITY;
 }
 
-pub fn remap (value : f32, from1: f32, to1: f32, from2: f32, to2: f32) -> f32 {
+pub fn remap(value: f32, from1: f32, to1: f32, from2: f32, to2: f32) -> f32 {
     (value - from1) / (to1 - from1) * (to2 - from2) + from2
 }
 
+pub fn lerp<T>(from: T, to: T, t: T) -> T
+where
+    T: Add<Output = T> + Sub<Output = T> + Mul<T, Output = T> + Copy,
+{
+    from + (to - from) * t
+}
 /// Vector for 2d translations etc.
 /// # Examples
 /// ## Translations
@@ -56,10 +72,9 @@ impl Class for Vec2 {
         if let (Some(x), Some(y)) = (vm.get_slot_double(1), vm.get_slot_double(2)) {
             Vec2 {
                 x: x as f64,
-                y: y as f64
+                y: y as f64,
             }
-        }
-        else {
+        } else {
             LilahPanic!(Vec2, "Arg (1) and Arg(2) must be of type Double");
         }
     }
@@ -92,59 +107,58 @@ impl Hash for Vec2 {
     }
 }
 
-impl Eq for Vec2 { }
+impl Eq for Vec2 {}
 
 impl Vec2 {
     ///x = 0, y = 0
-    pub const ZERO: Vec2 = Vec2 {x: 0.0, y: 0.0};
+    pub const ZERO: Vec2 = Vec2 { x: 0.0, y: 0.0 };
     ///x = 1, y = 1
-    pub const ONE: Vec2 = Vec2 {x: 1.0, y: 1.0};
+    pub const ONE: Vec2 = Vec2 { x: 1.0, y: 1.0 };
     ///x = 0, y = 1
-    pub const UP: Vec2 = Vec2 {x: 0.0, y: 1.0};
+    pub const UP: Vec2 = Vec2 { x: 0.0, y: 1.0 };
     ///x = 1, y = 0
-    pub const RIGHT: Vec2 = Vec2 {x: 1.0, y: 0.0};
+    pub const RIGHT: Vec2 = Vec2 { x: 1.0, y: 0.0 };
     ///x = 0, y = -1
-    pub const DOWN: Vec2 = Vec2 {x: 0.0, y: -1.0};
+    pub const DOWN: Vec2 = Vec2 { x: 0.0, y: -1.0 };
     ///x = -1, y = 0
-    pub const LEFT: Vec2 = Vec2 {x: -1.0, y: 0.0};
-    
+    pub const LEFT: Vec2 = Vec2 { x: -1.0, y: 0.0 };
+
     pub fn new(x: f64, y: f64) -> Self {
-        Self {
-            x,
-            y
-        }
+        Self { x, y }
     }
 
-    /// Magnitude of Vec2. 
+    /// Magnitude of Vec2.
     /// Slower than magnitude_sqr
     pub fn magnitude(&self) -> f64 {
         self.magnitude_sqr().sqrt()
     }
-    
-    /// Squared Magnitude of Vec2. 
+
+    /// Squared Magnitude of Vec2.
     /// Faster than normal Magnitude and can be used when you don't need an accurate magnitude.
     pub fn magnitude_sqr(&self) -> f64 {
-        (self.x*self.x)+(self.y*self.y)
+        (self.x * self.x) + (self.y * self.y)
     }
-    
+
     /// Scalar Dot product of two Vectors
     pub fn dot(a: Vec2, b: Vec2) -> f64 {
-        a.x*b.x + a.y*b.y
+        a.x * b.x + a.y * b.y
     }
-    
+
     /// Scalar Cross product of two Vectors
     pub fn cross(a: Vec2, b: Vec2) -> f64 {
-        a.x*b.y - a.y*b.x
+        a.x * b.y - a.y * b.x
     }
-    
+
     /// Vector normalized to have magnitude between 0 and 1
     pub fn normalized(&self) -> Vec2 {
         let magnitude = self.magnitude();
         if magnitude == 0.0 {
-            Vec2 {x: 0.0, y: 0.0 }
-        }
-        else {
-            Vec2 {x: self.x/magnitude, y: self.y/magnitude }
+            Vec2 { x: 0.0, y: 0.0 }
+        } else {
+            Vec2 {
+                x: self.x / magnitude,
+                y: self.y / magnitude,
+            }
         }
     }
 
@@ -158,26 +172,29 @@ impl Vec2 {
         let a = self.normalized();
         self.x = a.x;
         self.y = a.y;
-    }    
-    
+    }
+
     /// interpolation between two Vecs with t between 0, 1
     pub fn lerp(a: Vec2, b: Vec2, t: f64) -> Vec2 {
-        Vec2 {x: (a.x + (b.x - a.x) * t), y: (a.y + (b.y - a.y) * t) }
+        Vec2 {
+            x: (a.x + (b.x - a.x) * t),
+            y: (a.y + (b.y - a.y) * t),
+        }
     }
 
     pub fn get_intersection(a: (Vec2, Vec2), b: (Vec2, Vec2)) -> Option<Vec2> {
-        let xdiff = Vec2::new(a.0.x-a.1.x, b.0.x-b.1.x);
-        let ydiff = Vec2::new(a.0.y-a.1.y, b.0.y-b.1.y); 
-        
+        let xdiff = Vec2::new(a.0.x - a.1.x, b.0.x - b.1.x);
+        let ydiff = Vec2::new(a.0.y - a.1.y, b.0.y - b.1.y);
+
         let div = Vec2::cross(xdiff, ydiff);
-        
+
         if div == 0.0 {
             None
         } else {
             let d = Vec2::new(Vec2::cross(a.0, a.1), Vec2::cross(b.0, b.1));
             let x = Vec2::cross(d, xdiff) / div;
             let y = Vec2::cross(d, ydiff) / div;
-            
+
             Some(Vec2::new(x, y))
         }
     }
@@ -194,8 +211,7 @@ impl Vec2 {
     fn wren_set_x(&mut self, vm: &VM) {
         if let Some(x) = vm.get_slot_double(1) {
             self.x = x;
-        }
-        else {
+        } else {
             LilahTypeError!(Vec2, 1, f64);
         }
     }
@@ -203,8 +219,7 @@ impl Vec2 {
     fn wren_set_y(&mut self, vm: &VM) {
         if let Some(y) = vm.get_slot_double(1) {
             self.y = y;
-        }
-        else {
+        } else {
             LilahTypeError!(Vec2, 1, f64);
         }
     }
@@ -233,8 +248,7 @@ impl Vec2 {
         let b = vm.get_slot_foreign::<Vec2>(2);
         if let (Some(aa), Some(bb)) = (a, b) {
             vm.set_slot_double(0, Vec2::cross(*aa, *bb));
-        }
-        else {
+        } else {
             LilahTypeError!(Vec2, 1, Vec2);
             LilahTypeError!(Vec2, 2, Vec2);
             vm.set_slot_null(0);
@@ -246,8 +260,7 @@ impl Vec2 {
         let b = vm.get_slot_foreign::<Vec2>(2);
         if let (Some(aa), Some(bb)) = (a, b) {
             vm.set_slot_double(0, Vec2::dot(*aa, *bb));
-        }
-        else {
+        } else {
             LilahTypeError!(Vec2, 1, Vec2);
             LilahTypeError!(Vec2, 2, Vec2);
             vm.set_slot_null(0);
@@ -260,11 +273,16 @@ impl Vec2 {
         let t = vm.get_slot_double(3);
         if let (Some(aa), Some(bb), Some(tt)) = (a, b, t) {
             let _ = vm.set_slot_new_foreign("math", "Vec2", Vec2::lerp(*aa, *bb, tt), 0);
-        }
-        else {
-            if a.is_none() { LilahTypeError!(Vec2, 1, Vec2); }
-            if b.is_none() { LilahTypeError!(Vec2, 2, Vec2); }
-            if t.is_none() { LilahTypeError!(Vec2, 3, f64); }
+        } else {
+            if a.is_none() {
+                LilahTypeError!(Vec2, 1, Vec2);
+            }
+            if b.is_none() {
+                LilahTypeError!(Vec2, 2, Vec2);
+            }
+            if t.is_none() {
+                LilahTypeError!(Vec2, 3, f64);
+            }
             vm.set_slot_null(0);
         }
     }
@@ -295,11 +313,8 @@ impl Vec2 {
 
     fn wren_screen_to_world(vm: &VM) {
         if let Some(coord) = vm.get_slot_foreign::<Vec2>(1) {
-            let model = 
-            Mat4::IDENTITY * 
-            Mat4::from_translation( 
-                Vec3::new(coord.x as f32, coord.y as f32, 0.0)
-            );
+            let model = Mat4::IDENTITY
+                * Mat4::from_translation(Vec3::new(coord.x as f32, coord.y as f32, 0.0));
 
             let view = unsafe { *crate::math::VIEW_MATRIX };
             let projection = unsafe { *crate::math::PROJECTION_MATRIX };
@@ -307,21 +322,21 @@ impl Vec2 {
             let mvp = (model * view.inverse() * projection);
 
             let new_point = mvp.to_scale_rotation_translation().2;
-            let _ =
-            vm.set_slot_new_foreign("math", "Vec2", Vec2::new(new_point.x as f64, new_point.y as f64), 0);
-        }
-        else {
+            let _ = vm.set_slot_new_foreign(
+                "math",
+                "Vec2",
+                Vec2::new(new_point.x as f64, new_point.y as f64),
+                0,
+            );
+        } else {
             LilahTypeError!(Vec2, 1, Vec2);
         }
     }
 
     fn wren_world_to_screen(vm: &VM) {
         if let Some(coord) = vm.get_slot_foreign::<Vec2>(1) {
-            let model = 
-            Mat4::IDENTITY * 
-            Mat4::from_translation( 
-                Vec3::new(coord.x as f32, coord.y as f32, 0.0)
-            );
+            let model = Mat4::IDENTITY
+                * Mat4::from_translation(Vec3::new(coord.x as f32, coord.y as f32, 0.0));
 
             let view = unsafe { *crate::math::VIEW_MATRIX };
             let projection = unsafe { *crate::math::PROJECTION_MATRIX };
@@ -331,14 +346,11 @@ impl Vec2 {
             let new_point = mvp.to_scale_rotation_translation().2;
             let point_to_screen = Vec2::new(
                 new_point.x as f64,
-                new_point.y as f64
-                //remap(new_point.x, -1.0, 0.0, 1.0, 800.0) as f64/2.0, 
-                //remap(new_point.y, -1.0, 0.0, 1.0, 600.0) as f64/2.0
+                new_point.y as f64, //remap(new_point.x, -1.0, 0.0, 1.0, 800.0) as f64/2.0,
+                                    //remap(new_point.y, -1.0, 0.0, 1.0, 600.0) as f64/2.0
             );
-            let _ =
-            vm.set_slot_new_foreign("math", "Vec2", point_to_screen, 0);
-        }
-        else {
+            let _ = vm.set_slot_new_foreign("math", "Vec2", point_to_screen, 0);
+        } else {
             LilahTypeError!(Vec2, 1, Vec2);
         }
     }
@@ -354,13 +366,19 @@ impl ops::Add<Vec2> for Vec2 {
     type Output = Vec2;
 
     fn add(self, other: Vec2) -> Vec2 {
-        Vec2 { x: self.x+other.x, y: self.y+other.y }
+        Vec2 {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
     }
 }
 
 impl ops::AddAssign<Vec2> for Vec2 {
     fn add_assign(&mut self, other: Self) {
-        *self = Self { x: self.x+other.x, y: self.y+other.y }
+        *self = Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
     }
 }
 
@@ -368,13 +386,19 @@ impl ops::Sub<Vec2> for Vec2 {
     type Output = Vec2;
 
     fn sub(self, other: Vec2) -> Vec2 {
-        Vec2 { x: self.x-other.x, y: self.y-other.y }
+        Vec2 {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
     }
 }
 
 impl ops::SubAssign<Vec2> for Vec2 {
     fn sub_assign(&mut self, other: Self) {
-        *self = Self { x: self.x-other.x, y: self.y-other.y }
+        *self = Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
     }
 }
 
@@ -382,19 +406,28 @@ impl ops::Mul<f64> for Vec2 {
     type Output = Vec2;
 
     fn mul(self, other: f64) -> Vec2 {
-        Vec2 { x: self.x*other, y: self.y*other }
+        Vec2 {
+            x: self.x * other,
+            y: self.y * other,
+        }
     }
 }
 
 impl ops::MulAssign<f64> for Vec2 {
     fn mul_assign(&mut self, other: f64) {
-        *self = Self { x: self.x*other, y: self.y*other }
+        *self = Self {
+            x: self.x * other,
+            y: self.y * other,
+        }
     }
 }
 
 impl ops::MulAssign<i32> for Vec2 {
     fn mul_assign(&mut self, other: i32) {
-        *self = Self { x: self.x*other as f64, y: self.y*other as f64 }
+        *self = Self {
+            x: self.x * other as f64,
+            y: self.y * other as f64,
+        }
     }
 }
 
@@ -402,19 +435,28 @@ impl ops::Div<f64> for Vec2 {
     type Output = Vec2;
 
     fn div(self, other: f64) -> Vec2 {
-        Vec2 { x: self.x/other, y: self.y/other }
+        Vec2 {
+            x: self.x / other,
+            y: self.y / other,
+        }
     }
 }
 
 impl ops::DivAssign<f64> for Vec2 {
     fn div_assign(&mut self, other: f64) {
-        *self = Self { x: self.x/other, y: self.y/other }
+        *self = Self {
+            x: self.x / other,
+            y: self.y / other,
+        }
     }
 }
 
 impl ops::DivAssign<i32> for Vec2 {
     fn div_assign(&mut self, other: i32) {
-        *self = Self { x: self.x/other as f64, y: self.y/other as f64 }
+        *self = Self {
+            x: self.x / other as f64,
+            y: self.y / other as f64,
+        }
     }
 }
 
@@ -422,7 +464,10 @@ impl ops::Mul<i32> for Vec2 {
     type Output = Vec2;
 
     fn mul(self, other: i32) -> Vec2 {
-        Vec2 { x: self.x*other as f64, y: self.y*other as f64 }
+        Vec2 {
+            x: self.x * other as f64,
+            y: self.y * other as f64,
+        }
     }
 }
 
@@ -430,7 +475,10 @@ impl ops::Div<i32> for Vec2 {
     type Output = Vec2;
 
     fn div(self, other: i32) -> Vec2 {
-        Vec2 { x: self.x/other as f64, y: self.y/other as f64 }
+        Vec2 {
+            x: self.x / other as f64,
+            y: self.y / other as f64,
+        }
     }
 }
 
@@ -438,7 +486,7 @@ impl ops::Neg for Vec2 {
     type Output = Vec2;
 
     fn neg(self) -> Vec2 {
-        self*-1
+        self * -1
     }
 }
 
@@ -449,220 +497,435 @@ impl std::fmt::Display for Vec2 {
     }
 }
 
-pub fn make_line(start: Vec2, end: Vec2, thickness: f64, output: bool) -> [Vec2; 4] {
-    let offset = Vec2::perp(end-start).normalized() * thickness;
+pub fn make_line(start: Vec2, end: Vec2, thickness: [f64; 2], output: bool) -> [Vec2; 4] {
+    let offset = Vec2::perp(end - start).normalized() * thickness[0];
+    let offset2 = Vec2::perp(end - start).normalized() * thickness[1];
     let a = Vec2::new(start.x, start.y) + offset;
-    let b = Vec2::new(end.x, end.y) + offset;
-    let c = Vec2::new(end.x, end.y) - offset;
+    let b = Vec2::new(end.x, end.y) + offset2;
+    let c = Vec2::new(end.x, end.y) - offset2;
     let d = Vec2::new(start.x, start.y) - offset;
-    
+
     if output {
         println!("[{}, {}, {}, {}, {}]", a, b, c, d, a);
     }
     [a, b, c, d]
 }
 
-pub fn make_multi_line(lines: &Vec<Vec2>, thickness: f64) -> (Vec<[Vec2; 3]>, Vec<i32>) {
+pub fn make_simple_line(
+    points: &Vec<Vec2>,
+    thickness: [f64; 2],
+    opacity: [f64; 2],
+) -> Vec<[Vec2; 6]> {
+    let mut lines_tmp = vec![];
+    let mut curves_tmp = vec![];
+
+    let a = make_line(points[0], points[1], thickness, false);
+
+    lines_tmp.push(a);
+
+    let center = points[0];
+    let mut prev = a[3];
+    let correct = a[3] - points[0];
+    let mut angle = (correct.y).atan2(correct.x);
+
+    for i in 0..=5 {
+        let next = Vec2::new(
+            center.x + angle.cos() as f64 * correct.magnitude(),
+            center.y + angle.sin() as f64 * correct.magnitude(),
+        );
+        curves_tmp.push(([prev, next, center], 0));
+        angle += std::f64::consts::PI / 5.0;
+        prev = next;
+    }
+
+    let center = points[1];
+    let mut prev = a[2];
+    let correct = a[2] - points[1];
+    let mut angle = (correct.y).atan2(correct.x);
+
+    for i in 0..=5 {
+        let next = Vec2::new(
+            center.x + angle.cos() as f64 * correct.magnitude(),
+            center.y + angle.sin() as f64 * correct.magnitude(),
+        );
+        curves_tmp.push(([prev, next, center], 1));
+        angle -= std::f64::consts::PI / 5.0;
+        prev = next;
+    }
+
+    let mut result_lines = vec![];
+
+    for i in curves_tmp.iter() {
+        if i.1 == 0 {
+            result_lines.push([
+                i.0[0],
+                i.0[1],
+                i.0[2],
+                Vec2::new(opacity[0], 0.0),
+                Vec2::new(opacity[0], 0.0),
+                Vec2::new(opacity[0], 0.0),
+            ]);
+        } else {
+            break;
+        }
+    }
+
+    result_lines.push([
+        lines_tmp[0][2],
+        lines_tmp[0][0],
+        lines_tmp[0][1],
+        Vec2::new(opacity[1], 0.0),
+        Vec2::new(opacity[0], 0.0),
+        Vec2::new(opacity[1], 0.0),
+    ]);
+    result_lines.push([
+        lines_tmp[0][3],
+        lines_tmp[0][0],
+        lines_tmp[0][2],
+        Vec2::new(opacity[0], 0.0),
+        Vec2::new(opacity[1], 0.0),
+        Vec2::new(opacity[0], 0.0),
+    ]);
+
+    for i in curves_tmp.iter() {
+        if i.1 == points.len() - 1 {
+            result_lines.push([
+                i.0[0],
+                i.0[1],
+                i.0[2],
+                Vec2::new(opacity[1], 0.0),
+                Vec2::new(opacity[1], 0.0),
+                Vec2::new(opacity[1], 0.0),
+            ]);
+        }
+    }
+
+    result_lines
+}
+
+fn precision_f32(x: f32, decimals: u32) -> f32 {
+    if x == 0. || decimals == 0 {
+        0.
+    } else {
+        let shift = decimals as i32 - x.abs().log10().ceil() as i32;
+        let shift_factor = 10_f64.powi(shift) as f32;
+
+        (x * shift_factor).round() / shift_factor
+    }
+}
+
+pub fn make_multi_line(
+    lines: &Vec<Vec2>,
+    thickness: [f64; 2],
+    opacity: [f64; 2],
+) -> Vec<[Vec2; 6]> {
     let mut point = 0;
-    
-    let mut lines_tmp = vec!();
-    let mut curves_tmp = vec!();
-    
+
+    let mut lines_tmp = vec![];
+    let mut curves_tmp = vec![];
+
     loop {
-        if point > lines.len()-1 {
+        if point > lines.len() - 1 {
             break;
         }
         if point == 0 {
             point += 1;
             continue;
         }
-        
+
         if point == 1 {
             point += 1;
             continue;
         }
-        
-        let pp = (lines[point-2], lines[point-1], lines[point]);
-        
-        let a = make_line(pp.0, pp.1, thickness, false);
-        let b = make_line(pp.1, pp.2, thickness, false);
-        
-        let angle = Vec2::dot(Vec2::perp(pp.1-pp.0).normalized(), (pp.2-pp.1).normalized());
 
-        let inter = Vec2::get_intersection((a[3], a[2]), (b[3], b[2])).unwrap();
-        let correct = (inter-a[2]).magnitude();
-        let lines_gen = if angle < 0.0 {
-            ( 
-                make_line(pp.0, pp.1 - (pp.1-pp.0).normalized() * correct, thickness, false),
-                make_line(pp.1 + (pp.2 - pp.1).normalized() * correct, pp.2, thickness, false)
-            )
+        let thickness1 = lerp(
+            thickness[0] as f32,
+            thickness[1] as f32,
+            (point as f32 - 2.0) / (lines.len()) as f32,
+        ) as f64;
+
+        let thickness2 = lerp(
+            thickness[0] as f32,
+            thickness[1] as f32,
+            (point as f32 - 1.0) / (lines.len()) as f32,
+        ) as f64;
+
+        let thickness3 = lerp(
+            thickness[0] as f32,
+            thickness[1] as f32,
+            (point as f32) / (lines.len()) as f32,
+        ) as f64;
+
+        let pp = (lines[point - 2], lines[point - 1], lines[point]);
+
+        let a = make_line(pp.0, pp.1, [thickness1, thickness2], false);
+        let b = make_line(pp.1, pp.2, [thickness2, thickness3], false);
+
+        let angle = Vec2::dot(
+            Vec2::perp(pp.1 - pp.0).normalized(),
+            (pp.2 - pp.1).normalized(),
+        );
+
+        let inter = Vec2::get_intersection((a[3], a[2]), (b[3], b[2]));
+        let correct = if let Some(inter) = inter {
+            (inter - a[2]).magnitude()
         } else {
-            (
-                make_line(pp.0, pp.1 - (pp.1-pp.0).normalized() * correct, thickness, false),
-                make_line(pp.1 + (pp.2 - pp.1).normalized() * correct, pp.2, thickness, false)
-            )
+            0.0
         };
-        
+
+        let lines_gen =
+            if precision_f32(angle as f32, 2) > 0.01 || precision_f32(angle as f32, 2) < -0.01 {
+                (
+                    make_line(
+                        pp.0,
+                        pp.1 - (pp.1 - pp.0).normalized() * correct,
+                        [thickness1, thickness2],
+                        false,
+                    ),
+                    make_line(
+                        pp.1 + (pp.2 - pp.1).normalized() * correct,
+                        pp.2,
+                        [thickness2, thickness3],
+                        false,
+                    ),
+                )
+            } else {
+                (
+                    make_line(pp.0, pp.1, [thickness1, thickness2], false),
+                    make_line(pp.1, pp.2, [thickness2, thickness3], false),
+                )
+            };
+
         //start cap
         if point == 2 {
             let center = pp.0;
             let mut prev = lines_gen.0[3];
-            let correct = lines_gen.0[3]-pp.0;
+            let correct = lines_gen.0[3] - pp.0;
             let mut angle = (correct.y).atan2(correct.x);
-            
-            for i in 0..=5 {
-                let next = Vec2::new(center.x+angle.cos() as f64*correct.magnitude(), center.y+angle.sin() as f64*correct.magnitude()); 
+
+            for _ in 0..=5 {
+                let next = Vec2::new(
+                    center.x + angle.cos() as f64 * correct.magnitude(),
+                    center.y + angle.sin() as f64 * correct.magnitude(),
+                );
                 curves_tmp.push(([prev, next, center], 0));
-                angle += std::f64::consts::PI/5.0;
+                angle += std::f64::consts::PI / 5.0;
                 prev = next;
             }
         }
         //end cap
-        if point == lines.len()-1 {
+        if point == lines.len() - 1 {
             let center = pp.2;
             let mut prev = lines_gen.1[2];
-            let correct = lines_gen.1[2]-pp.2;
+            let correct = lines_gen.1[2] - pp.2;
             let mut angle = (correct.y).atan2(correct.x);
-            
-            for i in 0..=5 {
-                let next = Vec2::new(center.x+angle.cos() as f64*correct.magnitude(), center.y+angle.sin() as f64*correct.magnitude()); 
+
+            for _ in 0..=5 {
+                let next = Vec2::new(
+                    center.x + angle.cos() as f64 * correct.magnitude(),
+                    center.y + angle.sin() as f64 * correct.magnitude(),
+                );
                 curves_tmp.push(([prev, next, center], point));
-                angle -= std::f64::consts::PI/5.0;
+                angle -= std::f64::consts::PI / 5.0;
                 prev = next;
             }
         }
 
         lines_tmp.push(lines_gen.0);
         lines_tmp.push(lines_gen.1);
-    
-        let angle2 = Vec2::dot((lines_gen.0[1]-lines_gen.0[2]).normalized(), (lines_gen.1[0]-lines_gen.0[2]).normalized())*2.0;
-        
-        if angle2 < 0.0 {
-            let angle2 = Vec2::dot((lines_gen.0[2]-lines_gen.0[1]).normalized(), (lines_gen.1[0]-lines_gen.0[1]).normalized())*2.0;
-            let test = lines_gen.0[1] - lines_gen.0[2];
-            let mut start_angle = (test.y).atan2(test.x)+angle2/4.0 as f64;//+angle2;
-            let correct2 = (lines_gen.0[2]-lines_gen.0[1]); 
-            let mut prev = lines_gen.0[1];
 
-            for i in 0..=3 {
-                let mid_curve = Vec2::new(lines_gen.0[2].x+(start_angle).cos() as f64*correct2.magnitude(), lines_gen.0[2].y+(start_angle).sin() as f64*correct2.magnitude());
-                curves_tmp.push(([prev, mid_curve, lines_gen.0[2]], point-1));
-                prev = mid_curve;
-                
-                start_angle += angle2/4.0 as f64;
+        let angle2 = Vec2::dot(
+            (lines_gen.0[1] - lines_gen.0[2]).normalized(),
+            (lines_gen.1[0] - lines_gen.0[2]).normalized(),
+        ) * 2.0;
+
+        if precision_f32(angle as f32, 2) > 0.01 || precision_f32(angle as f32, 2) < -0.01 {
+            if angle < 0.0 {
+                let angle2 = Vec2::dot(
+                    (lines_gen.0[2] - lines_gen.0[1]).normalized(),
+                    (lines_gen.1[0] - lines_gen.0[1]).normalized(),
+                ) * 2.0;
+                let test = lines_gen.0[1] - lines_gen.0[2];
+                let mut start_angle = (test.y).atan2(test.x) + angle2 / 4.0 as f64;
+                let correct2 = (lines_gen.0[2] - lines_gen.0[1]);
+                let mut prev = lines_gen.0[1];
+
+                for i in 0..=3 {
+                    let mid_curve = Vec2::new(
+                        lines_gen.0[2].x + (start_angle).cos() as f64 * correct2.magnitude(),
+                        lines_gen.0[2].y + (start_angle).sin() as f64 * correct2.magnitude(),
+                    );
+                    curves_tmp.push(([prev, mid_curve, lines_gen.0[2]], point - 1));
+                    prev = mid_curve;
+
+                    start_angle += angle2 / 4.0 as f64;
+                }
+                curves_tmp.push(([lines_gen.0[2], lines_gen.1[0], prev], point - 1));
+            } else if angle > 0.0 {
+                let angle2 = Vec2::dot(
+                    (lines_gen.0[2] - lines_gen.0[1]).normalized(),
+                    (lines_gen.1[3] - lines_gen.0[2]).normalized(),
+                ) * 2.0;
+                let test = lines_gen.0[2] - lines_gen.0[1];
+                let mut start_angle = (test.y).atan2(test.x) + (angle2);
+                let correct2 = (lines_gen.1[3] - lines_gen.0[1]);
+                let mut prev = lines_gen.1[3];
+
+                for i in 0..=3 {
+                    let mid_curve = Vec2::new(
+                        lines_gen.0[1].x + (start_angle).cos() as f64 * correct2.magnitude(),
+                        lines_gen.0[1].y + (start_angle).sin() as f64 * correct2.magnitude(),
+                    );
+                    curves_tmp.push(([prev, mid_curve, lines_gen.1[0]], point - 1));
+                    prev = mid_curve;
+
+                    start_angle -= angle2 / 4.0;
+                }
+                curves_tmp.push(([lines_gen.0[1], prev, lines_gen.0[2]], point - 1));
             }
-            curves_tmp.push(([lines_gen.0[2], lines_gen.1[0], prev], point-1));
-        } else {
-            let angle2 = Vec2::dot((lines_gen.0[2]-lines_gen.0[1]).normalized(), (lines_gen.1[3]-lines_gen.0[2]).normalized())*2.0;
-            let test = lines_gen.0[2] - lines_gen.0[1];
-            let mut start_angle = (test.y).atan2(test.x)+(angle2);
-            let correct2 = (lines_gen.1[3]-lines_gen.0[1]); 
-            let mut prev = lines_gen.1[3];
-            
-            for i in 0..=3 {
-                let mid_curve = Vec2::new(lines_gen.0[1].x+(start_angle).cos() as f64*correct2.magnitude(), lines_gen.0[1].y+(start_angle).sin() as f64*correct2.magnitude());
-                curves_tmp.push(([prev, mid_curve, lines_gen.1[0]], point-1));
-                prev = mid_curve;
-                
-                start_angle -= angle2/4.0 as f64;
-            }
-            curves_tmp.push(([lines_gen.0[1], prev, lines_gen.0[2]], point-1));
         }
-        
+
         point += 1;
     }
-    
+
     let mut result_lines = vec![];
-    
+
+    let total_obj = lines_tmp.len() as f64;
+    let a = Vec2::new(lerp(opacity[0], opacity[1], 1.0 / total_obj), 0.0);
+    let b = Vec2::new(lerp(opacity[0], opacity[1], 2.0 / total_obj), 0.0);
+
     for i in curves_tmp.iter() {
         if i.1 == 0 {
-            result_lines.push(i.0);
+            result_lines.push([
+                i.0[0],
+                i.0[1],
+                i.0[2],
+                Vec2::new(opacity[0], 0.0),
+                a,
+                Vec2::new(opacity[0], 0.0),
+            ]);
         } else {
             break;
         }
     }
-    
-    result_lines.push([lines_tmp[0][2], lines_tmp[0][0], lines_tmp[0][1]]);
-    result_lines.push([lines_tmp[0][3], lines_tmp[0][0], lines_tmp[0][2]]);
+
+    result_lines.push([lines_tmp[0][2], lines_tmp[0][0], lines_tmp[0][1], b, a, b]);
+    result_lines.push([lines_tmp[0][3], lines_tmp[0][0], lines_tmp[0][2], a, a, b]);
+
+    for k in curves_tmp.iter() {
+        if k.1 == 1 {
+            result_lines.push([k.0[0], k.0[1], k.0[2], b, b, b]);
+        }
+    }
 
     let mut i = 2;
     let mut j = 2;
     loop {
-        if i >= lines_tmp.len()-1 {
-            result_lines.push(
-                [lines_tmp[lines_tmp.len()-1][2], lines_tmp[lines_tmp.len()-1][0], lines_tmp[lines_tmp.len()-1][1]]
+        if i >= lines_tmp.len() - 1 {
+            let a = Vec2::new(
+                lerp(opacity[0], opacity[1], (i - 2) as f64 / total_obj),
+                0.0,
             );
-            result_lines.push(
-                [lines_tmp[lines_tmp.len()-1][3], lines_tmp[lines_tmp.len()-1][0], lines_tmp[lines_tmp.len()-1][2]]
-            );
-            
+            let b = Vec2::new(lerp(opacity[0], opacity[1], 1.0), 0.0);
+
+            for k in curves_tmp.iter() {
+                if k.1 == j - 1 {
+                    result_lines.push([k.0[0], k.0[1], k.0[2], a, a, a]);
+                }
+            }
+
+            result_lines.push([
+                lines_tmp[lines_tmp.len() - 1][2],
+                lines_tmp[lines_tmp.len() - 1][0],
+                lines_tmp[lines_tmp.len() - 1][1],
+                a,
+                b,
+                a,
+            ]);
+            result_lines.push([
+                lines_tmp[lines_tmp.len() - 1][3],
+                lines_tmp[lines_tmp.len() - 1][0],
+                lines_tmp[lines_tmp.len() - 1][2],
+                b,
+                a,
+                b,
+            ]);
+
             for i in curves_tmp.iter() {
-                if i.1 == lines.len()-1 {
-                    result_lines.push(i.0);
+                if i.1 == lines.len() - 1 {
+                    result_lines.push([
+                        i.0[0],
+                        i.0[1],
+                        i.0[2],
+                        Vec2::new(opacity[1], 0.0),
+                        b,
+                        Vec2::new(opacity[1], 0.0),
+                    ]);
                 }
             }
             break;
         }
-        for k in curves_tmp.iter() {
-            if k.1 == j-1 {
-                result_lines.push(k.0);
-            }
-        }
 
-        result_lines.push([lines_tmp[i-1][0], lines_tmp[i][1], lines_tmp[i-1][3]]);
-        result_lines.push([lines_tmp[i][1], lines_tmp[i][2], lines_tmp[i-1][3]]);
-        
-        
+        let a = Vec2::new(
+            lerp(opacity[0], opacity[1], (i - 2) as f64 / total_obj),
+            0.0,
+        );
+        let b = Vec2::new(lerp(opacity[0], opacity[1], i as f64 / total_obj), 0.0);
+
+        result_lines.push([
+            lines_tmp[i - 1][0],
+            lines_tmp[i][1],
+            lines_tmp[i - 1][3],
+            a,
+            b,
+            a,
+        ]);
+        result_lines.push([
+            lines_tmp[i][1],
+            lines_tmp[i][2],
+            lines_tmp[i - 1][3],
+            b,
+            b,
+            a,
+        ]);
+
         for k in curves_tmp.iter() {
             if k.1 == j {
-                result_lines.push(k.0);
+                result_lines.push([k.0[0], k.0[1], k.0[2], b, b, b]);
             }
         }
         i += 2;
         j += 1;
     }
-    
-    let mut indices = vec!();
-    let mut check = HashMap::new();
-    for k in result_lines.iter() {
-        for vert in k {
-            if let Some(ind) = check.get(vert) {
-                indices.push(*ind);  
-            } else {
-                if check.len() == 0 {
-                    let num = 0;
-                    indices.push(num);  
-                    check.insert(vert, num);
-                } else {
-                    let num = check.len() as i32;
-                    check.insert(vert, num);
-                    indices.push(num);  
-                }
-            }
-        }
-    }
 
-    (result_lines, indices)
+    result_lines
 }
 
 pub struct Rect {
-    pub points : Vec<Vec2>
+    pub points: Vec<Vec2>,
 }
 
 impl Rect {
     pub fn new_from_rigidbody(body: &Rigidbody, _app: &App) -> Self {
-        let model = 
-        Mat4::IDENTITY * 
-        Mat4::from_scale_rotation_translation( 
-            Vec3::new(body.bounds.x as f32 * body.scale.x as f32, body.bounds.y  as f32 * body.scale.y as f32, 1.0),
-            Quat::from_rotation_z(body.rotation),
-            Vec3::new(body.position.x as f32 + body.pivot.x as f32, body.position.y as f32 + body.pivot.y as f32, 0.0)
-        );
+        let model = Mat4::IDENTITY
+            * Mat4::from_scale_rotation_translation(
+                Vec3::new(
+                    body.bounds.x as f32 * body.scale.x as f32,
+                    body.bounds.y as f32 * body.scale.y as f32,
+                    1.0,
+                ),
+                Quat::from_rotation_z(body.rotation),
+                Vec3::new(
+                    body.position.x as f32 + body.pivot.x as f32,
+                    body.position.y as f32 + body.pivot.y as f32,
+                    0.0,
+                ),
+            );
 
         let view = unsafe { *crate::math::VIEW_MATRIX };
         let projection = unsafe { *crate::math::PROJECTION_MATRIX };
 
-        let mvp =  view * model;
+        let mvp = view * model;
 
         let a = mvp * glam::Vec4::new(-0.5f32, 0.5f32, 0.0, 1.0);
         let b = mvp * glam::Vec4::new(0.5f32, 0.5f32, 0.0, 1.0);
@@ -675,11 +938,11 @@ impl Rect {
                 Vec2::new(b.x as f64, b.y as f64),
                 Vec2::new(c.x as f64, c.y as f64),
                 Vec2::new(d.x as f64, d.y as f64),
-            ]
+            ],
         }
     }
 
-   // Assuming Vec2 is a struct with fields x and y, and methods like dot, normalized, and basic arithmetic operations implemented.
+    // Assuming Vec2 is a struct with fields x and y, and methods like dot, normalized, and basic arithmetic operations implemented.
 
     fn get_edges(r: &Rect) -> Vec<Vec2> {
         let mut edges = vec![];
@@ -745,13 +1008,13 @@ impl Rect {
             }
         }
 
-        let mtv_axis2 = unsafe { *crate::math::PROJECTION_MATRIX } * Vec4::new(mtv_axis.x as f32, mtv_axis.y as f32, 0.0, 0.0); 
+        let mtv_axis2 = unsafe { *crate::math::PROJECTION_MATRIX }
+            * Vec4::new(mtv_axis.x as f32, mtv_axis.y as f32, 0.0, 0.0);
 
         let mtv = Vec2::new(mtv_axis2.x as f64, mtv_axis2.y as f64) * mtv_distance;
-        
+
         (true, mtv)
     }
-    
 }
 
 create_module! (
@@ -783,6 +1046,6 @@ create_module! (
     module => math
 );
 
-pub fn publish_modules(lib : &mut ModuleLibrary) {
+pub fn publish_modules(lib: &mut ModuleLibrary) {
     math::publish_module(lib);
 }

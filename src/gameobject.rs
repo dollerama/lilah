@@ -1,8 +1,7 @@
 use crate::{
     application::App,
     components::{
-        Animator, Component, ComponentBehaviour, Rigidbody, Scene, SceneData, Sfx, Sprite, Text,
-        Tickable, Transform,
+        Animator, Component, ComponentBehaviour, Line, Rigidbody, Scene, SceneData, Sfx, Sprite, Text, Tickable, Transform
     },
     math::Vec2,
     renderer::LilahTexture,
@@ -356,6 +355,8 @@ impl GameObject {
             self.components.push(Box::new(c.clone()));
         } else if let Some(c) = vm.get_slot_foreign::<Scene>(1) {
             self.components.push(Box::new(c.clone()));
+        } else if let Some(c) = vm.get_slot_foreign::<Line>(1) {
+            self.components.push(Box::new(c.clone()));
         } else {
             LilahTypeError!(GameObject, 1, Component);
         }
@@ -409,6 +410,12 @@ impl GameObject {
                             return;
                         }
                     }
+                    "Line" => {
+                        if let Some(b) = i.1.as_any().downcast_ref::<Line>() {
+                            b.send_to_wren(0, vm);
+                            return;
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -425,37 +432,42 @@ impl GameObject {
         for i in self.components.iter().enumerate() {
             if let Some(b) = i.1.as_any().downcast_ref::<Transform>() {
                 list_index += 1;
-                b.send_to_wren(1, vm);
+                vm.set_slot_new_foreign_scratch("game", "Transform", b.clone(), 1, 2);
                 vm.insert_in_list(0, list_index, 1);
             }
             if let Some(b) = i.1.as_any().downcast_ref::<Scene>() {
                 list_index += 1;
-                b.send_to_wren(1, vm);
+                vm.set_slot_new_foreign_scratch("game", "Scene",b.clone(), 1, 2);
                 vm.insert_in_list(0, list_index, 1);
             }
             if let Some(b) = i.1.as_any().downcast_ref::<Sprite>() {
                 list_index += 1;
-                b.send_to_wren(1, vm);
+                vm.set_slot_new_foreign_scratch("game", "Sprite", b.clone(), 1, 2);
                 vm.insert_in_list(0, list_index, 1);
             }
             if let Some(b) = i.1.as_any().downcast_ref::<Rigidbody>() {
                 list_index += 1;
-                b.send_to_wren(1, vm);
+                vm.set_slot_new_foreign_scratch("game", "Rigidbody", b.clone(), 1, 2);
                 vm.insert_in_list(0, list_index, 1);
             }
             if let Some(b) = i.1.as_any().downcast_ref::<Animator>() {
                 list_index += 1;
-                b.send_to_wren(1, vm);
+                vm.set_slot_new_foreign_scratch("game", "Animator", b.clone(), 1, 2);
                 vm.insert_in_list(0, list_index, 1);
             }
             if let Some(b) = i.1.as_any().downcast_ref::<ComponentBehaviour>() {
                 list_index += 1;
-                b.send_to_wren(1, vm);
+                vm.set_slot_new_foreign_scratch("game", "ComponentBehaviour", b.clone(), 1, 2);
                 vm.insert_in_list(0, list_index, 1);
             }
             if let Some(b) = i.1.as_any().downcast_ref::<Sfx>() {
                 list_index += 1;
-                b.send_to_wren(1, vm);
+                vm.set_slot_new_foreign_scratch("game", "Sfx", b.clone(), 1, 2);
+                vm.insert_in_list(0, list_index, 1);
+            }
+            if let Some(b) = i.1.as_any().downcast_ref::<Line>() {
+                list_index += 1;
+                vm.set_slot_new_foreign_scratch("game", "Line", b.clone(), 1, 2);
                 vm.insert_in_list(0, list_index, 1);
             }
         }
@@ -465,6 +477,7 @@ impl GameObject {
         }
     }
 
+    /*
     pub fn wren_set_component(&mut self, vm: &VM) {
         let mut finding = String::from("");
         if let Some(component_str) = vm.get_slot_string(1) {
@@ -580,4 +593,5 @@ impl GameObject {
 
         LilahNotFoundError!(GameObject, Component, finding);
     }
+    */
 }
