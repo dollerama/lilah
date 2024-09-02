@@ -68,8 +68,8 @@ class Trail is Behaviour {
     minDistance=(v) { _minDistance = v }
     maxCount {_maxCount}
     maxCount=(v) {_maxCount = v}
-    lastPos { _lastPos }
-    lastPos=(v) { _lastPos = v }
+    hist {_hist}
+    hist=(v) {_hist = v}
 
     construct new() {
     }
@@ -78,9 +78,9 @@ class Trail is Behaviour {
         gameobject.ref.add(Line.new())
         Line.set_thickness(gameobject.ref, [0.0, 10.0])
         
-        gamebehaviour.minDistance = 50 
-        gamebehaviour.maxCount = 5 
-        gamebehaviour.lastPos = gameobject.ref.get(Transform).position
+        gamebehaviour.minDistance = 10 
+        gamebehaviour.maxCount = 15 
+        gamebehaviour.hist = [gameobject.ref.get(Transform).position]
     }
 
     static update() {
@@ -88,17 +88,22 @@ class Trail is Behaviour {
             Line.add_point(gameobject.ref, gameobject.ref.get(Transform).position) 
         }
         
-        Line.set_point(gameobject.ref, gameobject.ref.get(Line).points.count-1, gameobject.ref.get(Transform).position)
-
-        var loop_len = gameobject.ref.get(Line).points.count-2 
-        
-        for(i in loop_len..0) {
-              if((gameobject.ref.get(Line).points[i]-gameobject.ref.get(Line).points[i+1]).magnitude() > gamebehaviour.minDistance) {
-                  Line.set_point(gameobject.ref, i, gameobject.ref.get(Line).points[i+1] + (gameobject.ref.get(Line).points[i]-gameobject.ref.get(Line).points[i+1]).normalized()*10)    
-              }
+        if((gamebehaviour.hist[gamebehaviour.hist.count-1]-gameobject.ref.get(Transform).position).magnitude() > gamebehaviour.minDistance) {
+            gamebehaviour.hist.add(gameobject.ref.get(Transform).position)
+            if(gamebehaviour.hist.count > gamebehaviour.maxCount) {
+                gamebehaviour.hist.removeAt(0)
+            } 
         }
-
-        lastPos = gameobject.ref.get(Transform).position
+        var set = {}
+        for(i in 0..gamebehaviour.hist.count-1) {
+            var new_point = gamebehaviour.hist[gamebehaviour.hist.count-1-i]
+            var old_point = gameobject.ref.get(Line).points[gameobject.ref.get(Line).points.count-1-i]
+            set[gameobject.ref.get(Line).points.count-1-i] = new_point//(new_point-old_point).normalized()*(gamebehaviour.minDistance/gamebehaviour.maxCount)
+        }
+        for(i in set) {
+            Line.set_point(gameobject.ref, i.key, i.value)
+        }
+        Line.set_point(gameobject.ref, gameobject.ref.get(Line).points.count-1, gameobject.ref.get(Transform).position)
     }
 }
 

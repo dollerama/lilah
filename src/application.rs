@@ -240,7 +240,7 @@ impl Scripting {
 
             match frame {
                 0 => {
-                    Scripting::call_fn_error_silent(&self.vm, &class, "setup", 0);
+                    Scripting::call_fn(&self.vm, &class, "setup", 0);
 
                     self.vm.execute(|vm| {
                         vm.set_slot_double(1, (frame + 1).into());
@@ -249,7 +249,7 @@ impl Scripting {
                     Scripting::call_handle(&self.vm, &class, &frame_setter);
                 }
                 1 => {
-                    Scripting::call_fn_error_silent(&self.vm, &class, "start", 0);
+                    Scripting::call_fn(&self.vm, &class, "start", 0);
 
                     self.vm.execute(|vm| {
                         vm.set_slot_double(1, (frame + 1).into());
@@ -272,7 +272,7 @@ impl Scripting {
                                     });
                                     Scripting::call_setter(&self.vm, &obj, "gamebehaviour");
 
-                                    Scripting::call_fn_error_silent(&self.vm, &obj, "start", 0);
+                                    Scripting::call_fn(&self.vm, &obj, "start", 0);
                                 }
                             }
                         }
@@ -280,7 +280,7 @@ impl Scripting {
                 }
                 _ => {
                     Scripting::call_fn(&self.vm, &state_class, "tick_fibers", 0);
-                    Scripting::call_fn_error_silent(&self.vm, &class, "update", 0);
+                    Scripting::call_fn(&self.vm, &class, "update", 0);
 
                     self.vm.execute(|vm| {
                         vm.set_slot_double(1, (frame + 1).into());
@@ -307,7 +307,7 @@ impl Scripting {
                                     });
                                     Scripting::call_setter(&self.vm, &obj, "gamebehaviour");
 
-                                    Scripting::call_fn_error_silent(&self.vm, &obj, "start", 0);
+                                    Scripting::call_fn(&self.vm, &obj, "start", 0);
                                 } else if g.1.start {
                                     self.vm
                                         .execute(|vm| vm.set_slot_string(1, g.0.clone()));
@@ -318,7 +318,7 @@ impl Scripting {
                                     });
                                     Scripting::call_setter(&self.vm, &obj, "gamebehaviour");
 
-                                    Scripting::call_fn_error_silent(&self.vm, &obj, "update", 0);
+                                    Scripting::call_fn(&self.vm, &obj, "update", 0);
 
                                     if let Some(body) = g.1.wrap_component::<Rigidbody>() {
                                         if let Some(coll) = &body.colliding {
@@ -331,7 +331,7 @@ impl Scripting {
                                                 vm.set_slot_string(3, coll.uuid.clone());
                                                 vm.set_map_value(1,2, 3); 
                                             });
-                                            Scripting::call_fn_error_silent(&self.vm, &obj, "onCollision", 1);
+                                            Scripting::call_fn(&self.vm, &obj, "onCollision", 1);
                                         }
                                     }
                                 }
