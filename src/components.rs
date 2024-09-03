@@ -1998,7 +1998,7 @@ impl Line {
             vertex_count: 0,
             thickness,
             color,
-            opacity: [0.0, 1.0],
+            opacity: [1.0, 1.0],
             vertex_array: unsafe { VertexArray::new() },
             vertex_buffer: unsafe { Buffer::new(gl::ARRAY_BUFFER) },
             sort: 0,
@@ -2268,24 +2268,45 @@ impl Line {
         vm.set_list_element(0, 3, 1);
     }
 
+    fn wren_get_opacity(&self, vm: &VM) {
+        vm.set_slot_new_list(0);
+        vm.set_slot_double(1, self.opacity[0] as f64);
+        vm.set_list_element(0, 0, 1);
+        vm.set_slot_double(1, self.opacity[1] as f64);
+        vm.set_list_element(0, 1, 1);
+    }
+
     fn wren_set_tint_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
-            if (comp.has::<Sprite>()) {
-                let mut spr = comp.get_mut::<Sprite>();
+            if (comp.has::<Line>()) {
+                let mut line = comp.get_mut::<Line>();
                 vm.get_list_element(2, 0, 3);
-                spr.tint.r = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+                line.color.r = vm.get_slot_double(3).unwrap_or(0f64) as f32;
                 vm.get_list_element(2, 1, 3);
-                spr.tint.g = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+                line.color.g = vm.get_slot_double(3).unwrap_or(0f64) as f32;
                 vm.get_list_element(2, 2, 3);
-                spr.tint.b = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+                line.color.b = vm.get_slot_double(3).unwrap_or(0f64) as f32;
                 vm.get_list_element(2, 3, 3);
-                spr.tint.a = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+                line.color.a = vm.get_slot_double(3).unwrap_or(0f64) as f32;
+            }
+        } else {
+            LilahTypeError!(Line, 1, GameObject);
+        }
+    }
+
+    fn wren_set_opacity_from_gameobject(vm: &VM) {
+        if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
+            if (comp.has::<Line>()) {
+                let mut line = comp.get_mut::<Line>();
+                vm.get_list_element(2, 0, 3);
+                line.opacity[0] = vm.get_slot_double(3).unwrap_or(0f64);
+                vm.get_list_element(2, 1, 3);
+                line.opacity[1] = vm.get_slot_double(3).unwrap_or(0f64);
             }
         } else {
             LilahTypeError!(Sprite, 1, GameObject);
         }
     }
-
     fn wren_set_thickness_from_gameobject(vm: &VM) {
         if let Some(comp) = vm.get_slot_foreign_mut::<GameObject>(1) {
             let t = vm.get_slot_type(2);
@@ -2468,6 +2489,13 @@ impl Debug {
                 .get_attrib_location("position")
                 .expect("msg");
             set_attribute!(vao, pos_attrib, Vertex::0, gl::FLOAT);
+
+            let o_attrib = crate::application::DEBUG_PROGRAM
+                .as_ref()
+                .expect("program")
+                .get_attrib_location("opacity")
+                .expect("msg");
+            set_attribute!(vao, o_attrib, Vertex::1, gl::FLOAT);
 
             let mat_attr = gl::GetUniformLocation(
                 crate::application::DEBUG_PROGRAM
@@ -2998,6 +3026,7 @@ create_module! (
     class("Line") crate::components::Line => line {
         instance(getter "as_component") wren_as_component,
         instance(getter "color") wren_get_tint,
+        instance(getter "opacity") wren_get_opacity,
         instance(getter "sort") wren_get_sort,
         instance(getter "thickness") wren_get_thickness,
         instance(getter "points") wren_get_points,
@@ -3006,6 +3035,7 @@ create_module! (
         static(fn "get_thickness", 1) wren_get_thickness_from_gameobject,
         static(fn "set_thickness", 2) wren_set_thickness_from_gameobject,
         static(fn "set_color", 2) wren_set_tint_from_gameobject,
+        static(fn "set_opacity", 2) wren_set_opacity_from_gameobject,
         static(fn "remove_point", 2) wren_remove_point_from_gameobject,
         static(fn "pop_point", 1) wren_pop_point_from_gameobject,
         static(fn "add_point", 2) wren_add_point_from_gameobject,

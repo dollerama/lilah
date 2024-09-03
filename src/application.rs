@@ -491,7 +491,7 @@ impl App {
     uniform vec4 tint;
 
     void main() {
-        FragColor = vec4(tint.rgb, o.x);//tint.a);
+        FragColor = vec4(tint.rgb, o.x*tint.a);
     } 
     "#;
 

@@ -77,7 +77,7 @@ class Trail is Behaviour {
     static start() {
         gameobject.ref.add(Line.new())
         Line.set_thickness(gameobject.ref, [0.0, 10.0])
-        
+        Line.set_opacity(gameobject.ref, [0.0, 1.0]) 
         gamebehaviour.minDistance = 10 
         gamebehaviour.maxCount = 15 
         gamebehaviour.hist = [gameobject.ref.get(Transform).position]

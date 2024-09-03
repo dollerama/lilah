@@ -401,6 +401,8 @@ foreign class Line {
     ///{getter} color -> [Num]
     ///Gets color in form [r,g,b,a]
     foreign color
+    ///{getter} opacity -> [Num]
+    foreign opacity
     ///{getter} sort -> Num
     foreign sort
     ///{getter} thickness -> [Num]: 
@@ -418,6 +420,8 @@ foreign class Line {
     foreign static get_thickness(go)
     ///{static method} set_color(go: GameObject, color: [Num]) -> null
     foreign static set_color(go, color)
+    ///{static method} set_opacity(go: GameObject, opacity: [Num]) -> null
+    foreign static set_opacity(go, opacity)
     ///{static method} add_point(go: GameObject, point: Vec2) -> null
     foreign static add_point(go, point)
     ///{static method} remove_point(go: GameObject, index: Num) -> null
@@ -444,16 +448,7 @@ foreign class ComponentBehaviour {
 foreign class Debug {
     ///{static method} drawLine(start: Vec2, end: Vec2, color: [num]) -> null
     foreign static drawLine(start, end, color)
-
-    // debugRigidbody() {
-    //     for(g in Lilah.gameobjects) {
-    //         var r = g.get(Rigidbody)
-    //         if(r != null) {
-    //             Debug.drawLine(r.)
-    //         }
-    //     }
-    // }
-
+    
     static printFrameInfo() {
         System.print("Debug {")
         System.print("\tFps: %(Lilah.fps),")

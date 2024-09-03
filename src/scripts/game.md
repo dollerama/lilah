@@ -310,6 +310,7 @@ Inherits from ``Serializable``
 > - update_scale_y(go: GameObject, new_y: Num)
 > - set_rotation(go: GameObject, new_rot: Num)
 > - update_rotation(go: GameObject, new_rot: Num)
+> - inverse_point(go: GameObject, point: Vec2)
 ### ``new(p: Vec2)``
 constructor with arity(1) and returns ``Transform``
 ### ``as_component``
@@ -366,6 +367,8 @@ static method with arity(2) and returns ``null``
 static method with arity(2) and returns ``null``
 ### ``update_rotation(go: GameObject, new_rot: Num)``
 static method with arity(2) and returns ``null``
+### ``inverse_point(go: GameObject, point: Vec2)``
+static method with arity(2) and returns ``Vec2``
 ## GameObject
 > - new(name: String)
 > - add(x: Component)
@@ -433,6 +436,7 @@ static method with arity(2) and returns ``null``
 > - new()
 > - as_component
 > - color
+> - opacity
 > - sort
 > - thickness
 > - points
@@ -441,10 +445,12 @@ static method with arity(2) and returns ``null``
 > - set_thickness(go: GameObject, thickness: [Num])
 > - get_thickness(go: GameObject)
 > - set_color(go: GameObject, color: [Num])
+> - set_opacity(go: GameObject, opacity: [Num])
 > - add_point(go: GameObject, point: Vec2)
 > - remove_point(go: GameObject, index: Num)
 > - pop_point(go: GameObject)
 > - insert_point(go: GameObject, point: Vec2, index: Num)
+> - set_point(go: GameObject, index: Num, point: Vec2)
 ### ``new()``
 constructor returns ``Line``
 > constructs with no points and default thickness of 10.0
@@ -453,10 +459,12 @@ getter returns ``Component``
 ### ``color``
 getter returns ``[Num]``
 > Gets color in form [r,g,b,a]
+### ``opacity``
+getter returns ``[Num]``
 ### ``sort``
 getter returns ``Num``
 ### ``thickness``
-getter returns ``[Num]``
+getter returns ``[Num]: ``
 > Gets line thickness in form [start, end]
 ### ``points``
 getter returns ``[Vec2]``
@@ -470,6 +478,8 @@ static method with arity(2) and returns ``null``
 static method with arity(1) and returns ``[Num]``
 ### ``set_color(go: GameObject, color: [Num])``
 static method with arity(2) and returns ``null``
+### ``set_opacity(go: GameObject, opacity: [Num])``
+static method with arity(2) and returns ``null``
 ### ``add_point(go: GameObject, point: Vec2)``
 static method with arity(2) and returns ``null``
 ### ``remove_point(go: GameObject, index: Num)``
@@ -477,6 +487,8 @@ static method with arity(2) and returns ``null``
 ### ``pop_point(go: GameObject)``
 static method with arity(1) and returns ``null``
 ### ``insert_point(go: GameObject, point: Vec2, index: Num)``
+static method with arity(3) and returns ``null``
+### ``set_point(go: GameObject, index: Num, point: Vec2)``
 static method with arity(3) and returns ``null``
 ## ComponentBehaviour
 > - new(b: String)
