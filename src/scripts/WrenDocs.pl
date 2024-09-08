@@ -1,14 +1,22 @@
 #! /usr/bin/perl
 use strict;
+use File::Basename;
 use warnings;
+use Getopt::Long qw(GetOptions);
+use Data::Dumper;
 
 sub create_doc {
     my $file = $_[0];
+    my $verbose = $_[1];
+
+    if($verbose) {
+      print "  WrenDoc: starting ".basename($file)."\n";
+    }
     
     my $source = do {
         local $/ = undef;
         open my $fh, "<", $file
-            or die "could not open $file: $!";
+            or die "WrenDoc: could not open $file: $!";
         <$fh>;
     };
     
@@ -22,7 +30,7 @@ sub create_doc {
     my $prev_class = 0;
     foreach(@new_source) {
         my @ident_name = ($_ =~ /(?<=\{)(.*)(?=\})/g);
-        
+
         if(@ident_name) {
             if($ident_name[0] eq "class") {
                 if(@all_in_class-0 == 0) {
@@ -46,9 +54,14 @@ sub create_doc {
                 push(@all_classes, "> - [$ident_sig](#$ident_sig_lc)");
                 @all_in_class = ();
                 $prev_class = 1;
+
+
+                if($verbose) {
+                  print "    ".basename($file).": class => ".$ident_sig."\n";
+                }
             } elsif($ident_name[0] eq "module") {
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)/g)[1];
-                $module .= "# $ident_sig\n";
+                $module .= "$ident_sig";
                 $prev_class = 0;
             } elsif($ident_name[0] eq "static setter" || $ident_name[0] eq "setter") {
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)/g)[1];
@@ -57,6 +70,11 @@ sub create_doc {
 
                 push(@all_in_class, "> - $ident_sig");
                 $prev_class = 0;
+
+
+                if($verbose) {
+                  print "      ".basename($file).": setter => ".$ident_sig."\n";
+                }
             } else {
                 my $ident_sig = ($_ =~ /(?<=(\}\s))(.*)(?=(\s->))/g)[1];
                 my @words = ($ident_sig =~ /(\w+)/g);
@@ -76,6 +94,10 @@ sub create_doc {
 
                 push(@all_in_class, "> - $ident_sig");
                 $prev_class = 0;
+                
+                if($verbose) {
+                  print "      ".basename($file).": ".$ident_name[0]." => ".$ident_sig."\n";
+                }
             }
         } else {
             my @descr = ($_ =~ /[^\/].*/g);
@@ -83,10 +105,14 @@ sub create_doc {
             $output .= "> $descr[0]\n";
 
             $prev_class = 0;
+            
+            if($verbose) {
+              print "      ".basename($file).": description => ".@descr."\n";
+            }
         }
     }
 
-    my $result .= $module."### Classes\n".join("\n", @all_classes)."\n".$output_final;
+    my $result .= "# ".$module."\n### Classes\n".join("\n", @all_classes)."\n".$output_final;
     if(@all_in_class-0 == 1) {
         $result .= $output_header."@all_in_class"."\n".$output;
     } elsif(@all_in_class-0 == 0) {
@@ -94,14 +120,31 @@ sub create_doc {
     } else {
         $result .= $output_header.join("\n", @all_in_class)."\n".$output;
     }
-    ##print $result;
-    ##close($fh);
-    return $result;
+    return ($module, $result);
 }
                                        
-my $filename = 'src/scripts/game.md';
-unlink($filename);
-open(my $fh, '>>', $filename) or die "Could not open file '$filename' $!";
-print $fh create_doc("src/scripts/game.wren");
+my @inputs;
+my $outputs;
+my $verbose;
+GetOptions('out|o=s' => \$outputs, 'in|i=s' => \@inputs, 'verbose|v' => \$verbose) or die 'Usage: $0 -in|o FILE.wren -out|o FILE.md -verbose|v\n';
+@inputs = split(/,/,join(',',@inputs));
+
+unlink($outputs);
+
+my $file_header = "# ".basename($outputs, ".md")."\n"."### Modules\n";
+my $file = "";
+
+print "WrenDoc: building ".basename($outputs)."\n";
+
+for my $i (0 .. $#inputs) {
+  my $in  = $inputs[$i];
+  my @docu = create_doc($in, $verbose);
+  $file_header .= "> - [".$docu[0]."](#".$docu[0].")\n";
+  $file .= $docu[1];
+  print "  WrenDoc: built doc => ".basename($in)."\n";
+}
+
+open(my $fh, '>>', $outputs) or die 'WrenDoc Err: Could not open file '.$outputs.' $!';
+print $fh $file_header.$file; 
 close $fh;
-print "done\n";
+print "WrenDoc: Finished\n";

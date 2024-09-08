@@ -1,3 +1,17 @@
+# lilah_scripting
+### Modules
+> - [io](#io)
+> - [Game](#Game)
+# io
+### Classes
+> - [Fs](#fs)
+## Fs
+> - read(file: String)
+> - write(file: String, content: String)
+### ``read(file: String)``
+static method with arity(1) and returns ``null``
+### ``write(file: String, content: String)``
+static method with arity(2) and returns ``null``
 # Game
 ### Classes
 > - [Behaviour](#behaviour)

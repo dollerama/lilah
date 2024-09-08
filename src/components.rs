@@ -2370,91 +2370,6 @@ impl Line {
 }
 
 impl Debug {
-    /*
-    pub fn draw_multi_line(points: Vec<Vec2>, thickness: f64, tint: Color) {
-        let line_mesh = crate::math::make_multi_line(&points, [thickness, 0.0]);
-
-        let mut vertex_buff = vec!();
-
-        for i in 0..line_mesh.0.len() {
-            vertex_buff.push(Vertex([line_mesh.0[i][0].x as f32, line_mesh.0[i][0].y as f32], [0.0, 0.0]));
-            vertex_buff.push(Vertex([line_mesh.0[i][1].x as f32, line_mesh.0[i][1].y as f32], [0.0, 0.0]));
-            vertex_buff.push(Vertex([line_mesh.0[i][2].x as f32, line_mesh.0[i][2].y as f32], [0.0, 0.0]));
-        }
-
-        let model = Mat4::IDENTITY;
-        let view = unsafe { *crate::math::VIEW_MATRIX };
-        let projection = unsafe { *crate::math::PROJECTION_MATRIX };
-
-        let mvp = projection * view * model;
-
-        unsafe {
-            crate::application::DEBUG_PROGRAM.as_mut().expect("program").apply();
-
-            let vao = VertexArray::new();
-            vao.bind();
-
-            let vbo = Buffer::new(gl::ARRAY_BUFFER);
-            vbo.set_data(vertex_buff.as_slice(), gl::DYNAMIC_DRAW);
-
-            let pos_attrib = crate::application::DEBUG_PROGRAM.as_ref().expect("program").get_attrib_location("position").expect("msg");
-            set_attribute!(vao, pos_attrib, Vertex::0, gl::FLOAT);
-
-            let mat_attr = gl::GetUniformLocation(
-                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
-                CString::new("mvp").unwrap().as_ptr(),
-            );
-            gl::UniformMatrix4fv(mat_attr, 1, gl::FALSE as GLboolean, &mvp.to_cols_array()[0]);
-
-            let tint_attr = gl::GetUniformLocation(
-                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
-                CString::new("tint").unwrap().as_ptr(),
-            );
-            gl::Uniform4f(
-                tint_attr,
-                tint.r,
-                tint.g,
-                tint.b,
-                tint.a,
-            );
-
-            let width_attr = gl::GetUniformLocation(
-                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
-                CString::new("lineWidth").unwrap().as_ptr(),
-            );
-
-            gl::Uniform1d(width_attr, thickness);
-
-            let feather_attr = gl::GetUniformLocation(
-                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
-                CString::new("feather").unwrap().as_ptr(),
-            );
-
-            gl::Uniform1d(feather_attr, 1.0);
-
-            let segments_attr = gl::GetUniformLocation(
-                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
-                CString::new("segments").unwrap().as_ptr(),
-            );
-
-            let segments_len_attr = gl::GetUniformLocation(
-                crate::application::DEBUG_PROGRAM.as_ref().expect("program").id,
-                CString::new("segmentCount").unwrap().as_ptr(),
-            );
-
-            let flat_segments: Vec<GLfloat> = points.iter()
-            .flat_map(|v| vec![v.x as f32, v.y as f32])
-            .collect();
-
-            // Send the data to the shader
-            gl::Uniform2fv(segments_attr, points.len() as GLsizei, flat_segments.as_ptr());
-            gl::Uniform1i(segments_len_attr, points.len() as GLsizei);
-
-            gl::DrawArrays(gl::TRIANGLES, 0, line_mesh.1.len() as i32 * 3);
-        }
-    }
-    */
-
     pub fn draw_line(start: Vec2, end: Vec2, tint: Color) {
         let model = Mat4::IDENTITY;
         let view = unsafe { *crate::math::VIEW_MATRIX };
@@ -2757,7 +2672,6 @@ impl Component for Line {
 impl Tickable<Sprite> for Rigidbody {
     fn tick(&mut self, _: f64, d: &Sprite) {
         let sprite_size = d.get_size();
-
         self.bounds = Vec2::new(sprite_size.0 as f64, sprite_size.1 as f64);
     }
 }

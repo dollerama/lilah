@@ -1,8 +1,11 @@
 import "meta" for Meta
 import "random" for Random
-
+///{module} io
+///{class} Fs
 foreign class Fs {
+  ///{static method} read(file: String) -> null
 	foreign static read(file)
+  ///{static method} write(file: String, content: String) -> null
 	foreign static write(file, content)
 }
 
