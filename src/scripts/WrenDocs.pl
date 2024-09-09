@@ -36,6 +36,10 @@ sub create_docv2 {
     my @classes = ();
 
     foreach(@new_source) {
+        if($_ =~ m/^\s*\/\/.*/) {
+          next;
+        }
+
         if(($_ =~ /\/{3}.*/g) != 0) { 
             if(($_ =~ /(?<=\/{3})(.*)(?=(\s->))/s) == 0) {
                 $description .= "> ".($_ =~ /(?<=\/{3})(.*)/s)[0]."\n";
@@ -46,7 +50,7 @@ sub create_docv2 {
             }
         }
         
-        if(($_ =~ /foreign/s) != 0) {
+        if(($_ =~ /^\s*foreign/s) != 0) {
             if(($_ =~ /class/s) != 0) {
                 if($verbose) {
                     print "? foreign class\n";
@@ -66,7 +70,7 @@ sub create_docv2 {
                 }
             }
         } else {
-            if(($_ =~ /class/s) != 0) {
+            if(($_ =~ /^\s*class/s) != 0) {
                 if($verbose) {
                   print "? class\n";
                 }
@@ -250,13 +254,13 @@ sub create_docv2 {
             }
         }
         
-        if($_ =~ m/{/) {
+        if($_ =~ m/{(?=(?:(?:[^"]*"){2})*[^"]*$)/) {
             $depth = $depth+1;
             $description = "";
             $parameters = "";
             $return = "_";
         }
-        if($_ =~ m/}/) {
+        if($_ =~ m/}(?=(?:(?:[^"]*"){2})*[^"]*$)/) {
             $depth = $depth-1;
             $description = "";
             $parameters = "";
@@ -409,7 +413,9 @@ print "WrenDoc: building ".basename($outputs)."\n";
 for my $i (0 .. $#inputs) {
   my $in  = $inputs[$i];
   my @docu = create_docv2($in, $verbose);
-  $file_header .= "> - [".$docu[0]."](#".$docu[0].")\n";
+  my $file_header_proc = "module---".lc($docu[0])."--";
+  #$file_header_proc =~ s/[^a-zA-Z]+/-/g;
+  $file_header .= "> - [".$docu[0]."](#".$file_header_proc.")\n";
   $file .= $docu[1];
   print "  WrenDoc: built doc => ".basename($in)."\n";
 }

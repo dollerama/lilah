@@ -1,8 +1,8 @@
 # test
 ### Modules
-> - [app](#app)
-> - [io](#io)
-> - [math](#math)
+> - [app](#module---app--)
+> - [io](#module---io--)
+> - [math](#module---math--)
 ## Module ``app``
 ### Classes
 > - [GameObjectRef](#gameobjectref)
@@ -473,8 +473,6 @@
 ### Classes
 > - [Fs](#fs)
 > - [Serializable](#serializable)
-> - [%(name)](#%(name))
-> - [](#)
 > - [Json](#json)
 > - [JsonStringify](#jsonstringify)
 > - [JsonParser](#jsonparser)
@@ -482,190 +480,167 @@
 #### Methods
 
 ### Class ``Serializable``
-### Class ``%(name)``
-> Inherits from ``Serializable``
-### Class ````
 #### Methods
-> - //example Serializable.wrapper
 > - wrapperFn
-##### Method ``//example Serializable.wrapper({"math": "Vec2"}: _, "Rect": _, [["pos": _, Vec2]: _, ["size": _, Vec2]]: _)``
-``return _``
-
+> - wrapper
+> - properties
+> - serialize
+> - serialize
+> - deserialize
+> - iterProperties
 ##### Static Method ``wrapperFn(imports: _, name: _, values: _)``
 ``return _``
 
-#### Methods
-
-#### Methods
-> - if
-##### Method ``if(f is List: _)``
+##### Static Method ``wrapper(imports: _, name: _, values: _)``
 ``return _``
 
-#### Methods
-> - var result =
-> - for
-##### Getter ``var result =``
+##### Method ``properties(f: _)``
 ``return _``
 
-##### Method ``for(item in obj: _)``
+##### Static Method ``serialize(obj: _)``
 ``return _``
 
-#### Methods
-> - var result =
-> - while
-##### Getter ``var result =``
+##### Method ``serialize()``
 ``return _``
 
-##### Method ``while(true: _)``
+##### Method ``deserialize(obj: _)``
 ``return _``
 
-#### Methods
-> - while
-> - f2.call
-##### Method ``while(true: _)``
-``return _``
-
-##### Method ``f2.call()``
-``return _``
-
-#### Methods
-> - return Fiber.new
-##### Getter ``return Fiber.new``
+##### Static Method ``iterProperties(t: _)``
 ``return _``
 
 ### Class ``Json``
 #### Methods
-
-#### Methods
-
-#### Methods
-
-#### Methods
-> - JsonStringify.stringify
-##### Method ``JsonStringify.stringify(value: _, whitespace: _)``
+> - parse(string) { parse
+> - parse
+> - stringify(value) { stringify
+> - stringify
+> - stringify
+##### Static Method ``parse(string) { parse(string) { parse("json": _, string: _)``
 ``return _``
 
-#### Methods
+##### Static Method ``parse(source_id: _, source_string: _)``
+``return _``
+
+##### Static Method ``stringify(value) { stringify(value) { stringify(value: _, "  ": _)``
+``return _``
+
+##### Static Method ``stringify(value: _, whitespace: _)``
+``return _``
+
+##### Static Method ``stringify(value: _, whitespace: _, callback: _)``
+``return _``
 
 ### Class ``JsonStringify``
 #### Methods
-> - if(!
-> - if
-##### Method ``if(!(!(value is Map || value is List): _)``
+> - stringify
+> - stringify_map
+> - stringify_primitive
+> - stringify_list
+> - stringify_value
+##### Static Method ``stringify(value: _, whitespace: _, out: _)``
 ``return _``
 
-##### Method ``if(value is Map: _)``
+##### Static Method ``stringify_map(map: _, whitespace: _, depth: _, out: _)``
 ``return _``
 
-#### Methods
-> - if(map.count == 0) return out.call
-> - out.call
-##### Method ``if(map.count == 0) return out.call(map.count == 0) return out.call("{}": _)``
+##### Static Method ``stringify_primitive(value: _, out: _)``
 ``return _``
 
-##### Method ``out.call("{\n": _)``
+##### Static Method ``stringify_list(list: _, whitespace: _, depth: _, out: _)``
 ``return _``
 
-#### Methods
-> - if
-##### Method ``if(value is String: _)``
-``return _``
-
-#### Methods
-> - for
-##### Method ``for(item in list: _)``
-``return _``
-
-#### Methods
-> - if
-##### Method ``if(value is Map: _)``
+##### Static Method ``stringify_value(value: _, whitespace: _, depth: _, out: _)``
 ``return _``
 
 ### Class ``JsonParser``
 #### Methods
-
-#### Methods
-> - if
-##### Method ``if(pk == _OPEN_BRACKET: _)``
+> - root
+> - new
+> - unexpected
+> - is_eof
+> - is_whitespace
+> - is_token
+> - next
+> - peek() { peek
+> - peek
+> - peeks() { peeks
+> - peeks
+> - step
+> - skips
+> - parse_key
+> - parse_primitive
+> - read_raw_string
+> - read_string
+> - parse_string
+> - parse_value
+> - parse_list
+> - parse_map
+> - parse_map_value
+##### Getter ``root``
 ``return _``
 
-#### Methods
-
-#### Methods
-
-#### Methods
-
-#### Methods
-
-#### Methods
-
-#### Methods
-
-#### Methods
-
-#### Methods
-
-#### Methods
-
-#### Methods
-> - if
-> - if
-##### Method ``if(cur >= _end: _)``
+##### Constructor ``new(source_id: _, source: _)``
 ``return _``
 
-##### Method ``if(consume: _)``
+##### Method ``unexpected(point: _)``
 ``return _``
 
-#### Methods
-> - while
-##### Method ``while(true: _)``
+##### Method ``is_eof(point: _)``
 ``return _``
 
-#### Methods
-> - while
-> - if
-##### Method ``while(true: _)``
+##### Method ``is_whitespace(point: _)``
 ``return _``
 
-##### Method ``if(!quoted: _)``
+##### Method ``is_token(point: _)``
 ``return _``
 
-#### Methods
-> - while
-##### Method ``while(true: _)``
+##### Method ``next()``
 ``return _``
 
-#### Methods
-> - while
-##### Method ``while(true: _)``
+##### Method ``peek() { peek() { peek(1: _)``
 ``return _``
 
-#### Methods
-> - while
-##### Method ``while(true: _)``
+##### Method ``peek(n: _)``
 ``return _``
 
-#### Methods
-> - if(peeks() == _OPEN_STRING && peeks
-##### Method ``if(peeks() == _OPEN_STRING && peeks(peeks() == _OPEN_STRING && peeks(2) == _OPEN_STRING: _)``
+##### Method ``peeks() { peeks() { peeks(1: _)``
 ``return _``
 
-#### Methods
-
-#### Methods
-> - while
-##### Method ``while(true: _)``
+##### Method ``peeks(n: _)``
 ``return _``
 
-#### Methods
-
-#### Methods
-> - var map =
-> - while
-##### Getter ``var map =``
+##### Method ``step(consume: _)``
 ``return _``
 
-##### Method ``while(true: _)``
+##### Method ``skips(consume: _)``
+``return _``
+
+##### Method ``parse_key()``
+``return _``
+
+##### Method ``parse_primitive()``
+``return _``
+
+##### Method ``read_raw_string()``
+``return _``
+
+##### Method ``read_string()``
+``return _``
+
+##### Method ``parse_string()``
+``return _``
+
+##### Method ``parse_value()``
+``return _``
+
+##### Method ``parse_list()``
+``return _``
+
+##### Method ``parse_map()``
+``return _``
+
+##### Method ``parse_map_value()``
 ``return _``
 
 ## Module ``math``
