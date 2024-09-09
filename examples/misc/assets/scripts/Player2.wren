@@ -14,7 +14,7 @@ class Player2 is Behaviour {
 
         gameobject.add(Transform.new(Vec2.new(200,-200)))
         gameobject.add(Sprite.new("assets/test.png"))
-        gameobject.add(Rigidbody.new())
+        //gameobject.add(Rigidbody.new())
         gameobject.add(Animator.new())
         gameobject.add(Player2)
 
@@ -35,19 +35,16 @@ class Player2 is Behaviour {
         Animator.play(gameobject.ref)
         Sprite.cut_sprite_sheet(gameobject.ref, Vec2.new(0, 0), Vec2.new(3, 3))
         Sprite.set_sort(gameobject.ref, 10)
-        Rigidbody.set_rotation(gameobject.ref, 4)
+        //Rigidbody.set_rotation(gameobject.ref, 4)
         gamebehaviour.dead = false
     }
 
     static update() {
-        if(gameobject.ref.get(Rigidbody).velocity.magnitude() > 0.0) {
-            Animator.play(gameobject.ref)
-        } else {
-            Animator.stop(gameobject.ref)
-        }
+      gameobject.ref.get(Transform).rotation = gameobject.ref.get(Transform).rotation + 10 * Lilah.delta_time
     }
 
     static onCollision(c) {
+        /*
         if(!gamebehaviour.dead) {
             Rigidbody.set_solid(gameobject.ref, false)
             gamebehaviour.dead = true
@@ -72,5 +69,6 @@ class Player2 is Behaviour {
                 Transform.set_scale(gameobject.ref, v)
             }
         }
+        */
     }
 }

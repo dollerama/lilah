@@ -15,9 +15,8 @@ class Ball is Behaviour {
     }
 
     static start() {
-        Rigidbody.set_velocity_x(gameobject.ref, -gamebehaviour.speed)
-        
-        /*
+        gameobject.ref.get(Rigidbody).velocity = Vec2.new(-gamebehaviour.speed, 0)
+
         gameobject.behaviourData(ParticleSystem).distance.value = 30
         //gameobject.behaviourData(ParticleSystem).play()
         gameobject.behaviourData(ParticleSystem).direction = ParticleField.new(Vec2.new(0,0))
@@ -29,7 +28,6 @@ class Ball is Behaviour {
         gameobject.behaviourData(ParticleSystem).partStart = ParticleField.new(Fn.new { |p|
             Sprite.cut_sprite_sheet(p.ref, Vec2.new(0, 0), Vec2.new(1, 1))
         })
-        */
     }
     
     static update() {
@@ -45,7 +43,7 @@ class Ball is Behaviour {
         if(p1_side || p2_side) {
             Lilah.start_fiber(Fiber.new {
                 Rigidbody.set_position(gameobject.ref, Vec2.new(0, 0))
-                
+
                 if(p2_side) {
                     Lilah.find("P2").data["score"] = Lilah.find("P2").data["score"]+1
                     Text.set_text(Lilah.find("Score1").ref, "%(Lilah.find("P2").data["score"])")

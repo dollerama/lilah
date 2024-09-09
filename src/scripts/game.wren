@@ -91,12 +91,12 @@ foreign class Text {
     foreign font
     ///{getter} font_size -> Num
     foreign font_size
-    ///{setter} text = v: String
-    foreign text=(v)
-    ///{setter} font = v: String
-    foreign font=(v)
-    ///{setter} font_size = v: Num
-    foreign font_size=(v)
+    ///{setter} text = value: String
+    text=(value) { Text.set_text(Lilah.find(this.parent).ref, value) }
+    ///{setter} font = value: String
+    font=(value) { Text.set_font(Lilah.find(this.parent).ref, value) }
+    ///{setter} font_size = value: Num
+    font_size=(value) { Text.set_font_size(Lilah.find(this.parent).ref, value) }
     ///{static method} get_text(go: GameObject) -> String
     foreign static get_text(go)
     ///{static method} get_font(go: GameObject) -> String
@@ -115,6 +115,8 @@ foreign class Text {
 foreign class Sprite {
     ///{constructor} new(id: String) -> Sprite
     construct new(id) {}
+    ///{getter} parent -> String
+    foreign parent
     ///{getter} as_component -> Component
     foreign as_component
     ///{getter} size -> Vec2
@@ -123,9 +125,11 @@ foreign class Sprite {
     foreign texture_id
     ///{getter} current_index -> Vec2
     foreign current_index
-    ///{getter} tint -> List
+    ///{getter} tint -> [Num]
     ///Returns in the form [r,g,b,a]
     foreign tint
+    ///{setter} tint = value: [Num]
+    tint=(value) { Sprite.set_tint(Lilah.find(this.parent).ref, value) }
     ///{method} cut_sprite_sheet(i: Vec2, j: Vec2) -> null
     foreign cut_sprite_sheet(i, j)
     ///{method} cut_sprite_sheet(go: GameObject, i: Vec2, j: Vec2) -> null
@@ -140,6 +144,8 @@ foreign class Sprite {
 foreign class Scene {
     ///{constructor} new(i: String) -> Scene
     construct new(i) {}
+    ///{getter} parent -> String
+    foreign parent
     ///{getter} as_component -> Component
     foreign as_component
     ///{getter} markers -> [{String: Vec2}]
@@ -166,21 +172,25 @@ foreign class Scene {
 foreign class Rigidbody {
     ///{constructor} new() -> Rigidbody
     construct new() {}
+    ///{getter} parent -> String
+    foreign parent
     ///{getter} as_component -> Component
     foreign as_component
     ///{getter} position -> Vec2
     foreign position
     ///{getter} velocity -> Vec2
     foreign velocity
-    ///{setter} velocity = value: Vec2
-    foreign velocity=(value)
     ///{getter} solid -> bool
     foreign solid
-    ///{setter} solid = value: bool
-    foreign solid=(value)
     ///{getter} colliding -> Map/null
     ///returns a map in the form "name": _, "uuid": _ or null if no collision
     foreign colliding
+    ///{setter} velocity = value: Vec2
+    velocity=(value) { Rigidbody.set_velocity(Lilah.find(this.parent).ref, value) }
+    ///{setter} solid = value: bool
+    solid=(value) { Rigidbody.set_solid(Lilah.find(this.parent).ref, value) }
+    ///{setter} position = value: Vec2
+    position=(value) { Rigidbody.set_position(Lilah.find(this.parent).ref, value) }
     ///{static method} colliding(go: GameObject) -> Map/null
     ///returns a map in the form "name": _, "uuid": _ or null if no collision
     foreign static colliding(go)
@@ -212,6 +222,8 @@ foreign class Rigidbody {
 foreign class Animator {
     ///{constructor} new() -> Animator
     construct new() {}
+    ///{getter} parent -> String
+    foreign parent
     ///{getter} as_component -> Component
     foreign as_component
     ///{getter} playing -> bool
@@ -219,11 +231,11 @@ foreign class Animator {
     ///{getter} speed -> Num
     foreign speed
     ///{setter} speed = value: Num
-    foreign speed=(value)
+    speed=(value) { Animator.set_speed(Lilah.find(this.parent).ref, value) }
     ///{getter} frame -> Num
     foreign frame
     ///{setter} frame = value: Num
-    foreign frame=(value)
+    frame=(value) { Animator.set_frame(Lilah.find(this.parent).ref, value) }
     ///{method} play() -> null
     foreign play()
     ///{method} stop() -> null
@@ -265,18 +277,20 @@ foreign class Transform is Serializable {
     foreign rotation
     ///{getter} pivot -> Vec2
     foreign pivot
+    ///{getter} parent -> String
+    foreign parent
     ///{setter} position = value: Vec2
     #!position(ord = 0)
-    foreign position=(value)
+    position=(value) { Transform.set_position(Lilah.find(this.parent).ref, value) }
     ///{setter} scale = value: Vec2
     #!scale(ord = 1)
-    foreign scale=(value)
+    scale=(value) { Transform.set_scale(Lilah.find(this.parent).ref, value) }
     ///{setter} rotation = value: Num
     #!rotation(ord = 2)
-    foreign rotation=(value)
+    rotation=(value) { Transform.set_rotation(Lilah.find(this.parent).ref, value) }
     ///{setter} pivot = value: Vec2
     #!pivot(ord = 3)
-    foreign pivot=(value)
+    pivot=(value) { Transform.set_pivot(Lilah.find(this.parent).ref, value) }
     ///{static getter} default -> Transform
     static default { Transform.new(Vec2.new(0, 0)) }
 
@@ -369,6 +383,8 @@ foreign class GameObject {
 foreign class Sfx {
     ///{constructor} new(name: String, file: String) -> Sfx
     construct new(name, file) {}
+    ///{getter} parent -> String
+    foreign parent
     ///{getter} as_component -> Component
     foreign as_component
     ///{getter} name -> String
@@ -377,8 +393,8 @@ foreign class Sfx {
     foreign name=(v)
     ///{getter} volume -> Num
     foreign volume
-    ///{setter} volume = v: Num
-    foreign volume=(v)
+    ///{setter} volume = value: Num
+    volume=(value) { Sfx.set_volume(Lilah.find(this.parent).ref, value) }
     ///{getter} file -> String
     foreign file
     ///{method} play() -> null
@@ -396,6 +412,8 @@ foreign class Line {
     ///{constructor} new() -> Line
     ///constructs with no points and default thickness of 10.0
     construct new() {}
+    ///{getter} parent -> String
+    foreign parent
     ///{getter} as_component -> Component
     foreign as_component
     ///{getter} color -> [Num]
@@ -410,6 +428,14 @@ foreign class Line {
     foreign thickness
     ///{getter} points -> [Vec2]
     foreign points
+    ///{setter} sort = value: Num
+    sort=(value) { Line.set_sort(Lilah.find(this.parent).ref, value) }
+    ///{setter} color = value: [Num]
+    color=(value) { Line.set_color(Lilah.find(this.parent).ref, value) }
+    ///{setter} opacity = value: [Num]
+    opacity=(value) { Line.set_opacity(Lilah.find(this.parent).ref, value) }
+    ///{setter} thickness = value: [Num]
+    thickness=(value) { Line.set_thickness(Lilah.find(this.parent).ref, value) }
     ///{static method} set_sort(go: GameObject, sort: Num) -> null
     foreign static set_sort(go, sort)
     ///{static method} get_sort(go: GameObject) -> Num
@@ -440,6 +466,8 @@ foreign class ComponentBehaviour {
     construct new(b) { }
     ///{getter} as_component -> Component
     foreign as_component
+    ///{getter} parent -> String
+    foreign parent
     ///{getter} uuid -> String
     foreign uuid
 }

@@ -1,7 +1,8 @@
 use crate::{
     application::App,
     components::{
-        Animator, Component, ComponentBehaviour, Line, Rigidbody, Scene, SceneData, Sfx, Sprite, Text, Tickable, Transform
+        Animator, Component, ComponentBehaviour, Line, Rigidbody, Scene, SceneData, Sfx, Sprite,
+        Text, Tickable, Transform,
     },
     math::Vec2,
     renderer::LilahTexture,
@@ -67,7 +68,7 @@ pub struct GameObject {
     pub components: Vec<Box<dyn Component>>,
     pub init: bool,
     pub start: bool,
-    pub has_behaviour: bool
+    pub has_behaviour: bool,
 }
 
 impl Clone for GameObject {
@@ -291,7 +292,7 @@ impl GameObject {
 
     pub fn build(mut self) -> GameObject {
         if self.has::<Rigidbody>() && self.has::<Transform>() {
-            let transform = *self.get::<Transform>();
+            let transform = self.get::<Transform>().clone();
             let body = self.get_mut::<Rigidbody>();
 
             body.position = transform.position;
@@ -337,26 +338,45 @@ impl GameObject {
             if let Some(_) = c.as_any().downcast_ref::<ComponentBehaviour>() {
                 self.has_behaviour = true;
             }
-            self.components.push(c.clone_dyn());
+            let mut new_c = c.clone_dyn();
+            self.components.push(new_c);
         } else if let Some(c) = vm.get_slot_foreign::<Transform>(1) {
-            self.components.push(Box::new(c.clone()));
+            let mut new_c = c.clone();
+            new_c.parent = self.id.uuid.clone();
+            self.components.push(Box::new(new_c));
         } else if let Some(c) = vm.get_slot_foreign::<Rigidbody>(1) {
-            self.components.push(Box::new(c.clone()));
+            let mut new_c = c.clone();
+            new_c.parent = self.id.uuid.clone();
+            self.components.push(Box::new(new_c));
         } else if let Some(c) = vm.get_slot_foreign::<Sprite>(1) {
-            self.components.push(Box::new(c.clone()));
+            let mut new_c = c.clone();
+            new_c.parent = self.id.uuid.clone();
+            self.components.push(Box::new(new_c));
         } else if let Some(c) = vm.get_slot_foreign::<Text>(1) {
-            self.components.push(Box::new(c.clone()));
+            let mut new_c = c.clone();
+            new_c.parent = self.id.uuid.clone();
+            self.components.push(Box::new(new_c));
         } else if let Some(c) = vm.get_slot_foreign::<Animator>(1) {
-            self.components.push(Box::new(c.clone()));
+            let mut new_c = c.clone();
+            new_c.parent = self.id.uuid.clone();
+            self.components.push(Box::new(new_c));
         } else if let Some(c) = vm.get_slot_foreign::<Sfx>(1) {
-            self.components.push(Box::new(c.clone()));
+            let mut new_c = c.clone();
+            new_c.parent = self.id.uuid.clone();
+            self.components.push(Box::new(new_c));
         } else if let Some(c) = vm.get_slot_foreign::<ComponentBehaviour>(1) {
             self.has_behaviour = true;
-            self.components.push(Box::new(c.clone()));
+            let mut new_c = c.clone();
+            new_c.parent = self.id.uuid.clone();
+            self.components.push(Box::new(new_c));
         } else if let Some(c) = vm.get_slot_foreign::<Scene>(1) {
-            self.components.push(Box::new(c.clone()));
+            let mut new_c = c.clone();
+            new_c.parent = self.id.uuid.clone();
+            self.components.push(Box::new(new_c));
         } else if let Some(c) = vm.get_slot_foreign::<Line>(1) {
-            self.components.push(Box::new(c.clone()));
+            let mut new_c = c.clone();
+            new_c.parent = self.id.uuid.clone();
+            self.components.push(Box::new(new_c));
         } else {
             LilahTypeError!(GameObject, 1, Component);
         }
@@ -437,7 +457,7 @@ impl GameObject {
             }
             if let Some(b) = i.1.as_any().downcast_ref::<Scene>() {
                 list_index += 1;
-                vm.set_slot_new_foreign_scratch("game", "Scene",b.clone(), 1, 2);
+                vm.set_slot_new_foreign_scratch("game", "Scene", b.clone(), 1, 2);
                 vm.insert_in_list(0, list_index, 1);
             }
             if let Some(b) = i.1.as_any().downcast_ref::<Sprite>() {

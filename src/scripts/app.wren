@@ -182,11 +182,16 @@ class Lilah {
 
     static find(key) {
         if(__gameobjects == null) return null 
-        for(i in __gameobjects) {
-            var id = i.value.id
-            if(id["uuid"] == key || id["name"] == key) {
-                return GameObjectRef.new(id["uuid"])
-            }
+        
+        if(__gameobjects[key] != null) {
+          return GameObjectRef.new(key)
+        } else {
+          for(i in __gameobjects) {
+              var id = i.value.id
+              if(id["uuid"] == key || id["name"] == key) {
+                  return GameObjectRef.new(id["uuid"])
+              }
+          }
         }
         return null
     }

@@ -38,8 +38,9 @@ pub trait Component {
 }
 
 /// Transform Component for GameObjects
-#[derive(Debug, PartialEq, Default, Copy, Clone)]
+#[derive(Debug, PartialEq, Default, Clone)]
 pub struct Transform {
+    pub parent: String,
     pub position: Vec2,
     pub pivot: Vec2,
     pub scale: Vec2,
@@ -50,6 +51,7 @@ pub struct Transform {
 #[derive(Clone)]
 pub struct Sfx {
     pub name: String,
+    pub parent: String,
     pub file: String,
     pub play_state: bool,
     pub volume: f64,
@@ -60,6 +62,7 @@ pub struct Sfx {
 #[derive(PartialEq, Clone)]
 pub struct Rigidbody {
     pub position: Vec2,
+    pub parent: String,
     pub pivot: Vec2,
     pub scale: Vec2,
     pub rotation: f32,
@@ -75,6 +78,7 @@ pub struct Rigidbody {
 /// Sprite Component for GameObjects
 #[derive(Clone)]
 pub struct Sprite {
+    pub parent: String,
     /// size of sprite sheet
     base_size: (u32, u32),
     /// Start position on sprite sheet
@@ -139,6 +143,7 @@ pub struct TileSheet {
 
 #[derive(Clone, Default)]
 pub struct Scene {
+    pub parent: String,
     pub file: String,
     pub tiles: Vec<Vec<Sprite>>,
     pub markers: Vec<Marker>,
@@ -149,6 +154,7 @@ pub struct Scene {
 /// Animator Component for GameObjects
 #[derive(PartialEq, Default, Clone)]
 pub struct Animator {
+    pub parent: String,
     /// Name of State(String), sprite sheet index(i32, i32)
     states: HashMap<String, (i32, i32)>,
     current_state: String,
@@ -160,6 +166,7 @@ pub struct Animator {
 /// Behaviour Component for GameObjects
 #[derive(Clone)]
 pub struct ComponentBehaviour {
+    pub parent: String,
     /// Name of wren class to link to behaviour
     pub component: String,
     pub uuid: String,
@@ -168,6 +175,7 @@ pub struct ComponentBehaviour {
 /// Text Component for GameObjects
 #[derive(Clone)]
 pub struct Text {
+    pub parent: String,
     /// Name of wren class to link to behaviour
     text: String,
     font_size: u32,
@@ -188,6 +196,7 @@ pub struct Debug {}
 
 #[derive(Clone)]
 pub struct Line {
+    pub parent: String,
     pub points: Vec<Vec2>,
     pub vertex_count: u32,
     pub thickness: [f64; 2],
@@ -203,6 +212,7 @@ pub struct Line {
 impl Sfx {
     pub fn new(name: String, file: String) -> Self {
         Self {
+            parent: String::from(""),
             name,
             file,
             play_state: false,
@@ -218,6 +228,10 @@ impl Sfx {
     //for wren
     fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    fn wren_get_parent(&self, vm: &VM) {
+        vm.set_slot_string(0, self.parent.clone());
     }
 
     fn wren_name_getter(&self, vm: &VM) {
@@ -322,6 +336,7 @@ impl Sfx {
 impl Scene {
     pub fn new(file_name: String) -> Self {
         Self {
+            parent: String::from(""),
             file: file_name,
             tiles: vec![],
             transforms: vec![],
@@ -417,6 +432,10 @@ impl Scene {
         send_foreign!(vm, "game", "Scene", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
+    fn wren_get_parent(&self, vm: &VM) {
+        vm.set_slot_string(0, self.parent.clone());
+    }
+
     fn wren_markers(&self, vm: &VM) {
         vm.set_slot_new_list(0);
         for i in self.markers.iter().enumerate() {
@@ -432,7 +451,7 @@ impl Scene {
             );
             vm.set_map_value(1, 2, 3);
 
-            vm.insert_in_list(0, 0 as i32, 1);
+            vm.insert_in_list(0, 0, 1);
         }
     }
 }
@@ -441,6 +460,7 @@ impl Scene {
 impl Transform {
     pub fn new(pos: Vec2) -> Self {
         Self {
+            parent: String::from(""),
             position: pos,
             pivot: Vec2::ZERO,
             rotation: 0.0,
@@ -469,6 +489,10 @@ impl Transform {
     //for wren
     fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    fn wren_get_parent(&self, vm: &VM) {
+        vm.set_slot_string(0, self.parent.clone());
     }
 
     fn wren_get_pos(&self, vm: &VM) {
@@ -780,6 +804,7 @@ impl Transform {
 impl Rigidbody {
     pub fn new(pos: Vec2) -> Self {
         Self {
+            parent: String::from(""),
             bounds: Vec2::ONE,
             pivot: Vec2::ZERO,
             velocity: Vec2::ZERO,
@@ -793,6 +818,7 @@ impl Rigidbody {
 
     pub fn new_without_pos() -> Self {
         Self {
+            parent: String::from(""),
             bounds: Vec2::ONE,
             pivot: Vec2::ZERO,
             velocity: Vec2::ZERO,
@@ -850,6 +876,10 @@ impl Rigidbody {
     //for wren
     fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    fn wren_get_parent(&self, vm: &VM) {
+        vm.set_slot_string(0, self.parent.clone());
     }
 
     fn wren_vel_getter(&self, vm: &VM) {
@@ -1075,6 +1105,7 @@ impl Rigidbody {
 impl Animator {
     pub fn new() -> Self {
         Self {
+            parent: String::from(""),
             states: HashMap::new(),
             current_state: String::from("None"),
             current_frame: 0.0,
@@ -1161,6 +1192,10 @@ impl Animator {
     //for wren
     fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    fn wren_get_parent(&self, vm: &VM) {
+        vm.set_slot_string(0, self.parent.clone());
     }
 
     fn wren_playing_getter(&self, vm: &VM) {
@@ -1386,6 +1421,7 @@ impl Text {
 
     pub fn new(t: &str, font: &str) -> Self {
         Self {
+            parent: String::from(""),
             text: t.to_string(),
             font_size: 24,
             font: font.to_string(),
@@ -1587,6 +1623,10 @@ impl Text {
         send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
+    fn wren_get_parent(&self, vm: &VM) {
+        vm.set_slot_string(0, self.parent.clone());
+    }
+
     fn wren_get_text(&self, vm: &VM) {
         vm.set_slot_string(0, self.text.clone());
     }
@@ -1707,6 +1747,7 @@ impl Sprite {
 
     pub fn new(t_id: &str) -> Self {
         Self {
+            parent: String::from(""),
             size: (1, 1),
             base_size: (1, 1),
             index_cut: (0, 0),
@@ -1891,6 +1932,10 @@ impl Sprite {
         send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
     }
 
+    fn wren_get_parent(&self, vm: &VM) {
+        vm.set_slot_string(0, self.parent.clone());
+    }
+
     fn wren_get_size(&self, vm: &VM) {
         send_foreign!(vm, "math", "Vec2", Vec2::new(self.get_size().0 as f64, self.get_size().1 as f64) => 0);
     }
@@ -1994,6 +2039,7 @@ impl Sprite {
 impl Line {
     pub fn new(points: Vec<Vec2>, thickness: [f64; 2], color: Color) -> Self {
         let mut res = Self {
+            parent: String::from(""),
             points,
             vertex_count: 0,
             thickness,
@@ -2169,6 +2215,10 @@ impl Line {
     //wren
     fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    fn wren_get_parent(&self, vm: &VM) {
+        vm.set_slot_string(0, self.parent.clone());
     }
 
     fn wren_get_points(&self, vm: &VM) {
@@ -2462,6 +2512,7 @@ impl Debug {
 impl ComponentBehaviour {
     pub fn new(s: String) -> Self {
         Self {
+            parent: String::from(""),
             component: s.clone(),
             uuid: Uuid::new_v4().to_string(),
         }
@@ -2474,6 +2525,10 @@ impl ComponentBehaviour {
     //for wren
     fn wren_as_component(&self, vm: &VM) {
         send_foreign!(vm, "game", "Component", Box::new(self.clone()) as Box<dyn Component> => 0);
+    }
+
+    fn wren_get_parent(&self, vm: &VM) {
+        vm.set_slot_string(0, self.parent.clone());
     }
 
     pub fn wren_getter_uuid(&mut self, vm: &VM) {
@@ -2496,6 +2551,7 @@ impl Default for Sprite {
 impl Default for Rigidbody {
     fn default() -> Self {
         Self {
+            parent: String::from(""),
             bounds: Vec2::ONE,
             pivot: Vec2::ZERO,
             scale: Vec2::ONE,
@@ -2800,10 +2856,7 @@ create_module! (
         instance(getter "scale") wren_get_scale,
         instance(getter "rotation") wren_get_rotation,
         instance(getter "pivot") wren_get_pivot,
-        instance(setter "position") wren_set_pos,
-        instance(setter "scale") wren_set_scale,
-        instance(setter "rotation") wren_set_rotation,
-        instance(setter "pivot") wren_set_pivot,
+        instance(getter "parent") wren_get_parent,
 
         static(fn "set_pivot", 2) wren_set_pivot_from_gameobject,
         static(fn "set_position", 2) wren_set_pos_from_gameobject,
@@ -2831,6 +2884,7 @@ create_module! (
         instance(getter "tint") wren_get_tint,
         instance(getter "texture_id") wren_get_texture_id,
         instance(getter "current_index") wren_get_index,
+        instance(getter "parent") wren_get_parent,
         instance(fn "cut_sprite_sheet", 2) wren_cut_sprite_sheet,
         static(fn "cut_sprite_sheet", 3) wren_cut_sprite_sheet_from_gameobject,
         static(fn "set_sort", 2) wren_set_sort_from_gameobject,
@@ -2842,7 +2896,8 @@ create_module! (
 
     class("Scene") crate::components::Scene => scene {
         instance(getter "as_component") wren_as_component,
-        instance(getter "markers") wren_markers
+        instance(getter "markers") wren_markers,
+        instance(getter "parent") wren_get_parent
     }
 
     class("GameObject") crate::gameobject::GameObject => go {
@@ -2863,7 +2918,7 @@ create_module! (
         instance(getter "solid") wren_solid_getter,
         instance(setter "solid") wren_solid_setter,
         instance(getter "colliding") wren_colliding_getter,
-
+        instance(getter "parent") wren_get_parent,
         static(fn "colliding", 1) wren_colliding_from_gameobject,
         static(fn "set_velocity", 2) wren_set_vel_from_gameobject,
         static(fn "set_velocity_x", 2) wren_set_vel_x_from_gameobject,
@@ -2883,8 +2938,7 @@ create_module! (
         instance(getter "playing") wren_playing_getter,
         instance(getter "frame") wren_frame_getter,
         instance(getter "speed") wren_speed_getter,
-        instance(setter "speed") wren_set_speed,
-        instance(setter "frame") wren_set_frame,
+        instance(getter "parent") wren_get_parent,
         instance(fn "get_state", 1) wren_get_state,
         instance(fn "set_state", 1) wren_set_state,
         instance(fn "play", 0) wren_play,
@@ -2901,7 +2955,8 @@ create_module! (
 
     class("ComponentBehaviour") crate::components::ComponentBehaviour => component_behaviour {
         instance(getter "as_component") wren_as_component,
-        instance(getter "uuid") wren_getter_uuid
+        instance(getter "uuid") wren_getter_uuid,
+        instance(getter "parent") wren_get_parent
     }
 
     class("Text") crate::components::Text => text {
@@ -2909,9 +2964,7 @@ create_module! (
         instance(getter "text") wren_get_text,
         instance(getter "font") wren_get_font,
         instance(getter "font_size") wren_get_font_size,
-        instance(setter "text") wren_set_text,
-        instance(setter "font") wren_set_font,
-        instance(setter "font_size") wren_set_font_size,
+        instance(getter "parent") wren_get_parent,
         static(fn "get_text", 1) wren_get_text_from_gameobject,
         static(fn "get_font", 1) wren_get_font_from_gameobject,
         static(fn "get_font_size", 1) wren_get_font_size_from_gameobject,
@@ -2925,8 +2978,8 @@ create_module! (
         instance(getter "name") wren_name_getter,
         instance(setter "name") wren_name_setter,
         instance(getter "volume") wren_volume_getter,
-        instance(setter "volume") wren_volume_setter,
         instance(getter "file") wren_file_getter,
+        instance(getter "parent") wren_get_parent,
         instance(fn "play", 0) wren_play,
         static(fn "get_volume", 2) wren_get_volume_from_gameobject,
         static(fn "set_volume", 3) wren_set_volume_from_gameobject,
@@ -2944,6 +2997,7 @@ create_module! (
         instance(getter "sort") wren_get_sort,
         instance(getter "thickness") wren_get_thickness,
         instance(getter "points") wren_get_points,
+        instance(getter "parent") wren_get_parent,
         static(fn "set_sort", 2) wren_set_sort_from_gameobject,
         static(fn "get_sort", 1) wren_get_sort_from_gameobject,
         static(fn "get_thickness", 1) wren_get_thickness_from_gameobject,
