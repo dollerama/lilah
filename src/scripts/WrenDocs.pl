@@ -53,7 +53,7 @@ sub create_docv2 {
         if(($_ =~ /^\s*foreign/s) != 0) {
             if(($_ =~ /class/s) != 0) {
                 if($verbose) {
-                    print "? foreign class\n";
+                    print "    WrenDoc Found: foreign class\n";
                 }
 
                 my $class_inherit = ($_ =~ /(?<=(is\s))(.*)(?=(\s\{))/g)[1];
@@ -72,12 +72,12 @@ sub create_docv2 {
         } else {
             if(($_ =~ /^\s*class/s) != 0) {
                 if($verbose) {
-                  print "? class\n";
+                  print "    WrenDoc Found: class\n";
                 }
 
                 my $class_inherit = ($_ =~ /(?<=(is\s))(.*)(?=(\s\{))/g)[1];
                 
-                if($class_inherit ne "") {
+                if(!$class_inherit || $class_inherit ne "") {
                     my $class_name = ($_ =~ /(?<=(class\s))(.*)(?=(\s[is]))/g)[1];
                     $header .= "### Class ``".$class_name."``\n";
                     $header .= "> Inherits from ``".$class_inherit."``\n";
@@ -95,7 +95,7 @@ sub create_docv2 {
                     if(@beginning != 0) {
                         if(join("", @beginning) =~ m/=\s?\(/) {
                             if($verbose) {
-                                print "? static setter\n";
+                                print "    WrenDoc Found: static setter\n";
                             }
 
                             my $name = ($_ =~ /(?<=(static\s))(.*)(?=(=\s?\())/s)[1];
@@ -107,7 +107,7 @@ sub create_docv2 {
                             $result .= "##### Static Setter ``".$name;
                             $result .= " = ";
                             for( $a = 0; $a <= $#param; $a = $a + 1 ) {
-                                if($param_t[$a] eq "") {
+                                if(!@param_t || $param_t[$a] eq "") {
                                     $result .= $param[$a].": _";
                                 } else {
                                     $result .= $param[$a].": ".$param_t[$a];
@@ -122,7 +122,7 @@ sub create_docv2 {
                         }
                         elsif(join("", @beginning) =~ m/\(/) {
                             if($verbose) {
-                                print "? static method\n";
+                                print "    WrenDoc Found: static method\n";
                             }
 
                             my $name = ($_ =~ /(?<=(static\s))(.*)(?=\()/s)[1];
@@ -132,7 +132,7 @@ sub create_docv2 {
                             $result .= "##### Static Method ``".$name; 
                             $result .= "(";
                             for( $a = 0; $a <= $#param; $a = $a + 1 ) {
-                                if($param_t[$a] eq "") {
+                                if(!@param_t || $param_t[$a] eq "") {
                                     $result .= $param[$a].": _";
                                 } else {
                                     $result .= $param[$a].": ".$param_t[$a];
@@ -146,7 +146,7 @@ sub create_docv2 {
                             push(@methods, "> - ".$name);
                         } else {
                             if($verbose) {
-                                print "? static getter\n";
+                                print "    WrenDoc Found:  static getter\n";
                             }              
                             my $name = ($_ =~ /(?<=(static\s))(.*)(?=(\{))/s)[1];
                             $name =~ s/^\s+|\s+$//g;
@@ -160,7 +160,7 @@ sub create_docv2 {
                     }
                 } elsif(($_ =~ /construct/s) != 0) {
                     if($verbose) {
-                        print "? constructor\n";
+                        print "    WrenDoc Found: constructor\n";
                     }    
                     my $name = ($_ =~ /(?<=(construct\s))(.*)(?=\()/s)[1];
                     my @param = split(", ", ($_ =~ /(?<=(\())(.*)(?=(\)))/s)[1]);
@@ -169,7 +169,7 @@ sub create_docv2 {
                     $result .= "##### Constructor ``".$name; 
                     $result .= "(";
                     for( $a = 0; $a <= $#param; $a = $a + 1 ) {
-                        if($param_t[$a] eq "") {
+                        if(!@param_t || $param_t[$a] eq "") {
                             $result .= $param[$a].": _";
                         } else {
                             $result .= $param[$a].": ".$param_t[$a];
@@ -187,7 +187,7 @@ sub create_docv2 {
                     if(@beginning != 0) {
                         if(join("", @beginning) =~ m/=\s?\(/) {
                             if($verbose) {
-                                print "? setter\n";
+                                print "    WrenDoc Found: setter\n";
                             }            
                             my $name = ($_ =~ /(.*)(?=(=\s?\())/s)[0];
                             $name =~ s/^\s+|\s+$//g;
@@ -198,7 +198,7 @@ sub create_docv2 {
                             $result .= "##### Setter ``".$name; 
                             $result .= " = ";
                             for( $a = 0; $a <= $#param; $a = $a + 1 ) {
-                                if($param_t[$a] eq "") {
+                                if(!@param_t || $param_t[$a] eq "") {
                                     $result .= $param[$a].": _";
                                 } else {
                                     $result .= $param[$a].": ".$param_t[$a];
@@ -213,7 +213,7 @@ sub create_docv2 {
                         }
                         elsif(join("", @beginning) =~ m/\(/) {
                             if($verbose) {
-                                print "? method\n";
+                                print "    WrenDoc Found: method\n";
                             }            
                             my $name = ($_ =~ /(.*)(?=\()/s)[0];
                             $name =~ s/^\s+|\s+$//g;
@@ -223,7 +223,7 @@ sub create_docv2 {
                             $result .= "##### Method ``".$name; 
                             $result .= "(";
                             for( $a = 0; $a <= $#param; $a = $a + 1 ) {
-                                if($param_t[$a] eq "") {
+                                if(!@param_t || $param_t[$a] eq "") {
                                     $result .= $param[$a].": _";
                                 } else {
                                     $result .= $param[$a].": ".$param_t[$a];
@@ -238,7 +238,7 @@ sub create_docv2 {
                         }
                         else {
                             if($verbose) {
-                                print "? getter\n";
+                                print "    WrenDoc Found: getter\n";
                             }            
                             my $name = ($_ =~ /(.*)(?=(\{))/s)[0];
                             $name =~ s/^\s+|\s+$//g;

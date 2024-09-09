@@ -5,15 +5,16 @@
 > - [math](#module---math--)
 ## Module ``app``
 ### Classes
-> - [GameObjectRef](#gameobjectref)
-> - [Lilah](#lilah)
-> - [Audio](#audio)
-> - [KeycodeLookup](#keycodelookup)
-> - [Input](#input)
-> - [UI](#ui)
-> - [Curve](#curve)
-> - [Tween](#tween)
-### Class ``GameObjectRef``
+> - [](#)
+> - [](#)
+> - [](#)
+> - [](#)
+> - [](#)
+> - [](#)
+> - [](#)
+> - [](#)
+### Class ````
+> Inherits from ````
 #### Methods
 > - create_ref
 > - ref
@@ -53,7 +54,8 @@
 ##### Constructor ``new(i: _)``
 ``return _``
 
-### Class ``Lilah``
+### Class ````
+> Inherits from ````
 #### Methods
 > - camera
 > - destroy
@@ -152,7 +154,8 @@
 ##### Static Method ``find(key: _)``
 ``return _``
 
-### Class ``Audio``
+### Class ````
+> Inherits from ````
 #### Methods
 > - music
 > - command
@@ -201,7 +204,8 @@
 ##### Static Method ``clear()``
 ``return _``
 
-### Class ``KeycodeLookup``
+### Class ````
+> Inherits from ````
 #### Methods
 > - new
 > - W
@@ -239,7 +243,8 @@
 ##### Getter ``Left``
 ``return _``
 
-### Class ``Input``
+### Class ````
+> Inherits from ````
 #### Methods
 > - mouse_pos
 > - Keycode
@@ -309,7 +314,8 @@
 ##### Static Method ``binding2D(bind1: _, bind2: _)``
 ``return _``
 
-### Class ``UI``
+### Class ````
+> Inherits from ````
 #### Methods
 > - on_click_callbacks
 > - on_click_down_callbacks
@@ -339,7 +345,8 @@
 ##### Static Method ``tick()``
 ``return _``
 
-### Class ``Curve``
+### Class ````
+> Inherits from ````
 #### Methods
 > - linear
 > - inQuad
@@ -393,7 +400,8 @@
 ##### Static Getter ``inOutElastic``
 ``return _``
 
-### Class ``Tween``
+### Class ````
+> Inherits from ````
 #### Methods
 > - tweens
 > - tweens
@@ -472,14 +480,15 @@
 ## Module ``io``
 ### Classes
 > - [Fs](#fs)
-> - [Serializable](#serializable)
-> - [Json](#json)
-> - [JsonStringify](#jsonstringify)
-> - [JsonParser](#jsonparser)
+> - [](#)
+> - [](#)
+> - [](#)
+> - [](#)
 ### Foreign Class ``Fs``
 #### Methods
 
-### Class ``Serializable``
+### Class ````
+> Inherits from ````
 #### Methods
 > - wrapperFn
 > - wrapper
@@ -509,7 +518,8 @@
 ##### Static Method ``iterProperties(t: _)``
 ``return _``
 
-### Class ``Json``
+### Class ````
+> Inherits from ````
 #### Methods
 > - parse(string) { parse
 > - parse
@@ -531,7 +541,8 @@
 ##### Static Method ``stringify(value: _, whitespace: _, callback: _)``
 ``return _``
 
-### Class ``JsonStringify``
+### Class ````
+> Inherits from ````
 #### Methods
 > - stringify
 > - stringify_map
@@ -553,7 +564,8 @@
 ##### Static Method ``stringify_value(value: _, whitespace: _, depth: _, out: _)``
 ``return _``
 
-### Class ``JsonParser``
+### Class ````
+> Inherits from ````
 #### Methods
 > - root
 > - new
@@ -645,9 +657,10 @@
 
 ## Module ``math``
 ### Classes
-> - [Util](#util)
+> - [](#)
 > - [Vec2](#vec2)
-### Class ``Util``
+### Class ````
+> Inherits from ````
 #### Methods
 > - lerp
 ##### Static Method ``lerp(a: _, b: _, t: _)``
