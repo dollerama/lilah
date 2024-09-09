@@ -5,6 +5,276 @@ use warnings;
 use Getopt::Long qw(GetOptions);
 use Data::Dumper;
 
+sub create_docv2 {
+    my $file = $_[0];
+    my $verbose = $_[1];
+
+    if($verbose) {
+      print "  WrenDoc: starting ".basename($file)."\n";
+    }
+    
+    my $source = do {
+        local $/ = undef;
+        open my $fh, "<", $file
+            or die "WrenDoc: could not open $file: $!";
+        <$fh>;
+    };
+
+    my @new_source = $source =~ /.*/g;
+
+
+    my $parameters;
+    my $return = "_";
+    my $description = "";
+
+    my $result = "";
+    my $header = ""; 
+    my $final = "";
+    my $depth = 0;
+
+    my @methods = ();
+    my @classes = ();
+
+    foreach(@new_source) {
+        if(($_ =~ /\/{3}.*/g) != 0) { 
+            if(($_ =~ /(?<=\/{3})(.*)(?=(\s->))/s) == 0) {
+                $description .= "> ".($_ =~ /(?<=\/{3})(.*)/s)[0]."\n";
+            } else {
+                $description = "";
+                $parameters = ($_ =~ /(?<=\/{3})(.*)(?=(\s->))/s)[0];
+                $return = ($_ =~ /(?<=(->\W))(.*)/s)[1];
+            }
+        }
+        
+        if(($_ =~ /foreign/s) != 0) {
+            if(($_ =~ /class/s) != 0) {
+                if($verbose) {
+                    print "? foreign class\n";
+                }
+
+                my $class_inherit = ($_ =~ /(?<=(is\s))(.*)(?=(\s\{))/g)[1];
+                
+                if($class_inherit ne "") {
+                    my $class_name = ($_ =~ /(?<=(class\s))(.*)(?=(\s[is]))/g)[1];
+                    $header .= "### Foreign Class ``".$class_name."``\n";
+                    $header .= "> Inherits from ``".$class_inherit."``\n";
+                    push(@classes, "> - [".$class_name."](#".lc($class_name).")");
+                } else {
+                    my $class_name = ($_ =~ /(?<=(class\s))(.*)(?=(\s[{]))/g)[1];
+                    $header .= "### Foreign Class ``".$class_name."``\n";
+                    push(@classes, "> - [".$class_name."](#".lc($class_name).")");
+                }
+            }
+        } else {
+            if(($_ =~ /class/s) != 0) {
+                if($verbose) {
+                  print "? class\n";
+                }
+
+                my $class_inherit = ($_ =~ /(?<=(is\s))(.*)(?=(\s\{))/g)[1];
+                
+                if($class_inherit ne "") {
+                    my $class_name = ($_ =~ /(?<=(class\s))(.*)(?=(\s[is]))/g)[1];
+                    $header .= "### Class ``".$class_name."``\n";
+                    $header .= "> Inherits from ``".$class_inherit."``\n";
+                    push(@classes, "> - [".$class_name."](#".lc($class_name).")");
+                } else {
+                    my $class_name = ($_ =~ /(?<=(class\s))(.*)(?=(\s[{]))/g)[1];
+                    $header .= "### Class ``".$class_name."``\n";
+                    push(@classes, "> - [".$class_name."](#".lc($class_name).")");
+                }
+            }
+            if($depth == 1) {
+                if(($_ =~ /static/s) != 0) {
+                    my @beginning = ($_ =~ /(.*)(?<={)/s);
+                    
+                    if(@beginning != 0) {
+                        if(join("", @beginning) =~ m/=\s?\(/) {
+                            if($verbose) {
+                                print "? static setter\n";
+                            }
+
+                            my $name = ($_ =~ /(?<=(static\s))(.*)(?=(=\s?\())/s)[1];
+                            $name =~ s/^\s+|\s+$//g;
+                            
+                            my @param = split(", ", ($_ =~ /(?<=(\())(.*)(?=(\)))/s)[1]);
+                            my @param_t = split(", ", $parameters);
+        
+                            $result .= "##### Static Setter ``".$name;
+                            $result .= " = ";
+                            for( $a = 0; $a <= $#param; $a = $a + 1 ) {
+                                if($param_t[$a] eq "") {
+                                    $result .= $param[$a].": _";
+                                } else {
+                                    $result .= $param[$a].": ".$param_t[$a];
+                                }
+                                if($a != $#param) {
+                                    $result .= ", ";
+                                }
+                            }
+                            $result .= "``\n";
+                            $result .= $description."\n";
+                            push(@methods, "> - ".$name);
+                        }
+                        elsif(join("", @beginning) =~ m/\(/) {
+                            if($verbose) {
+                                print "? static method\n";
+                            }
+
+                            my $name = ($_ =~ /(?<=(static\s))(.*)(?=\()/s)[1];
+                            my @param = split(", ", ($_ =~ /(?<=(\())(.*)(?=(\)))/s)[1]);
+                            my @param_t = split(", ", $parameters);
+                
+                            $result .= "##### Static Method ``".$name; 
+                            $result .= "(";
+                            for( $a = 0; $a <= $#param; $a = $a + 1 ) {
+                                if($param_t[$a] eq "") {
+                                    $result .= $param[$a].": _";
+                                } else {
+                                    $result .= $param[$a].": ".$param_t[$a];
+                                }
+                                if($a != $#param) {
+                                    $result .= ", ";
+                                }
+                            }
+                            $result .= ")``\n"."``return ".$return."``\n";
+                            $result .= $description."\n";
+                            push(@methods, "> - ".$name);
+                        } else {
+                            if($verbose) {
+                                print "? static getter\n";
+                            }              
+                            my $name = ($_ =~ /(?<=(static\s))(.*)(?=(\{))/s)[1];
+                            $name =~ s/^\s+|\s+$//g;
+        
+                            $result .= "##### Static Getter ``".$name; 
+                            $result .= $parameters;
+                            $result .= "``\n"."``return ".$return."``\n";
+                            $result .= $description."\n";
+                            push(@methods, "> - ".$name);
+                        }
+                    }
+                } elsif(($_ =~ /construct/s) != 0) {
+                    if($verbose) {
+                        print "? constructor\n";
+                    }    
+                    my $name = ($_ =~ /(?<=(construct\s))(.*)(?=\()/s)[1];
+                    my @param = split(", ", ($_ =~ /(?<=(\())(.*)(?=(\)))/s)[1]);
+                    my @param_t = split(", ", $parameters);
+        
+                    $result .= "##### Constructor ``".$name; 
+                    $result .= "(";
+                    for( $a = 0; $a <= $#param; $a = $a + 1 ) {
+                        if($param_t[$a] eq "") {
+                            $result .= $param[$a].": _";
+                        } else {
+                            $result .= $param[$a].": ".$param_t[$a];
+                        }
+                        if($a != $#param) {
+                            $result .= ", ";
+                        }
+                    }
+                    $result .= ")``\n"."``return ".$return."``\n";
+                    $result .= $description."\n";
+                    push(@methods, "> - ".$name);
+                } else {
+                    my @beginning = ($_ =~ /(.*)(?<={)/s);
+                    
+                    if(@beginning != 0) {
+                        if(join("", @beginning) =~ m/=\s?\(/) {
+                            if($verbose) {
+                                print "? setter\n";
+                            }            
+                            my $name = ($_ =~ /(.*)(?=(=\s?\())/s)[0];
+                            $name =~ s/^\s+|\s+$//g;
+                            
+                            my @param = split(", ", ($_ =~ /(?<=(\())(.*)(?=(\)\s\{))/s)[1]);
+                            my @param_t = split(", ", $parameters);
+        
+                            $result .= "##### Setter ``".$name; 
+                            $result .= " = ";
+                            for( $a = 0; $a <= $#param; $a = $a + 1 ) {
+                                if($param_t[$a] eq "") {
+                                    $result .= $param[$a].": _";
+                                } else {
+                                    $result .= $param[$a].": ".$param_t[$a];
+                                }
+                                if($a != $#param) {
+                                    $result .= ", ";
+                                }
+                            }
+                            $result .= "``\n";
+                            $result .= $description."\n";
+                            push(@methods, "> - ".$name);
+                        }
+                        elsif(join("", @beginning) =~ m/\(/) {
+                            if($verbose) {
+                                print "? method\n";
+                            }            
+                            my $name = ($_ =~ /(.*)(?=\()/s)[0];
+                            $name =~ s/^\s+|\s+$//g;
+                            my @param = split(", ", ($_ =~ /(?<=(\())(.*)(?=(\)))/s)[1]);
+                            my @param_t = split(", ", $parameters);
+                
+                            $result .= "##### Method ``".$name; 
+                            $result .= "(";
+                            for( $a = 0; $a <= $#param; $a = $a + 1 ) {
+                                if($param_t[$a] eq "") {
+                                    $result .= $param[$a].": _";
+                                } else {
+                                    $result .= $param[$a].": ".$param_t[$a];
+                                }
+                                if($a != $#param) {
+                                    $result .= ", ";
+                                }
+                            }
+                            $result .= ")``\n"."``return ".$return."``\n";
+                            $result .= $description."\n";
+                            push(@methods, "> - ".$name);
+                        }
+                        else {
+                            if($verbose) {
+                                print "? getter\n";
+                            }            
+                            my $name = ($_ =~ /(.*)(?=(\{))/s)[0];
+                            $name =~ s/^\s+|\s+$//g;
+        
+                            $result .= "##### Getter ``".$name; 
+                            $result .= $parameters;
+                            $result .= "``\n"."``return ".$return."``\n";
+                            $result .= $description."\n";
+                            push(@methods, "> - ".$name);
+                        }
+                    }
+                }
+            }
+        }
+        
+        if($_ =~ m/{/) {
+            $depth = $depth+1;
+            $description = "";
+            $parameters = "";
+            $return = "_";
+        }
+        if($_ =~ m/}/) {
+            $depth = $depth-1;
+            $description = "";
+            $parameters = "";
+            $return = "_";
+            if($depth == 0) {
+                $final .= $header."#### Methods\n".join("\n", @methods)."\n".$result;
+                $result = "";
+                $header = "";
+                @methods = ();
+            }
+        }
+    }
+
+    my $output = "## Module ``".basename($file, ".wren")."``\n### Classes\n".join("\n", @classes)."\n".$final;
+
+    return(basename($file, ".wren"), $output);
+}
+
 sub create_doc {
     my $file = $_[0];
     my $verbose = $_[1];
@@ -138,7 +408,7 @@ print "WrenDoc: building ".basename($outputs)."\n";
 
 for my $i (0 .. $#inputs) {
   my $in  = $inputs[$i];
-  my @docu = create_doc($in, $verbose);
+  my @docu = create_docv2($in, $verbose);
   $file_header .= "> - [".$docu[0]."](#".$docu[0].")\n";
   $file .= $docu[1];
   print "  WrenDoc: built doc => ".basename($in)."\n";
