@@ -57,7 +57,7 @@
 
 ##### Setter ``[key]`` {#0-s0}
 
-##### Constructor ``new(i: _)`` {#0-c-1}
+##### Constructor ``new(i: _)`` <a id='0-c-1'></a>
 ``return _``
 
 ### Class ``Lilah``
