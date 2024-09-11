@@ -88,7 +88,7 @@ sub create_doc {
                     my $class_name =
                       ( $_ =~ /(?<=(class\s))(.*)(?=(\s[{]))/g )[1];
                     my $link = $mod."-"."-k".$#classes;
-                    $header .= "### Foreign Class `` <a id='" . $class_name . "'></a> ``\n";
+                    $header .= "### Foreign Class `` <a id='" . $link . "'></a> ``\n";
                     $header .= ">\n".$description . "\n";
                     push( @classes,
                         "> - [" . $class_name . "](#" . $link . ")" );
