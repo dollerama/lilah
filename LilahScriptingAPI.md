@@ -122,9 +122,9 @@
 > - [is_whitespace](#io-4-m1)
 > - [is_token](#io-4-m2)
 > - [next](#io-4-m3)
-> - [peek() { peek](#io-4-m4)
+> - [peek](#io-4-m4)
 > - [peek](#io-4-m5)
-> - [peeks() { peeks](#io-4-m6)
+> - [peeks](#io-4-m6)
 > - [peeks](#io-4-m7)
 > - [step](#io-4-m8)
 > - [skips](#io-4-m9)
@@ -158,13 +158,13 @@
 ##### Method ``next()`` <a id='io-4-m3'></a>
 ``return _``
 
-##### Method ``peek() { peek() { peek(1: _)`` <a id='io-4-m4'></a>
+##### Method ``peek() { peek(1: _)`` <a id='io-4-m4'></a>
 ``return _``
 
 ##### Method ``peek(n: _)`` <a id='io-4-m5'></a>
 ``return _``
 
-##### Method ``peeks() { peeks() { peeks(1: _)`` <a id='io-4-m6'></a>
+##### Method ``peeks() { peeks(1: _)`` <a id='io-4-m6'></a>
 ``return _``
 
 ##### Method ``peeks(n: _)`` <a id='io-4-m7'></a>
