@@ -2,42 +2,40 @@ import "math" for Vec2
 import "app" for Lilah, GameObjectRef, Tween
 import "io" for Serializable
 import "random" for Random
-///{module} Game
 
-///{class} Behaviour : Serializable
 class Behaviour is Serializable {
-    ///{static getter} data -> Map
+    ///_ -> Map
     static data { __data }
-    ///{static setter} data = v: Map
+    ///_ -> Map
     static data=(v) { __data = v }
 
-    ///{static getter} [i: Any] -> Any
+    ///Any -> Any
     static [i] {
         return __data[i]
     }
 
-    ///{static setter} [i: Any] = v: Any
+    ///Any, Any -> Null
     static [i] = (v) {
-        return __data[i] = v
+        __data[i] = v
     }
 
-    ///{getter} frame -> Num
+    ///_ -> Num
     frame {
         if(_frame == null) {
             _frame = 0
         }
         return _frame
     }
-    ///{setter} frame = v: Num
+    ///Num -> Null
     frame=(v) {_frame=v}
-    ///{getter} as_behaviour -> ComponentBehaviour
+    ///_ -> ComponentBehaviour
     ///Example:
     ///```js
     ///gameobject.add(ParticleSystem.new(gameobject).as_behaviour)
     ///```
     as_behaviour { _behaviour }
 
-    ///{constructor} new(g: GameObject, c: Behaviour) -> Behaviour
+    ///GameObject, ComponentBehaviour -> Behaviour
     construct new(g, c) {
         if(__data == null) {
             __data = {}
@@ -54,23 +52,24 @@ class Behaviour is Serializable {
         _behaviour = b.as_component
         __data[g.uuid]["%(c)"][b.uuid] = c.new()
     }
-    ///{static method} start() -> null
+    ///_ -> Null
     ///Runs the frame after setup.
     static start() {}
-    ///{static method} update() -> null
+    ///_ -> Null
     ///Run every frame.
     static update() {}
-    ///{static method} onCollision() -> null
+    ///Map -> Null
+    //Default value Map takes form {"id": id, "name": name}
     ///Runs every frame after start that the Behaviour has a collision given a Rigidbody and Transform is attached.
     static onCollision(collision) {}
 
-    ///{method} setup() -> null
+    ///_ -> Null
     ///Runs the first frame regardless of whether or not the Behaviour is attached.
     setup() {}
-    ///{method} start() -> null
+    ///_ -> Null
     ///Runs the second frame regardless of whether or not the Behaviour is attached.
     start() {}
-    ///{method} update() -> null
+    ///_ -> Null
     ///Runs every frame after start regardless of whether or not the Behaviour is attached.
     update() {}
 }
