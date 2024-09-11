@@ -217,8 +217,6 @@
 ### Class ``Behaviour`` <a id='game--k-1'></a> 
 > Inherits from ``Serializable``
 >
-> {module} Game
-> {class} Behaviour : Serializable
 
 #### Constructors
 > - [new](#game-0-c-1)
@@ -238,56 +236,53 @@
 > - [setup](#game-0-m2)
 > - [start](#game-0-m3)
 > - [update](#game-0-m4)
-##### Static Getter ``data: {static getter} data`` <a id='game-0-g-1'></a>
+##### Static Getter ``data`` <a id='game-0-g-1'></a>
 ``return Map``
 
 ##### Static Setter ``data = v: _`` <a id='game-0-s-1'></a>
-> {static setter} data = v: Map
 
-##### Static Getter ``[i]: {static getter} [i: Any]`` <a id='game-0-g0'></a>
+##### Static Getter ``[i]: Any`` <a id='game-0-g0'></a>
 ``return Any``
 
-##### Static Setter ``[i]:  = v: `` <a id='game-0-s0'></a>
-> {static setter} [i: Any] = v: Any
+##### Static Setter ``[i]: Any = v: Any`` <a id='game-0-s0'></a>
 
-##### Getter ``frame: {getter} frame`` <a id='game-0-g1'></a>
+##### Getter ``frame`` <a id='game-0-g1'></a>
 ``return Num``
 
-##### Setter ``frame = v: _`` <a id='game-0-s1'></a>
-> {setter} frame = v: Num
+##### Setter ``frame = v: Num`` <a id='game-0-s1'></a>
 
-##### Getter ``as_behaviour: {getter} as_behaviour`` <a id='game-0-g2'></a>
+##### Getter ``as_behaviour`` <a id='game-0-g2'></a>
 ``return ComponentBehaviour``
 > Example:
 > ```js
 > gameobject.add(ParticleSystem.new(gameobject).as_behaviour)
 > ```
 
-##### Constructor ``new(g: {constructor} new(g: GameObject, c: c: Behaviour))`` <a id='game-0-c-1'></a>
+##### Constructor ``new(g: GameObject, c: ComponentBehaviour)`` <a id='game-0-c-1'></a>
 ``return Behaviour``
 
 ##### Static Method ``start()`` <a id='game-0-m-1'></a>
-``return null``
+``return Null``
 > Runs the frame after setup.
 
 ##### Static Method ``update()`` <a id='game-0-m0'></a>
-``return null``
+``return Null``
 > Run every frame.
 
-##### Static Method ``onCollision(collision: {static method} onCollision())`` <a id='game-0-m1'></a>
-``return null``
+##### Static Method ``onCollision(collision: Map)`` <a id='game-0-m1'></a>
+``return Null``
 > Runs every frame after start that the Behaviour has a collision given a Rigidbody and Transform is attached.
 
 ##### Method ``setup()`` <a id='game-0-m2'></a>
-``return null``
+``return Null``
 > Runs the first frame regardless of whether or not the Behaviour is attached.
 
 ##### Method ``start()`` <a id='game-0-m3'></a>
-``return null``
+``return Null``
 > Runs the second frame regardless of whether or not the Behaviour is attached.
 
 ##### Method ``update()`` <a id='game-0-m4'></a>
-``return null``
+``return Null``
 > Runs every frame after start regardless of whether or not the Behaviour is attached.
 
 ### Foreign Class ``Component`` <a id='game--k0'></a> 
