@@ -36,9 +36,8 @@ jobs:
         run: perl src/scripts/WrenDocs.pl -out Test.md -in src/scripts/io.wren
       - name: update file and push to remote
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-    
+          git config --global user.name "dollerama"
+          
           git add -A
-          git commit -m "Update test.txt"
+          git commit -m "Update doc"
           git push
