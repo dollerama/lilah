@@ -37,6 +37,7 @@ jobs:
       - name: update file and push to remote
         run: |
           git config --global user.name "dollerama"
+          git config --global user.email "graham.p.sullivan@gmail.com"
           
           git add -A
           git commit -m "Update doc"
