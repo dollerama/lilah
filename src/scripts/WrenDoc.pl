@@ -530,7 +530,7 @@ sub create_doc {
                             if ($verbose) {
                                 print "    WrenDoc Found: method\n";
                             }
-                            my $name = ( $_ =~ /(.*)(?=\()/s )[0];
+                            my $name = ( $_ =~ /(.*?)(?=\()/s )[0];
                             $name =~ s/^\s+|\s+$//g;
                             my @param = split( ", ",
                                 ( $_ =~ /(?<=(\())(.*)(?=(\)))/s )[1] );
