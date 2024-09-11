@@ -29,54 +29,50 @@
 >
 
 #### Methods
-> - [//example Serializable.wrapper](#io-1-m-1)
-> - [wrapperFn](#io-1-m0)
-> - [wrapper](#io-1-m1)
-> - [properties](#io-1-m2)
+> - [wrapperFn](#io-1-m-1)
+> - [wrapper](#io-1-m0)
+> - [properties](#io-1-m1)
+> - [serialize](#io-1-m2)
 > - [serialize](#io-1-m3)
-> - [serialize](#io-1-m4)
-> - [deserialize](#io-1-m5)
-> - [iterProperties](#io-1-m6)
-##### Method ``//example Serializable.wrapper({"math": "Vec2"}: _, "Rect": _, [["pos": _, Vec2]: _, ["size": _, Vec2]]: _)`` <a id='io-1-m-1'></a>
+> - [deserialize](#io-1-m4)
+> - [iterProperties](#io-1-m5)
+##### Static Method ``wrapperFn(imports: _, name: _, values: _)`` <a id='io-1-m-1'></a>
 ``return _``
 
-##### Static Method ``wrapperFn(imports: _, name: _, values: _)`` <a id='io-1-m0'></a>
+##### Static Method ``wrapper(imports: _, name: _, values: _)`` <a id='io-1-m0'></a>
 ``return _``
 
-##### Static Method ``wrapper(imports: _, name: _, values: _)`` <a id='io-1-m1'></a>
+##### Method ``properties(f: _)`` <a id='io-1-m1'></a>
 ``return _``
 
-##### Method ``properties(f: _)`` <a id='io-1-m2'></a>
+##### Static Method ``serialize(obj: _)`` <a id='io-1-m2'></a>
 ``return _``
 
-##### Static Method ``serialize(obj: _)`` <a id='io-1-m3'></a>
+##### Method ``serialize()`` <a id='io-1-m3'></a>
 ``return _``
 
-##### Method ``serialize()`` <a id='io-1-m4'></a>
+##### Method ``deserialize(obj: _)`` <a id='io-1-m4'></a>
 ``return _``
 
-##### Method ``deserialize(obj: _)`` <a id='io-1-m5'></a>
-``return _``
-
-##### Static Method ``iterProperties(t: _)`` <a id='io-1-m6'></a>
+##### Static Method ``iterProperties(t: _)`` <a id='io-1-m5'></a>
 ``return _``
 
 ### Class ``Json`` <a id='io--k1'></a>
 >
 
 #### Methods
-> - [parse(string) { parse](#io-2-m-1)
+> - [parse](#io-2-m-1)
 > - [parse](#io-2-m0)
-> - [stringify(value) { stringify](#io-2-m1)
+> - [stringify](#io-2-m1)
 > - [stringify](#io-2-m2)
 > - [stringify](#io-2-m3)
-##### Static Method ``parse(string) { parse(string) { parse("json": _, string: _)`` <a id='io-2-m-1'></a>
+##### Static Method ``parse(string: _)`` <a id='io-2-m-1'></a>
 ``return _``
 
 ##### Static Method ``parse(source_id: _, source_string: _)`` <a id='io-2-m0'></a>
 ``return _``
 
-##### Static Method ``stringify(value) { stringify(value) { stringify(value: _, "  ": _)`` <a id='io-2-m1'></a>
+##### Static Method ``stringify(value: _)`` <a id='io-2-m1'></a>
 ``return _``
 
 ##### Static Method ``stringify(value: _, whitespace: _)`` <a id='io-2-m2'></a>
@@ -158,13 +154,13 @@
 ##### Method ``next()`` <a id='io-4-m3'></a>
 ``return _``
 
-##### Method ``peek() { peek(1: _)`` <a id='io-4-m4'></a>
+##### Method ``peek()`` <a id='io-4-m4'></a>
 ``return _``
 
 ##### Method ``peek(n: _)`` <a id='io-4-m5'></a>
 ``return _``
 
-##### Method ``peeks() { peeks(1: _)`` <a id='io-4-m6'></a>
+##### Method ``peeks()`` <a id='io-4-m6'></a>
 ``return _``
 
 ##### Method ``peeks(n: _)`` <a id='io-4-m7'></a>
@@ -306,10 +302,10 @@
 #### Constructors
 > - [new](#game-2-c-1)
 #### Getters
-> - [as_component](#game-2-g-1)
-> - [text](#game-2-g0)
-> - [font](#game-2-g1)
-> - [font_size](#game-2-g2)
+> - [](#game-2-g-1)
+> - [](#game-2-g0)
+> - [](#game-2-g1)
+> - [](#game-2-g2)
 #### Setters
 > - [text](#game-2-s-1)
 > - [font](#game-2-s0)
@@ -324,16 +320,16 @@
 ##### Constructor ``new(text: {constructor} new(text: String, font: font: String))`` <a id='game-2-c-1'></a>
 ``return Text``
 
-##### Foreign Getter ``as_component: {getter} as_component`` <a id='game-2-g-1'></a>
+##### Foreign Getter ``: {getter} as_component`` <a id='game-2-g-1'></a>
 ``return Component``
 
-##### Foreign Getter ``text: {getter} text`` <a id='game-2-g0'></a>
+##### Foreign Getter ``: {getter} text`` <a id='game-2-g0'></a>
 ``return String``
 
-##### Foreign Getter ``font: {getter} font`` <a id='game-2-g1'></a>
+##### Foreign Getter ``: {getter} font`` <a id='game-2-g1'></a>
 ``return String``
 
-##### Foreign Getter ``font_size: {getter} font_size`` <a id='game-2-g2'></a>
+##### Foreign Getter ``: {getter} font_size`` <a id='game-2-g2'></a>
 ``return Num``
 
 ##### Setter ``text = value: _`` <a id='game-2-s-1'></a>
@@ -370,12 +366,12 @@
 #### Constructors
 > - [new](#game-3-c-1)
 #### Getters
-> - [parent](#game-3-g-1)
-> - [as_component](#game-3-g0)
-> - [size](#game-3-g1)
-> - [texture_id](#game-3-g2)
-> - [current_index](#game-3-g3)
-> - [tint](#game-3-g4)
+> - [](#game-3-g-1)
+> - [](#game-3-g0)
+> - [](#game-3-g1)
+> - [](#game-3-g2)
+> - [](#game-3-g3)
+> - [](#game-3-g4)
 #### Setters
 > - [tint](#game-3-s-1)
 #### Methods
@@ -386,22 +382,22 @@
 ##### Constructor ``new(id: {constructor} new(id: String))`` <a id='game-3-c-1'></a>
 ``return Sprite``
 
-##### Foreign Getter ``parent: {getter} parent`` <a id='game-3-g-1'></a>
+##### Foreign Getter ``: {getter} parent`` <a id='game-3-g-1'></a>
 ``return String``
 
-##### Foreign Getter ``as_component: {getter} as_component`` <a id='game-3-g0'></a>
+##### Foreign Getter ``: {getter} as_component`` <a id='game-3-g0'></a>
 ``return Component``
 
-##### Foreign Getter ``size: {getter} size`` <a id='game-3-g1'></a>
+##### Foreign Getter ``: {getter} size`` <a id='game-3-g1'></a>
 ``return Vec2``
 
-##### Foreign Getter ``texture_id: {getter} texture_id`` <a id='game-3-g2'></a>
+##### Foreign Getter ``: {getter} texture_id`` <a id='game-3-g2'></a>
 ``return String``
 
-##### Foreign Getter ``current_index: {getter} current_index`` <a id='game-3-g3'></a>
+##### Foreign Getter ``: {getter} current_index`` <a id='game-3-g3'></a>
 ``return Vec2``
 
-##### Foreign Getter ``tint: {getter} tint`` <a id='game-3-g4'></a>
+##### Foreign Getter ``: {getter} tint`` <a id='game-3-g4'></a>
 ``return [Num]``
 > Returns in the form [r,g,b,a]
 
@@ -427,21 +423,21 @@
 #### Constructors
 > - [new](#game-4-c-1)
 #### Getters
-> - [parent](#game-4-g-1)
-> - [as_component](#game-4-g0)
-> - [markers](#game-4-g1)
+> - [](#game-4-g-1)
+> - [](#game-4-g0)
+> - [](#game-4-g1)
 #### Methods
 > - [getMarker](#game-4-m-1)
 ##### Constructor ``new(i: {constructor} new(i: String))`` <a id='game-4-c-1'></a>
 ``return Scene``
 
-##### Foreign Getter ``parent: {getter} parent`` <a id='game-4-g-1'></a>
+##### Foreign Getter ``: {getter} parent`` <a id='game-4-g-1'></a>
 ``return String``
 
-##### Foreign Getter ``as_component: {getter} as_component`` <a id='game-4-g0'></a>
+##### Foreign Getter ``: {getter} as_component`` <a id='game-4-g0'></a>
 ``return Component``
 
-##### Foreign Getter ``markers: {getter} markers`` <a id='game-4-g1'></a>
+##### Foreign Getter ``: {getter} markers`` <a id='game-4-g1'></a>
 ``return [{String: Vec2}]``
 
 ##### Method ``getMarker(index: {method} getMarker(index: String))`` <a id='game-4-m-1'></a>
@@ -455,12 +451,12 @@
 #### Constructors
 > - [new](#game-5-c-1)
 #### Getters
-> - [parent](#game-5-g-1)
-> - [as_component](#game-5-g0)
-> - [position](#game-5-g1)
-> - [velocity](#game-5-g2)
-> - [solid](#game-5-g3)
-> - [colliding](#game-5-g4)
+> - [](#game-5-g-1)
+> - [](#game-5-g0)
+> - [](#game-5-g1)
+> - [](#game-5-g2)
+> - [](#game-5-g3)
+> - [](#game-5-g4)
 #### Setters
 > - [velocity](#game-5-s-1)
 > - [solid](#game-5-s0)
@@ -481,22 +477,22 @@
 ##### Constructor ``new()`` <a id='game-5-c-1'></a>
 ``return Rigidbody``
 
-##### Foreign Getter ``parent: {getter} parent`` <a id='game-5-g-1'></a>
+##### Foreign Getter ``: {getter} parent`` <a id='game-5-g-1'></a>
 ``return String``
 
-##### Foreign Getter ``as_component: {getter} as_component`` <a id='game-5-g0'></a>
+##### Foreign Getter ``: {getter} as_component`` <a id='game-5-g0'></a>
 ``return Component``
 
-##### Foreign Getter ``position: {getter} position`` <a id='game-5-g1'></a>
+##### Foreign Getter ``: {getter} position`` <a id='game-5-g1'></a>
 ``return Vec2``
 
-##### Foreign Getter ``velocity: {getter} velocity`` <a id='game-5-g2'></a>
+##### Foreign Getter ``: {getter} velocity`` <a id='game-5-g2'></a>
 ``return Vec2``
 
-##### Foreign Getter ``solid: {getter} solid`` <a id='game-5-g3'></a>
+##### Foreign Getter ``: {getter} solid`` <a id='game-5-g3'></a>
 ``return bool``
 
-##### Foreign Getter ``colliding: {getter} colliding`` <a id='game-5-g4'></a>
+##### Foreign Getter ``: {getter} colliding`` <a id='game-5-g4'></a>
 ``return Map/null``
 > returns a map in the form "name": _, "uuid": _ or null if no collision
 
@@ -553,11 +549,11 @@
 #### Constructors
 > - [new](#game-6-c-1)
 #### Getters
-> - [parent](#game-6-g-1)
-> - [as_component](#game-6-g0)
-> - [playing](#game-6-g1)
-> - [speed](#game-6-g2)
-> - [frame](#game-6-g3)
+> - [](#game-6-g-1)
+> - [](#game-6-g0)
+> - [](#game-6-g1)
+> - [](#game-6-g2)
+> - [](#game-6-g3)
 #### Setters
 > - [speed](#game-6-s-1)
 > - [frame](#game-6-s0)
@@ -577,22 +573,22 @@
 ##### Constructor ``new()`` <a id='game-6-c-1'></a>
 ``return Animator``
 
-##### Foreign Getter ``parent: {getter} parent`` <a id='game-6-g-1'></a>
+##### Foreign Getter ``: {getter} parent`` <a id='game-6-g-1'></a>
 ``return String``
 
-##### Foreign Getter ``as_component: {getter} as_component`` <a id='game-6-g0'></a>
+##### Foreign Getter ``: {getter} as_component`` <a id='game-6-g0'></a>
 ``return Component``
 
-##### Foreign Getter ``playing: {getter} playing`` <a id='game-6-g1'></a>
+##### Foreign Getter ``: {getter} playing`` <a id='game-6-g1'></a>
 ``return bool``
 
-##### Foreign Getter ``speed: {getter} speed`` <a id='game-6-g2'></a>
+##### Foreign Getter ``: {getter} speed`` <a id='game-6-g2'></a>
 ``return Num``
 
 ##### Setter ``speed = value: _`` <a id='game-6-s-1'></a>
 > {setter} speed = value: Num
 
-##### Foreign Getter ``frame: {getter} frame`` <a id='game-6-g3'></a>
+##### Foreign Getter ``: {getter} frame`` <a id='game-6-g3'></a>
 ``return Num``
 
 ##### Setter ``frame = value: _`` <a id='game-6-s0'></a>
@@ -643,12 +639,12 @@
 #### Constructors
 > - [new](#game-7-c-1)
 #### Getters
-> - [as_component](#game-7-g-1)
-> - [position](#game-7-g0)
-> - [scale](#game-7-g1)
-> - [rotation](#game-7-g2)
-> - [pivot](#game-7-g3)
-> - [parent](#game-7-g4)
+> - [](#game-7-g-1)
+> - [](#game-7-g0)
+> - [](#game-7-g1)
+> - [](#game-7-g2)
+> - [](#game-7-g3)
+> - [](#game-7-g4)
 > - [default](#game-7-g5)
 #### Setters
 > - [position](#game-7-s-1)
@@ -677,22 +673,22 @@
 ##### Constructor ``new(p: {constructor} new(p: Vec2))`` <a id='game-7-c-1'></a>
 ``return Transform``
 
-##### Foreign Getter ``as_component: {getter} as_component`` <a id='game-7-g-1'></a>
+##### Foreign Getter ``: {getter} as_component`` <a id='game-7-g-1'></a>
 ``return Component``
 
-##### Foreign Getter ``position: {getter} position`` <a id='game-7-g0'></a>
+##### Foreign Getter ``: {getter} position`` <a id='game-7-g0'></a>
 ``return Vec2``
 
-##### Foreign Getter ``scale: {getter} scale`` <a id='game-7-g1'></a>
+##### Foreign Getter ``: {getter} scale`` <a id='game-7-g1'></a>
 ``return Vec2``
 
-##### Foreign Getter ``rotation: {getter} rotation`` <a id='game-7-g2'></a>
+##### Foreign Getter ``: {getter} rotation`` <a id='game-7-g2'></a>
 ``return Num``
 
-##### Foreign Getter ``pivot: {getter} pivot`` <a id='game-7-g3'></a>
+##### Foreign Getter ``: {getter} pivot`` <a id='game-7-g3'></a>
 ``return Vec2``
 
-##### Foreign Getter ``parent: {getter} parent`` <a id='game-7-g4'></a>
+##### Foreign Getter ``: {getter} parent`` <a id='game-7-g4'></a>
 ``return String``
 
 ##### Setter ``position = value: _`` <a id='game-7-s-1'></a>
@@ -771,10 +767,10 @@
 #### Constructors
 > - [new](#game-8-c-1)
 #### Getters
-> - [id](#game-8-g-1)
-> - [uuid](#game-8-g0)
-> - [name](#game-8-g1)
-> - [components](#game-8-g2)
+> - [](#game-8-g-1)
+> - [](#game-8-g0)
+> - [](#game-8-g1)
+> - [](#game-8-g2)
 > - [toString](#game-8-g3)
 #### Setters
 > - [name](#game-8-s-1)
@@ -798,20 +794,20 @@
 ##### Method ``add(x: _)`` <a id='game-8-m2'></a>
 ``return _``
 
-##### Foreign Getter ``id: {getter} id`` <a id='game-8-g-1'></a>
+##### Foreign Getter ``: {getter} id`` <a id='game-8-g-1'></a>
 ``return Map``
 > Returns a map in the form "name": _, "uuid": _
 
-##### Foreign Getter ``uuid: {getter} uuid`` <a id='game-8-g0'></a>
+##### Foreign Getter ``: {getter} uuid`` <a id='game-8-g0'></a>
 ``return String``
 
-##### Foreign Getter ``name: {getter} name`` <a id='game-8-g1'></a>
+##### Foreign Getter ``: {getter} name`` <a id='game-8-g1'></a>
 ``return String``
 
 ##### Foreign Setter ``name = v: _`` <a id='game-8-s-1'></a>
 > {setter} name = v: String
 
-##### Foreign Getter ``components: {getter} components`` <a id='game-8-g2'></a>
+##### Foreign Getter ``: {getter} components`` <a id='game-8-g2'></a>
 ``return [Component]``
 
 ##### Getter ``toString`` <a id='game-8-g3'></a>
@@ -824,11 +820,11 @@
 #### Constructors
 > - [new](#game-9-c-1)
 #### Getters
-> - [parent](#game-9-g-1)
-> - [as_component](#game-9-g0)
-> - [name](#game-9-g1)
-> - [volume](#game-9-g2)
-> - [file](#game-9-g3)
+> - [](#game-9-g-1)
+> - [](#game-9-g0)
+> - [](#game-9-g1)
+> - [](#game-9-g2)
+> - [](#game-9-g3)
 #### Setters
 > - [name](#game-9-s-1)
 > - [volume](#game-9-s0)
@@ -840,25 +836,25 @@
 ##### Constructor ``new(name: {constructor} new(name: String, file: file: String))`` <a id='game-9-c-1'></a>
 ``return Sfx``
 
-##### Foreign Getter ``parent: {getter} parent`` <a id='game-9-g-1'></a>
+##### Foreign Getter ``: {getter} parent`` <a id='game-9-g-1'></a>
 ``return String``
 
-##### Foreign Getter ``as_component: {getter} as_component`` <a id='game-9-g0'></a>
+##### Foreign Getter ``: {getter} as_component`` <a id='game-9-g0'></a>
 ``return Component``
 
-##### Foreign Getter ``name: {getter} name`` <a id='game-9-g1'></a>
+##### Foreign Getter ``: {getter} name`` <a id='game-9-g1'></a>
 ``return String``
 
 ##### Foreign Setter ``name = v: _`` <a id='game-9-s-1'></a>
 > {setter} name = v: String
 
-##### Foreign Getter ``volume: {getter} volume`` <a id='game-9-g2'></a>
+##### Foreign Getter ``: {getter} volume`` <a id='game-9-g2'></a>
 ``return Num``
 
 ##### Setter ``volume = value: _`` <a id='game-9-s0'></a>
 > {setter} volume = value: Num
 
-##### Foreign Getter ``file: {getter} file`` <a id='game-9-g3'></a>
+##### Foreign Getter ``: {getter} file`` <a id='game-9-g3'></a>
 ``return String``
 
 ##### Foreign Method ``play()`` <a id='game-9-m-1'></a>
@@ -880,13 +876,13 @@
 #### Constructors
 > - [new](#game-10-c-1)
 #### Getters
-> - [parent](#game-10-g-1)
-> - [as_component](#game-10-g0)
-> - [color](#game-10-g1)
-> - [opacity](#game-10-g2)
-> - [sort](#game-10-g3)
-> - [thickness](#game-10-g4)
-> - [points](#game-10-g5)
+> - [](#game-10-g-1)
+> - [](#game-10-g0)
+> - [](#game-10-g1)
+> - [](#game-10-g2)
+> - [](#game-10-g3)
+> - [](#game-10-g4)
+> - [](#game-10-g5)
 #### Setters
 > - [sort](#game-10-s-1)
 > - [color](#game-10-s0)
@@ -908,27 +904,27 @@
 ``return Line``
 > constructs with no points and default thickness of 10.0
 
-##### Foreign Getter ``parent: {getter} parent`` <a id='game-10-g-1'></a>
+##### Foreign Getter ``: {getter} parent`` <a id='game-10-g-1'></a>
 ``return String``
 
-##### Foreign Getter ``as_component: {getter} as_component`` <a id='game-10-g0'></a>
+##### Foreign Getter ``: {getter} as_component`` <a id='game-10-g0'></a>
 ``return Component``
 
-##### Foreign Getter ``color: {getter} color`` <a id='game-10-g1'></a>
+##### Foreign Getter ``: {getter} color`` <a id='game-10-g1'></a>
 ``return [Num]``
 > Gets color in form [r,g,b,a]
 
-##### Foreign Getter ``opacity: {getter} opacity`` <a id='game-10-g2'></a>
+##### Foreign Getter ``: {getter} opacity`` <a id='game-10-g2'></a>
 ``return [Num]``
 
-##### Foreign Getter ``sort: {getter} sort`` <a id='game-10-g3'></a>
+##### Foreign Getter ``: {getter} sort`` <a id='game-10-g3'></a>
 ``return Num``
 
-##### Foreign Getter ``thickness: {getter} thickness`` <a id='game-10-g4'></a>
+##### Foreign Getter ``: {getter} thickness`` <a id='game-10-g4'></a>
 ``return [Num]: ``
 > Gets line thickness in form [start, end]
 
-##### Foreign Getter ``points: {getter} points`` <a id='game-10-g5'></a>
+##### Foreign Getter ``: {getter} points`` <a id='game-10-g5'></a>
 ``return [Vec2]``
 
 ##### Setter ``sort = value: _`` <a id='game-10-s-1'></a>
@@ -983,19 +979,19 @@
 #### Constructors
 > - [new](#game-11-c-1)
 #### Getters
-> - [as_component](#game-11-g-1)
-> - [parent](#game-11-g0)
-> - [uuid](#game-11-g1)
+> - [](#game-11-g-1)
+> - [](#game-11-g0)
+> - [](#game-11-g1)
 ##### Constructor ``new(b: {constructor} new(b: String))`` <a id='game-11-c-1'></a>
 ``return ComponentBehaviour``
 
-##### Foreign Getter ``as_component: {getter} as_component`` <a id='game-11-g-1'></a>
+##### Foreign Getter ``: {getter} as_component`` <a id='game-11-g-1'></a>
 ``return Component``
 
-##### Foreign Getter ``parent: {getter} parent`` <a id='game-11-g0'></a>
+##### Foreign Getter ``: {getter} parent`` <a id='game-11-g0'></a>
 ``return String``
 
-##### Foreign Getter ``uuid: {getter} uuid`` <a id='game-11-g1'></a>
+##### Foreign Getter ``: {getter} uuid`` <a id='game-11-g1'></a>
 ``return String``
 
 ### Foreign Class ``Debug`` <a id='game--k11'></a> 
@@ -1059,7 +1055,7 @@
 >
 
 #### Constructors
-> - [new(g) { super](#particlesystem-1-c-1)
+> - [new](#particlesystem-1-c-1)
 > - [new](#particlesystem-1-c0)
 #### Getters
 > - [gameobject](#particlesystem-1-g-1)
@@ -1104,14 +1100,14 @@
 ##### Static Getter ``gameobject`` <a id='particlesystem-1-g-1'></a>
 ``return _``
 
-##### Static Setter ``gameobject = v) { __gameobject = GameObjectRef.new(v: _`` <a id='particlesystem-1-s-1'></a>
+##### Static Setter ``gameobject = v: _`` <a id='particlesystem-1-s-1'></a>
 
 ##### Static Getter ``gamebehaviour`` <a id='particlesystem-1-g0'></a>
 ``return _``
 
 ##### Static Setter ``gamebehaviour = v: _`` <a id='particlesystem-1-s0'></a>
 
-##### Constructor ``new(g) { super(g) { super(g: _, ParticleSystem: _)`` <a id='particlesystem-1-c-1'></a>
+##### Constructor ``new(g: _)`` <a id='particlesystem-1-c-1'></a>
 ``return _``
 
 ##### Static Getter ``default`` <a id='particlesystem-1-g1'></a>
@@ -1251,7 +1247,7 @@
 >
 
 #### Constructors
-> - [new(g) { super](#trail-1-c-1)
+> - [new](#trail-1-c-1)
 > - [new](#trail-1-c0)
 #### Getters
 > - [gameobject](#trail-1-g-1)
@@ -1272,14 +1268,14 @@
 ##### Static Getter ``gameobject`` <a id='trail-1-g-1'></a>
 ``return _``
 
-##### Static Setter ``gameobject = v) { __gameobject = GameObjectRef.new(v: _`` <a id='trail-1-s-1'></a>
+##### Static Setter ``gameobject = v: _`` <a id='trail-1-s-1'></a>
 
 ##### Static Getter ``gamebehaviour`` <a id='trail-1-g0'></a>
 ``return _``
 
 ##### Static Setter ``gamebehaviour = v: _`` <a id='trail-1-s0'></a>
 
-##### Constructor ``new(g) { super(g) { super(g: _, Trail: _)`` <a id='trail-1-c-1'></a>
+##### Constructor ``new(g: _)`` <a id='trail-1-c-1'></a>
 ``return _``
 
 ##### Static Getter ``default`` <a id='trail-1-g1'></a>
@@ -1736,7 +1732,7 @@
 > - [from](#app-7-g3)
 > - [to](#app-7-g4)
 > - [on_complete](#app-7-g5)
-> - [toString { "Tween](#app-7-g6)
+> - [toString](#app-7-g6)
 #### Setters
 > - [tweens](#app-7-s-1)
 > - [duration](#app-7-s0)
@@ -1789,7 +1785,7 @@
 ##### Constructor ``new(f: _, t: _)`` <a id='app-7-c-1'></a>
 ``return _``
 
-##### Getter ``toString { "Tween`` <a id='app-7-g6'></a>
+##### Getter ``toString`` <a id='app-7-g6'></a>
 ``return _``
 
 ##### Method ``time(t: _)`` <a id='app-7-m0'></a>
@@ -1823,15 +1819,15 @@
 #### Constructors
 > - [new](#math-1-c-1)
 #### Getters
-> - [x](#math-1-g-1)
-> - [y](#math-1-g0)
+> - [](#math-1-g-1)
+> - [](#math-1-g0)
 > - [default](#math-1-g1)
-> - [one](#math-1-g2)
-> - [zero](#math-1-g3)
-> - [up](#math-1-g4)
-> - [down](#math-1-g5)
-> - [left](#math-1-g6)
-> - [right](#math-1-g7)
+> - [](#math-1-g2)
+> - [](#math-1-g3)
+> - [](#math-1-g4)
+> - [](#math-1-g5)
+> - [](#math-1-g6)
+> - [](#math-1-g7)
 > - [-](#math-1-g8)
 > - [toString](#math-1-g9)
 #### Setters
@@ -1857,10 +1853,10 @@
 ##### Constructor ``new(x: _, y: _)`` <a id='math-1-c-1'></a>
 ``return _``
 
-##### Foreign Getter ``x`` <a id='math-1-g-1'></a>
+##### Foreign Getter ```` <a id='math-1-g-1'></a>
 ``return _``
 
-##### Foreign Getter ``y`` <a id='math-1-g0'></a>
+##### Foreign Getter ```` <a id='math-1-g0'></a>
 ``return _``
 
 ##### Foreign Setter ``x = x: _`` <a id='math-1-s-1'></a>
@@ -1876,22 +1872,22 @@
 ##### Method ``setProperty()`` <a id='math-1-m0'></a>
 ``return _``
 
-##### Foreign Static Getter ``one`` <a id='math-1-g2'></a>
+##### Foreign Static Getter ```` <a id='math-1-g2'></a>
 ``return _``
 
-##### Foreign Static Getter ``zero`` <a id='math-1-g3'></a>
+##### Foreign Static Getter ```` <a id='math-1-g3'></a>
 ``return _``
 
-##### Foreign Static Getter ``up`` <a id='math-1-g4'></a>
+##### Foreign Static Getter ```` <a id='math-1-g4'></a>
 ``return _``
 
-##### Foreign Static Getter ``down`` <a id='math-1-g5'></a>
+##### Foreign Static Getter ```` <a id='math-1-g5'></a>
 ``return _``
 
-##### Foreign Static Getter ``left`` <a id='math-1-g6'></a>
+##### Foreign Static Getter ```` <a id='math-1-g6'></a>
 ``return _``
 
-##### Foreign Static Getter ``right`` <a id='math-1-g7'></a>
+##### Foreign Static Getter ```` <a id='math-1-g7'></a>
 ``return _``
 
 ##### Foreign Method ``magnitude()`` <a id='math-1-m1'></a>
