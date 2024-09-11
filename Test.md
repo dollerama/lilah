@@ -8,7 +8,7 @@
 > - [Json](#io--k1)
 > - [JsonStringify](#io--k2)
 > - [JsonParser](#io--k3)
-### Foreign Class `` <a id='Fs'></a> ``
+### Foreign Class `` <a id='io--k-1'></a> ``
 >
 
 #### Methods
