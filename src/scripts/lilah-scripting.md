@@ -7,1128 +7,1128 @@
 > - [ParticleSystem](#module-particlesystem)
 ## Module ``app``
 ### Classes
-> - [GameObjectRef](#class-gameobjectref)
-> - [Lilah](#class-lilah)
-> - [Audio](#class-audio)
-> - [KeycodeLookup](#class-keycodelookup)
-> - [Input](#class-input)
-> - [UI](#class-ui)
-> - [Curve](#class-curve)
-> - [Tween](#class-tween)
-### Class ``GameObjectRef``
+> - [GameObjectRef](#app--k-1)
+> - [Lilah](#app--k0)
+> - [Audio](#app--k1)
+> - [KeycodeLookup](#app--k2)
+> - [Input](#app--k3)
+> - [UI](#app--k4)
+> - [Curve](#app--k5)
+> - [Tween](#app--k6)
+### Class ``GameObjectRef`` <a id='app--k-1'></a>
 >
 
 #### Constructors
-> - [new](#0-c-1)
+> - [new](#app-0-c-1)
 #### Getters
-> - [ref](#0-g-1)
-> - [data](#0-g0)
-> - [[key]](#0-g1)
+> - [ref](#app-0-g-1)
+> - [data](#app-0-g0)
+> - [[key]](#app-0-g1)
 #### Setters
-> - [data](#0-s-1)
-> - [[key]](#0-s0)
+> - [data](#app-0-s-1)
+> - [[key]](#app-0-s0)
 #### Methods
-> - [create_ref](#0-m-1)
-> - [behaviourData](#0-m0)
-> - [behaviourData](#0-m1)
-> - [behaviourData](#0-m2)
-##### Static Method ``create_ref(id: _)`` {#0-m-1}
+> - [create_ref](#app-0-m-1)
+> - [behaviourData](#app-0-m0)
+> - [behaviourData](#app-0-m1)
+> - [behaviourData](#app-0-m2)
+##### Static Method ``create_ref(id: _)`` <a id='app-0-m-1'></a>
 ``return _``
 
-##### Getter ``ref`` {#0-g-1}
+##### Getter ``ref`` <a id='app-0-g-1'></a>
 ``return _``
 
-##### Method ``behaviourData(b: _)`` {#0-m0}
+##### Method ``behaviourData(b: _)`` <a id='app-0-m0'></a>
 ``return _``
 
-##### Method ``behaviourData(b: _, uuid: _)`` {#0-m1}
+##### Method ``behaviourData(b: _, uuid: _)`` <a id='app-0-m1'></a>
 ``return _``
 
-##### Method ``behaviourData(b: _, u: _, mut: _)`` {#0-m2}
+##### Method ``behaviourData(b: _, u: _, mut: _)`` <a id='app-0-m2'></a>
 ``return _``
 
-##### Setter ``data = v: _`` {#0-s-1}
+##### Setter ``data = v: _`` <a id='app-0-s-1'></a>
 
-##### Getter ``data`` {#0-g0}
+##### Getter ``data`` <a id='app-0-g0'></a>
 ``return _``
 
-##### Getter ``[key]`` {#0-g1}
+##### Getter ``[key]`` <a id='app-0-g1'></a>
 ``return _``
 
-##### Setter ``[key]`` {#0-s0}
+##### Setter ``[key]`` <a id='app-0-s0'></a>
 
-##### Constructor ``new(i: _)`` {#0-c-1}
+##### Constructor ``new(i: _)`` <a id='app-0-c-1'></a>
 ``return _``
 
-### Class ``Lilah``
+### Class ``Lilah`` <a id='app--k0'></a>
 >
 
 #### Getters
-> - [camera](#1-g-1)
-> - [destroy](#1-g0)
-> - [destroy_internal](#1-g1)
-> - [gameobjects](#1-g2)
-> - [gameobjects_values](#1-g3)
-> - [data](#1-g4)
-> - [delta_time](#1-g5)
-> - [time](#1-g6)
-> - [fps](#1-g7)
-> - [fullscreen](#1-g8)
-> - [screen_size](#1-g9)
-> - [fiberCount](#1-g10)
+> - [camera](#app-1-g-1)
+> - [destroy](#app-1-g0)
+> - [destroy_internal](#app-1-g1)
+> - [gameobjects](#app-1-g2)
+> - [gameobjects_values](#app-1-g3)
+> - [data](#app-1-g4)
+> - [delta_time](#app-1-g5)
+> - [time](#app-1-g6)
+> - [fps](#app-1-g7)
+> - [fullscreen](#app-1-g8)
+> - [screen_size](#app-1-g9)
+> - [fiberCount](#app-1-g10)
 #### Setters
-> - [gameobjects](#1-s-1)
-> - [data](#1-s0)
-> - [delta_time](#1-s1)
-> - [time](#1-s2)
-> - [fps](#1-s3)
-> - [fullscreen](#1-s4)
-> - [screen_size](#1-s5)
+> - [gameobjects](#app-1-s-1)
+> - [data](#app-1-s0)
+> - [delta_time](#app-1-s1)
+> - [time](#app-1-s2)
+> - [fps](#app-1-s3)
+> - [fullscreen](#app-1-s4)
+> - [screen_size](#app-1-s5)
 #### Methods
-> - [tick_fibers](#1-m-1)
-> - [start_fiber](#1-m0)
-> - [instantiate](#1-m1)
-> - [instantiate](#1-m2)
-> - [clear](#1-m3)
-> - [destroy](#1-m4)
-> - [find](#1-m5)
-##### Static Getter ``camera`` {#1-g-1}
+> - [tick_fibers](#app-1-m-1)
+> - [start_fiber](#app-1-m0)
+> - [instantiate](#app-1-m1)
+> - [instantiate](#app-1-m2)
+> - [clear](#app-1-m3)
+> - [destroy](#app-1-m4)
+> - [find](#app-1-m5)
+##### Static Getter ``camera`` <a id='app-1-g-1'></a>
 ``return _``
 
-##### Static Getter ``destroy`` {#1-g0}
+##### Static Getter ``destroy`` <a id='app-1-g0'></a>
 ``return _``
 
-##### Static Getter ``destroy_internal`` {#1-g1}
+##### Static Getter ``destroy_internal`` <a id='app-1-g1'></a>
 ``return _``
 
-##### Static Getter ``gameobjects`` {#1-g2}
+##### Static Getter ``gameobjects`` <a id='app-1-g2'></a>
 ``return _``
 
-##### Static Setter ``gameobjects = v: _`` {#1-s-1}
+##### Static Setter ``gameobjects = v: _`` <a id='app-1-s-1'></a>
 
-##### Static Getter ``gameobjects_values`` {#1-g3}
+##### Static Getter ``gameobjects_values`` <a id='app-1-g3'></a>
 ``return _``
 
-##### Static Getter ``data`` {#1-g4}
+##### Static Getter ``data`` <a id='app-1-g4'></a>
 ``return _``
 
-##### Static Setter ``data = v: _`` {#1-s0}
+##### Static Setter ``data = v: _`` <a id='app-1-s0'></a>
 
-##### Static Getter ``delta_time`` {#1-g5}
+##### Static Getter ``delta_time`` <a id='app-1-g5'></a>
 ``return _``
 
-##### Static Setter ``delta_time = v: _`` {#1-s1}
+##### Static Setter ``delta_time = v: _`` <a id='app-1-s1'></a>
 
-##### Static Getter ``time`` {#1-g6}
+##### Static Getter ``time`` <a id='app-1-g6'></a>
 ``return _``
 
-##### Static Setter ``time = v: _`` {#1-s2}
+##### Static Setter ``time = v: _`` <a id='app-1-s2'></a>
 
-##### Static Getter ``fps`` {#1-g7}
+##### Static Getter ``fps`` <a id='app-1-g7'></a>
 ``return _``
 
-##### Static Setter ``fps = v: _`` {#1-s3}
+##### Static Setter ``fps = v: _`` <a id='app-1-s3'></a>
 
-##### Static Getter ``fullscreen`` {#1-g8}
+##### Static Getter ``fullscreen`` <a id='app-1-g8'></a>
 ``return _``
 
-##### Static Setter ``fullscreen = v: _`` {#1-s4}
+##### Static Setter ``fullscreen = v: _`` <a id='app-1-s4'></a>
 
-##### Static Getter ``screen_size`` {#1-g9}
+##### Static Getter ``screen_size`` <a id='app-1-g9'></a>
 ``return _``
 
-##### Static Setter ``screen_size = v: _`` {#1-s5}
+##### Static Setter ``screen_size = v: _`` <a id='app-1-s5'></a>
 
-##### Static Getter ``fiberCount`` {#1-g10}
+##### Static Getter ``fiberCount`` <a id='app-1-g10'></a>
 ``return _``
 
-##### Static Method ``tick_fibers()`` {#1-m-1}
+##### Static Method ``tick_fibers()`` <a id='app-1-m-1'></a>
 ``return _``
 
-##### Static Method ``start_fiber(f: _)`` {#1-m0}
+##### Static Method ``start_fiber(f: _)`` <a id='app-1-m0'></a>
 ``return _``
 
-##### Static Method ``instantiate(go: _, d: _)`` {#1-m1}
+##### Static Method ``instantiate(go: _, d: _)`` <a id='app-1-m1'></a>
 ``return _``
 
-##### Static Method ``instantiate(go: _)`` {#1-m2}
+##### Static Method ``instantiate(go: _)`` <a id='app-1-m2'></a>
 ``return _``
 
-##### Static Method ``clear()`` {#1-m3}
+##### Static Method ``clear()`` <a id='app-1-m3'></a>
 ``return _``
 
-##### Static Method ``destroy(key: _)`` {#1-m4}
+##### Static Method ``destroy(key: _)`` <a id='app-1-m4'></a>
 ``return _``
 
-##### Static Method ``find(key: _)`` {#1-m5}
+##### Static Method ``find(key: _)`` <a id='app-1-m5'></a>
 ``return _``
 
-### Class ``Audio``
+### Class ``Audio`` <a id='app--k1'></a>
 >
 
 #### Getters
-> - [music](#2-g-1)
-> - [command](#2-g0)
-> - [dirty](#2-g1)
-> - [volume](#2-g2)
-> - [fade](#2-g3)
+> - [music](#app-2-g-1)
+> - [command](#app-2-g0)
+> - [dirty](#app-2-g1)
+> - [volume](#app-2-g2)
+> - [fade](#app-2-g3)
 #### Setters
-> - [volume](#2-s-1)
+> - [volume](#app-2-s-1)
 #### Methods
-> - [play](#2-m-1)
-> - [play](#2-m0)
-> - [play](#2-m1)
-> - [pause](#2-m2)
-> - [pause](#2-m3)
-> - [clear](#2-m4)
-##### Static Getter ``music`` {#2-g-1}
+> - [play](#app-2-m-1)
+> - [play](#app-2-m0)
+> - [play](#app-2-m1)
+> - [pause](#app-2-m2)
+> - [pause](#app-2-m3)
+> - [clear](#app-2-m4)
+##### Static Getter ``music`` <a id='app-2-g-1'></a>
 ``return _``
 
-##### Static Getter ``command`` {#2-g0}
+##### Static Getter ``command`` <a id='app-2-g0'></a>
 ``return _``
 
-##### Static Getter ``dirty`` {#2-g1}
+##### Static Getter ``dirty`` <a id='app-2-g1'></a>
 ``return _``
 
-##### Static Getter ``volume`` {#2-g2}
+##### Static Getter ``volume`` <a id='app-2-g2'></a>
 ``return _``
 
-##### Static Getter ``fade`` {#2-g3}
+##### Static Getter ``fade`` <a id='app-2-g3'></a>
 ``return _``
 
-##### Static Setter ``volume = v: _`` {#2-s-1}
+##### Static Setter ``volume = v: _`` <a id='app-2-s-1'></a>
 
-##### Static Method ``play(file: _)`` {#2-m-1}
+##### Static Method ``play(file: _)`` <a id='app-2-m-1'></a>
 ``return _``
 
-##### Static Method ``play(file: _, fade_in_ms: _)`` {#2-m0}
+##### Static Method ``play(file: _, fade_in_ms: _)`` <a id='app-2-m0'></a>
 ``return _``
 
-##### Static Method ``play()`` {#2-m1}
+##### Static Method ``play()`` <a id='app-2-m1'></a>
 ``return _``
 
-##### Static Method ``pause()`` {#2-m2}
+##### Static Method ``pause()`` <a id='app-2-m2'></a>
 ``return _``
 
-##### Static Method ``pause(fade_out_ms: _)`` {#2-m3}
+##### Static Method ``pause(fade_out_ms: _)`` <a id='app-2-m3'></a>
 ``return _``
 
-##### Static Method ``clear()`` {#2-m4}
+##### Static Method ``clear()`` <a id='app-2-m4'></a>
 ``return _``
 
-### Class ``KeycodeLookup``
+### Class ``KeycodeLookup`` <a id='app--k2'></a>
 >
 
 #### Constructors
-> - [new](#3-c-1)
+> - [new](#app-3-c-1)
 #### Getters
-> - [W](#3-g-1)
-> - [A](#3-g0)
-> - [S](#3-g1)
-> - [D](#3-g2)
-> - [Up](#3-g3)
-> - [Right](#3-g4)
-> - [Down](#3-g5)
-> - [Left](#3-g6)
-##### Constructor ``new()`` {#3-c-1}
+> - [W](#app-3-g-1)
+> - [A](#app-3-g0)
+> - [S](#app-3-g1)
+> - [D](#app-3-g2)
+> - [Up](#app-3-g3)
+> - [Right](#app-3-g4)
+> - [Down](#app-3-g5)
+> - [Left](#app-3-g6)
+##### Constructor ``new()`` <a id='app-3-c-1'></a>
 ``return _``
 
-##### Getter ``W`` {#3-g-1}
+##### Getter ``W`` <a id='app-3-g-1'></a>
 ``return _``
 
-##### Getter ``A`` {#3-g0}
+##### Getter ``A`` <a id='app-3-g0'></a>
 ``return _``
 
-##### Getter ``S`` {#3-g1}
+##### Getter ``S`` <a id='app-3-g1'></a>
 ``return _``
 
-##### Getter ``D`` {#3-g2}
+##### Getter ``D`` <a id='app-3-g2'></a>
 ``return _``
 
-##### Getter ``Up`` {#3-g3}
+##### Getter ``Up`` <a id='app-3-g3'></a>
 ``return _``
 
-##### Getter ``Right`` {#3-g4}
+##### Getter ``Right`` <a id='app-3-g4'></a>
 ``return _``
 
-##### Getter ``Down`` {#3-g5}
+##### Getter ``Down`` <a id='app-3-g5'></a>
 ``return _``
 
-##### Getter ``Left`` {#3-g6}
+##### Getter ``Left`` <a id='app-3-g6'></a>
 ``return _``
 
-### Class ``Input``
+### Class ``Input`` <a id='app--k3'></a>
 >
 
 #### Getters
-> - [mouse_pos](#4-g-1)
-> - [Keycode](#4-g0)
-> - [mappings](#4-g1)
-> - [mouse_mappings](#4-g2)
-> - [bindings](#4-g3)
+> - [mouse_pos](#app-4-g-1)
+> - [Keycode](#app-4-g0)
+> - [mappings](#app-4-g1)
+> - [mouse_mappings](#app-4-g2)
+> - [bindings](#app-4-g3)
 #### Methods
-> - [is_pressed](#4-m-1)
-> - [is_mouse_pressed](#4-m0)
-> - [set_mouse_pos](#4-m1)
-> - [update_mapping](#4-m2)
-> - [update_mouse_mapping](#4-m3)
-> - [update_binding](#4-m4)
-> - [key](#4-m5)
-> - [mouse](#4-m6)
-> - [key_down](#4-m7)
-> - [mouse_down](#4-m8)
-> - [binding](#4-m9)
-> - [binding2D](#4-m10)
-##### Static Getter ``mouse_pos`` {#4-g-1}
+> - [is_pressed](#app-4-m-1)
+> - [is_mouse_pressed](#app-4-m0)
+> - [set_mouse_pos](#app-4-m1)
+> - [update_mapping](#app-4-m2)
+> - [update_mouse_mapping](#app-4-m3)
+> - [update_binding](#app-4-m4)
+> - [key](#app-4-m5)
+> - [mouse](#app-4-m6)
+> - [key_down](#app-4-m7)
+> - [mouse_down](#app-4-m8)
+> - [binding](#app-4-m9)
+> - [binding2D](#app-4-m10)
+##### Static Getter ``mouse_pos`` <a id='app-4-g-1'></a>
 ``return _``
 
-##### Static Getter ``Keycode`` {#4-g0}
+##### Static Getter ``Keycode`` <a id='app-4-g0'></a>
 ``return _``
 
-##### Static Method ``is_pressed(key: _)`` {#4-m-1}
+##### Static Method ``is_pressed(key: _)`` <a id='app-4-m-1'></a>
 ``return _``
 
-##### Static Method ``is_mouse_pressed(key: _)`` {#4-m0}
+##### Static Method ``is_mouse_pressed(key: _)`` <a id='app-4-m0'></a>
 ``return _``
 
-##### Static Getter ``mappings`` {#4-g1}
+##### Static Getter ``mappings`` <a id='app-4-g1'></a>
 ``return _``
 
-##### Static Getter ``mouse_mappings`` {#4-g2}
+##### Static Getter ``mouse_mappings`` <a id='app-4-g2'></a>
 ``return _``
 
-##### Static Getter ``bindings`` {#4-g3}
+##### Static Getter ``bindings`` <a id='app-4-g3'></a>
 ``return _``
 
-##### Static Method ``set_mouse_pos(pos: _)`` {#4-m1}
+##### Static Method ``set_mouse_pos(pos: _)`` <a id='app-4-m1'></a>
 ``return _``
 
-##### Static Method ``update_mapping(key: _, pressed: _, pressed_down: _)`` {#4-m2}
+##### Static Method ``update_mapping(key: _, pressed: _, pressed_down: _)`` <a id='app-4-m2'></a>
 ``return _``
 
-##### Static Method ``update_mouse_mapping(button: _, pressed: _, pressed_down: _)`` {#4-m3}
+##### Static Method ``update_mouse_mapping(button: _, pressed: _, pressed_down: _)`` <a id='app-4-m3'></a>
 ``return _``
 
-##### Static Method ``update_binding(bind: _, neg: _, pos: _)`` {#4-m4}
+##### Static Method ``update_binding(bind: _, neg: _, pos: _)`` <a id='app-4-m4'></a>
 ``return _``
 
-##### Static Method ``key(key: _)`` {#4-m5}
+##### Static Method ``key(key: _)`` <a id='app-4-m5'></a>
 ``return _``
 
-##### Static Method ``mouse(button: _)`` {#4-m6}
+##### Static Method ``mouse(button: _)`` <a id='app-4-m6'></a>
 ``return _``
 
-##### Static Method ``key_down(key: _)`` {#4-m7}
+##### Static Method ``key_down(key: _)`` <a id='app-4-m7'></a>
 ``return _``
 
-##### Static Method ``mouse_down(button: _)`` {#4-m8}
+##### Static Method ``mouse_down(button: _)`` <a id='app-4-m8'></a>
 ``return _``
 
-##### Static Method ``binding(bind: _)`` {#4-m9}
+##### Static Method ``binding(bind: _)`` <a id='app-4-m9'></a>
 ``return _``
 
-##### Static Method ``binding2D(bind1: _, bind2: _)`` {#4-m10}
+##### Static Method ``binding2D(bind1: _, bind2: _)`` <a id='app-4-m10'></a>
 ``return _``
 
-### Class ``UI``
+### Class ``UI`` <a id='app--k4'></a>
 >
 
 #### Getters
-> - [on_click_callbacks](#5-g-1)
-> - [on_click_down_callbacks](#5-g0)
-> - [on_hover_callbacks](#5-g1)
+> - [on_click_callbacks](#app-5-g-1)
+> - [on_click_down_callbacks](#app-5-g0)
+> - [on_hover_callbacks](#app-5-g1)
 #### Methods
-> - [on_click](#5-m-1)
-> - [on_click_down](#5-m0)
-> - [on_hover](#5-m1)
-> - [tick](#5-m2)
-##### Static Getter ``on_click_callbacks`` {#5-g-1}
+> - [on_click](#app-5-m-1)
+> - [on_click_down](#app-5-m0)
+> - [on_hover](#app-5-m1)
+> - [tick](#app-5-m2)
+##### Static Getter ``on_click_callbacks`` <a id='app-5-g-1'></a>
 ``return _``
 
-##### Static Getter ``on_click_down_callbacks`` {#5-g0}
+##### Static Getter ``on_click_down_callbacks`` <a id='app-5-g0'></a>
 ``return _``
 
-##### Static Getter ``on_hover_callbacks`` {#5-g1}
+##### Static Getter ``on_hover_callbacks`` <a id='app-5-g1'></a>
 ``return _``
 
-##### Static Method ``on_click(gameobject: _, callback: _)`` {#5-m-1}
+##### Static Method ``on_click(gameobject: _, callback: _)`` <a id='app-5-m-1'></a>
 ``return _``
 
-##### Static Method ``on_click_down(gameobject: _, callback: _)`` {#5-m0}
+##### Static Method ``on_click_down(gameobject: _, callback: _)`` <a id='app-5-m0'></a>
 ``return _``
 
-##### Static Method ``on_hover(gameobject: _, callback: _)`` {#5-m1}
+##### Static Method ``on_hover(gameobject: _, callback: _)`` <a id='app-5-m1'></a>
 ``return _``
 
-##### Static Method ``tick()`` {#5-m2}
+##### Static Method ``tick()`` <a id='app-5-m2'></a>
 ``return _``
 
-### Class ``Curve``
+### Class ``Curve`` <a id='app--k5'></a>
 >
 
 #### Getters
-> - [linear](#6-g-1)
-> - [inQuad](#6-g0)
-> - [outQuad](#6-g1)
-> - [inOutQuad](#6-g2)
-> - [inQuart](#6-g3)
-> - [outQuart](#6-g4)
-> - [inOutQuart](#6-g5)
-> - [inBack](#6-g6)
-> - [outBack](#6-g7)
-> - [inOutBack](#6-g8)
-> - [inElastic](#6-g9)
-> - [outElastic](#6-g10)
-> - [inOutElastic](#6-g11)
-##### Static Getter ``linear`` {#6-g-1}
+> - [linear](#app-6-g-1)
+> - [inQuad](#app-6-g0)
+> - [outQuad](#app-6-g1)
+> - [inOutQuad](#app-6-g2)
+> - [inQuart](#app-6-g3)
+> - [outQuart](#app-6-g4)
+> - [inOutQuart](#app-6-g5)
+> - [inBack](#app-6-g6)
+> - [outBack](#app-6-g7)
+> - [inOutBack](#app-6-g8)
+> - [inElastic](#app-6-g9)
+> - [outElastic](#app-6-g10)
+> - [inOutElastic](#app-6-g11)
+##### Static Getter ``linear`` <a id='app-6-g-1'></a>
 ``return _``
 
-##### Static Getter ``inQuad`` {#6-g0}
+##### Static Getter ``inQuad`` <a id='app-6-g0'></a>
 ``return _``
 
-##### Static Getter ``outQuad`` {#6-g1}
+##### Static Getter ``outQuad`` <a id='app-6-g1'></a>
 ``return _``
 
-##### Static Getter ``inOutQuad`` {#6-g2}
+##### Static Getter ``inOutQuad`` <a id='app-6-g2'></a>
 ``return _``
 
-##### Static Getter ``inQuart`` {#6-g3}
+##### Static Getter ``inQuart`` <a id='app-6-g3'></a>
 ``return _``
 
-##### Static Getter ``outQuart`` {#6-g4}
+##### Static Getter ``outQuart`` <a id='app-6-g4'></a>
 ``return _``
 
-##### Static Getter ``inOutQuart`` {#6-g5}
+##### Static Getter ``inOutQuart`` <a id='app-6-g5'></a>
 ``return _``
 
-##### Static Getter ``inBack`` {#6-g6}
+##### Static Getter ``inBack`` <a id='app-6-g6'></a>
 ``return _``
 
-##### Static Getter ``outBack`` {#6-g7}
+##### Static Getter ``outBack`` <a id='app-6-g7'></a>
 ``return _``
 
-##### Static Getter ``inOutBack`` {#6-g8}
+##### Static Getter ``inOutBack`` <a id='app-6-g8'></a>
 ``return _``
 
-##### Static Getter ``inElastic`` {#6-g9}
+##### Static Getter ``inElastic`` <a id='app-6-g9'></a>
 ``return _``
 
-##### Static Getter ``outElastic`` {#6-g10}
+##### Static Getter ``outElastic`` <a id='app-6-g10'></a>
 ``return _``
 
-##### Static Getter ``inOutElastic`` {#6-g11}
+##### Static Getter ``inOutElastic`` <a id='app-6-g11'></a>
 ``return _``
 
-### Class ``Tween``
+### Class ``Tween`` <a id='app--k6'></a>
 >
 
 #### Constructors
-> - [new](#7-c-1)
+> - [new](#app-7-c-1)
 #### Getters
-> - [tweens](#7-g-1)
-> - [tweenCount](#7-g0)
-> - [duration](#7-g1)
-> - [use_curve](#7-g2)
-> - [from](#7-g3)
-> - [to](#7-g4)
-> - [on_complete](#7-g5)
-> - [toString { "Tween](#7-g6)
+> - [tweens](#app-7-g-1)
+> - [tweenCount](#app-7-g0)
+> - [duration](#app-7-g1)
+> - [use_curve](#app-7-g2)
+> - [from](#app-7-g3)
+> - [to](#app-7-g4)
+> - [on_complete](#app-7-g5)
+> - [toString { "Tween](#app-7-g6)
 #### Setters
-> - [tweens](#7-s-1)
-> - [duration](#7-s0)
-> - [use_curve](#7-s1)
-> - [from](#7-s2)
-> - [to](#7-s3)
-> - [on_complete](#7-s4)
+> - [tweens](#app-7-s-1)
+> - [duration](#app-7-s0)
+> - [use_curve](#app-7-s1)
+> - [from](#app-7-s2)
+> - [to](#app-7-s3)
+> - [on_complete](#app-7-s4)
 #### Methods
-> - [insert_tween](#7-m-1)
-> - [time](#7-m0)
-> - [curve](#7-m1)
-> - [onComplete](#7-m2)
-> - [play](#7-m3)
-##### Static Getter ``tweens`` {#7-g-1}
+> - [insert_tween](#app-7-m-1)
+> - [time](#app-7-m0)
+> - [curve](#app-7-m1)
+> - [onComplete](#app-7-m2)
+> - [play](#app-7-m3)
+##### Static Getter ``tweens`` <a id='app-7-g-1'></a>
 ``return _``
 
-##### Static Setter ``tweens = v: _`` {#7-s-1}
+##### Static Setter ``tweens = v: _`` <a id='app-7-s-1'></a>
 
-##### Static Getter ``tweenCount`` {#7-g0}
+##### Static Getter ``tweenCount`` <a id='app-7-g0'></a>
 ``return _``
 
-##### Static Method ``insert_tween(t: _)`` {#7-m-1}
+##### Static Method ``insert_tween(t: _)`` <a id='app-7-m-1'></a>
 ``return _``
 
-##### Getter ``duration`` {#7-g1}
+##### Getter ``duration`` <a id='app-7-g1'></a>
 ``return _``
 
-##### Getter ``use_curve`` {#7-g2}
+##### Getter ``use_curve`` <a id='app-7-g2'></a>
 ``return _``
 
-##### Getter ``from`` {#7-g3}
+##### Getter ``from`` <a id='app-7-g3'></a>
 ``return _``
 
-##### Getter ``to`` {#7-g4}
+##### Getter ``to`` <a id='app-7-g4'></a>
 ``return _``
 
-##### Getter ``on_complete`` {#7-g5}
+##### Getter ``on_complete`` <a id='app-7-g5'></a>
 ``return _``
 
-##### Setter ``duration = v: _`` {#7-s0}
+##### Setter ``duration = v: _`` <a id='app-7-s0'></a>
 
-##### Setter ``use_curve = v: _`` {#7-s1}
+##### Setter ``use_curve = v: _`` <a id='app-7-s1'></a>
 
-##### Setter ``from = v: _`` {#7-s2}
+##### Setter ``from = v: _`` <a id='app-7-s2'></a>
 
-##### Setter ``to = v: _`` {#7-s3}
+##### Setter ``to = v: _`` <a id='app-7-s3'></a>
 
-##### Setter ``on_complete = v: _`` {#7-s4}
+##### Setter ``on_complete = v: _`` <a id='app-7-s4'></a>
 
-##### Constructor ``new(f: _, t: _)`` {#7-c-1}
+##### Constructor ``new(f: _, t: _)`` <a id='app-7-c-1'></a>
 ``return _``
 
-##### Getter ``toString { "Tween`` {#7-g6}
+##### Getter ``toString { "Tween`` <a id='app-7-g6'></a>
 ``return _``
 
-##### Method ``time(t: _)`` {#7-m0}
+##### Method ``time(t: _)`` <a id='app-7-m0'></a>
 ``return _``
 
-##### Method ``curve(c: _)`` {#7-m1}
+##### Method ``curve(c: _)`` <a id='app-7-m1'></a>
 ``return _``
 
-##### Method ``onComplete(c: _)`` {#7-m2}
+##### Method ``onComplete(c: _)`` <a id='app-7-m2'></a>
 ``return _``
 
-##### Method ``play(c: _)`` {#7-m3}
+##### Method ``play(c: _)`` <a id='app-7-m3'></a>
 ``return _``
 
 ## Module ``io``
 ### Classes
-> - [Fs](#foreign-class-fs)
-> - [Serializable](#class-serializable)
-> - [Json](#class-json)
-> - [JsonStringify](#class-jsonstringify)
-> - [JsonParser](#class-jsonparser)
-### Foreign Class ``Fs``
+> - [Fs](#io--k-1)
+> - [Serializable](#io--k0)
+> - [Json](#io--k1)
+> - [JsonStringify](#io--k2)
+> - [JsonParser](#io--k3)
+### Foreign Class `` <a id='Fs'></a> ``
 >
 
 #### Methods
-> - [read](#0-m-1)
-> - [write](#0-m0)
-##### Foreign Static Method ``read(file: _)`` {#0-m-1}
+> - [read](#io-0-m-1)
+> - [write](#io-0-m0)
+##### Foreign Static Method ``read(file: _)`` <a id='io-0-m-1'></a>
 ``return _``
 
-##### Foreign Static Method ``write(file: _, content: _)`` {#0-m0}
+##### Foreign Static Method ``write(file: _, content: _)`` <a id='io-0-m0'></a>
 ``return _``
 
-### Class ``Serializable``
+### Class ``Serializable`` <a id='io--k0'></a>
 >
 
 #### Methods
-> - [//example Serializable.wrapper](#1-m-1)
-> - [wrapperFn](#1-m0)
-> - [wrapper](#1-m1)
-> - [properties](#1-m2)
-> - [serialize](#1-m3)
-> - [serialize](#1-m4)
-> - [deserialize](#1-m5)
-> - [iterProperties](#1-m6)
-##### Method ``//example Serializable.wrapper({"math": "Vec2"}: _, "Rect": _, [["pos": _, Vec2]: _, ["size": _, Vec2]]: _)`` {#1-m-1}
+> - [//example Serializable.wrapper](#io-1-m-1)
+> - [wrapperFn](#io-1-m0)
+> - [wrapper](#io-1-m1)
+> - [properties](#io-1-m2)
+> - [serialize](#io-1-m3)
+> - [serialize](#io-1-m4)
+> - [deserialize](#io-1-m5)
+> - [iterProperties](#io-1-m6)
+##### Method ``//example Serializable.wrapper({"math": "Vec2"}: _, "Rect": _, [["pos": _, Vec2]: _, ["size": _, Vec2]]: _)`` <a id='io-1-m-1'></a>
 ``return _``
 
-##### Static Method ``wrapperFn(imports: _, name: _, values: _)`` {#1-m0}
+##### Static Method ``wrapperFn(imports: _, name: _, values: _)`` <a id='io-1-m0'></a>
 ``return _``
 
-##### Static Method ``wrapper(imports: _, name: _, values: _)`` {#1-m1}
+##### Static Method ``wrapper(imports: _, name: _, values: _)`` <a id='io-1-m1'></a>
 ``return _``
 
-##### Method ``properties(f: _)`` {#1-m2}
+##### Method ``properties(f: _)`` <a id='io-1-m2'></a>
 ``return _``
 
-##### Static Method ``serialize(obj: _)`` {#1-m3}
+##### Static Method ``serialize(obj: _)`` <a id='io-1-m3'></a>
 ``return _``
 
-##### Method ``serialize()`` {#1-m4}
+##### Method ``serialize()`` <a id='io-1-m4'></a>
 ``return _``
 
-##### Method ``deserialize(obj: _)`` {#1-m5}
+##### Method ``deserialize(obj: _)`` <a id='io-1-m5'></a>
 ``return _``
 
-##### Static Method ``iterProperties(t: _)`` {#1-m6}
+##### Static Method ``iterProperties(t: _)`` <a id='io-1-m6'></a>
 ``return _``
 
-### Class ``Json``
+### Class ``Json`` <a id='io--k1'></a>
 >
 
 #### Methods
-> - [parse(string) { parse](#2-m-1)
-> - [parse](#2-m0)
-> - [stringify(value) { stringify](#2-m1)
-> - [stringify](#2-m2)
-> - [stringify](#2-m3)
-##### Static Method ``parse(string) { parse(string) { parse("json": _, string: _)`` {#2-m-1}
+> - [parse(string) { parse](#io-2-m-1)
+> - [parse](#io-2-m0)
+> - [stringify(value) { stringify](#io-2-m1)
+> - [stringify](#io-2-m2)
+> - [stringify](#io-2-m3)
+##### Static Method ``parse(string) { parse(string) { parse("json": _, string: _)`` <a id='io-2-m-1'></a>
 ``return _``
 
-##### Static Method ``parse(source_id: _, source_string: _)`` {#2-m0}
+##### Static Method ``parse(source_id: _, source_string: _)`` <a id='io-2-m0'></a>
 ``return _``
 
-##### Static Method ``stringify(value) { stringify(value) { stringify(value: _, "  ": _)`` {#2-m1}
+##### Static Method ``stringify(value) { stringify(value) { stringify(value: _, "  ": _)`` <a id='io-2-m1'></a>
 ``return _``
 
-##### Static Method ``stringify(value: _, whitespace: _)`` {#2-m2}
+##### Static Method ``stringify(value: _, whitespace: _)`` <a id='io-2-m2'></a>
 ``return _``
 
-##### Static Method ``stringify(value: _, whitespace: _, callback: _)`` {#2-m3}
+##### Static Method ``stringify(value: _, whitespace: _, callback: _)`` <a id='io-2-m3'></a>
 ``return _``
 
-### Class ``JsonStringify``
+### Class ``JsonStringify`` <a id='io--k2'></a>
 >
 
 #### Methods
-> - [stringify](#3-m-1)
-> - [stringify_map](#3-m0)
-> - [stringify_primitive](#3-m1)
-> - [stringify_list](#3-m2)
-> - [stringify_value](#3-m3)
-##### Static Method ``stringify(value: _, whitespace: _, out: _)`` {#3-m-1}
+> - [stringify](#io-3-m-1)
+> - [stringify_map](#io-3-m0)
+> - [stringify_primitive](#io-3-m1)
+> - [stringify_list](#io-3-m2)
+> - [stringify_value](#io-3-m3)
+##### Static Method ``stringify(value: _, whitespace: _, out: _)`` <a id='io-3-m-1'></a>
 ``return _``
 
-##### Static Method ``stringify_map(map: _, whitespace: _, depth: _, out: _)`` {#3-m0}
+##### Static Method ``stringify_map(map: _, whitespace: _, depth: _, out: _)`` <a id='io-3-m0'></a>
 ``return _``
 
-##### Static Method ``stringify_primitive(value: _, out: _)`` {#3-m1}
+##### Static Method ``stringify_primitive(value: _, out: _)`` <a id='io-3-m1'></a>
 ``return _``
 
-##### Static Method ``stringify_list(list: _, whitespace: _, depth: _, out: _)`` {#3-m2}
+##### Static Method ``stringify_list(list: _, whitespace: _, depth: _, out: _)`` <a id='io-3-m2'></a>
 ``return _``
 
-##### Static Method ``stringify_value(value: _, whitespace: _, depth: _, out: _)`` {#3-m3}
+##### Static Method ``stringify_value(value: _, whitespace: _, depth: _, out: _)`` <a id='io-3-m3'></a>
 ``return _``
 
-### Class ``JsonParser``
+### Class ``JsonParser`` <a id='io--k3'></a>
 >
 
 #### Constructors
-> - [new](#4-c-1)
+> - [new](#io-4-c-1)
 #### Getters
-> - [root](#4-g-1)
+> - [root](#io-4-g-1)
 #### Methods
-> - [unexpected](#4-m-1)
-> - [is_eof](#4-m0)
-> - [is_whitespace](#4-m1)
-> - [is_token](#4-m2)
-> - [next](#4-m3)
-> - [peek() { peek](#4-m4)
-> - [peek](#4-m5)
-> - [peeks() { peeks](#4-m6)
-> - [peeks](#4-m7)
-> - [step](#4-m8)
-> - [skips](#4-m9)
-> - [parse_key](#4-m10)
-> - [parse_primitive](#4-m11)
-> - [read_raw_string](#4-m12)
-> - [read_string](#4-m13)
-> - [parse_string](#4-m14)
-> - [parse_value](#4-m15)
-> - [parse_list](#4-m16)
-> - [parse_map](#4-m17)
-> - [parse_map_value](#4-m18)
-##### Getter ``root`` {#4-g-1}
+> - [unexpected](#io-4-m-1)
+> - [is_eof](#io-4-m0)
+> - [is_whitespace](#io-4-m1)
+> - [is_token](#io-4-m2)
+> - [next](#io-4-m3)
+> - [peek() { peek](#io-4-m4)
+> - [peek](#io-4-m5)
+> - [peeks() { peeks](#io-4-m6)
+> - [peeks](#io-4-m7)
+> - [step](#io-4-m8)
+> - [skips](#io-4-m9)
+> - [parse_key](#io-4-m10)
+> - [parse_primitive](#io-4-m11)
+> - [read_raw_string](#io-4-m12)
+> - [read_string](#io-4-m13)
+> - [parse_string](#io-4-m14)
+> - [parse_value](#io-4-m15)
+> - [parse_list](#io-4-m16)
+> - [parse_map](#io-4-m17)
+> - [parse_map_value](#io-4-m18)
+##### Getter ``root`` <a id='io-4-g-1'></a>
 ``return _``
 
-##### Constructor ``new(source_id: _, source: _)`` {#4-c-1}
+##### Constructor ``new(source_id: _, source: _)`` <a id='io-4-c-1'></a>
 ``return _``
 
-##### Method ``unexpected(point: _)`` {#4-m-1}
+##### Method ``unexpected(point: _)`` <a id='io-4-m-1'></a>
 ``return _``
 
-##### Method ``is_eof(point: _)`` {#4-m0}
+##### Method ``is_eof(point: _)`` <a id='io-4-m0'></a>
 ``return _``
 
-##### Method ``is_whitespace(point: _)`` {#4-m1}
+##### Method ``is_whitespace(point: _)`` <a id='io-4-m1'></a>
 ``return _``
 
-##### Method ``is_token(point: _)`` {#4-m2}
+##### Method ``is_token(point: _)`` <a id='io-4-m2'></a>
 ``return _``
 
-##### Method ``next()`` {#4-m3}
+##### Method ``next()`` <a id='io-4-m3'></a>
 ``return _``
 
-##### Method ``peek() { peek() { peek(1: _)`` {#4-m4}
+##### Method ``peek() { peek() { peek(1: _)`` <a id='io-4-m4'></a>
 ``return _``
 
-##### Method ``peek(n: _)`` {#4-m5}
+##### Method ``peek(n: _)`` <a id='io-4-m5'></a>
 ``return _``
 
-##### Method ``peeks() { peeks() { peeks(1: _)`` {#4-m6}
+##### Method ``peeks() { peeks() { peeks(1: _)`` <a id='io-4-m6'></a>
 ``return _``
 
-##### Method ``peeks(n: _)`` {#4-m7}
+##### Method ``peeks(n: _)`` <a id='io-4-m7'></a>
 ``return _``
 
-##### Method ``step(consume: _)`` {#4-m8}
+##### Method ``step(consume: _)`` <a id='io-4-m8'></a>
 ``return _``
 
-##### Method ``skips(consume: _)`` {#4-m9}
+##### Method ``skips(consume: _)`` <a id='io-4-m9'></a>
 ``return _``
 
-##### Method ``parse_key()`` {#4-m10}
+##### Method ``parse_key()`` <a id='io-4-m10'></a>
 ``return _``
 
-##### Method ``parse_primitive()`` {#4-m11}
+##### Method ``parse_primitive()`` <a id='io-4-m11'></a>
 ``return _``
 
-##### Method ``read_raw_string()`` {#4-m12}
+##### Method ``read_raw_string()`` <a id='io-4-m12'></a>
 ``return _``
 
-##### Method ``read_string()`` {#4-m13}
+##### Method ``read_string()`` <a id='io-4-m13'></a>
 ``return _``
 
-##### Method ``parse_string()`` {#4-m14}
+##### Method ``parse_string()`` <a id='io-4-m14'></a>
 ``return _``
 
-##### Method ``parse_value()`` {#4-m15}
+##### Method ``parse_value()`` <a id='io-4-m15'></a>
 ``return _``
 
-##### Method ``parse_list()`` {#4-m16}
+##### Method ``parse_list()`` <a id='io-4-m16'></a>
 ``return _``
 
-##### Method ``parse_map()`` {#4-m17}
+##### Method ``parse_map()`` <a id='io-4-m17'></a>
 ``return _``
 
-##### Method ``parse_map_value()`` {#4-m18}
+##### Method ``parse_map_value()`` <a id='io-4-m18'></a>
 ``return _``
 
 ## Module ``math``
 ### Classes
-> - [Util](#class-util)
-> - [Vec2](#foreign-class-vec2)
-### Class ``Util``
+> - [Util](#math--k-1)
+> - [Vec2](#math--k0)
+### Class ``Util`` <a id='math--k-1'></a>
 >
 
 #### Methods
-> - [lerp](#0-m-1)
-##### Static Method ``lerp(a: _, b: _, t: _)`` {#0-m-1}
+> - [lerp](#math-0-m-1)
+##### Static Method ``lerp(a: _, b: _, t: _)`` <a id='math-0-m-1'></a>
 ``return _``
 
-### Foreign Class ``Vec2``
+### Foreign Class ``Vec2`` <a id='math--k0'></a> 
 > Inherits from ``Serializable``
 >
 
 #### Constructors
-> - [new](#1-c-1)
+> - [new](#math-1-c-1)
 #### Getters
-> - [x](#1-g-1)
-> - [y](#1-g0)
-> - [default](#1-g1)
-> - [one](#1-g2)
-> - [zero](#1-g3)
-> - [up](#1-g4)
-> - [down](#1-g5)
-> - [left](#1-g6)
-> - [right](#1-g7)
-> - [-](#1-g8)
-> - [toString](#1-g9)
+> - [x](#math-1-g-1)
+> - [y](#math-1-g0)
+> - [default](#math-1-g1)
+> - [one](#math-1-g2)
+> - [zero](#math-1-g3)
+> - [up](#math-1-g4)
+> - [down](#math-1-g5)
+> - [left](#math-1-g6)
+> - [right](#math-1-g7)
+> - [-](#math-1-g8)
+> - [toString](#math-1-g9)
 #### Setters
-> - [x](#1-s-1)
-> - [y](#1-s0)
+> - [x](#math-1-s-1)
+> - [y](#math-1-s0)
 #### Methods
-> - [getProperty](#1-m-1)
-> - [setProperty](#1-m0)
-> - [magnitude](#1-m1)
-> - [magnitude_sqr](#1-m2)
-> - [normalized](#1-m3)
-> - [normalize](#1-m4)
-> - [cross](#1-m5)
-> - [dot](#1-m6)
-> - [lerp](#1-m7)
-> - [screen_to_world_space](#1-m8)
-> - [world_to_screen_space](#1-m9)
-> - [+](#1-m10)
-> - [-](#1-m11)
-> - [*](#1-m12)
-> - [/](#1-m13)
-> - [=](#1-m14)
-##### Constructor ``new(x: _, y: _)`` {#1-c-1}
+> - [getProperty](#math-1-m-1)
+> - [setProperty](#math-1-m0)
+> - [magnitude](#math-1-m1)
+> - [magnitude_sqr](#math-1-m2)
+> - [normalized](#math-1-m3)
+> - [normalize](#math-1-m4)
+> - [cross](#math-1-m5)
+> - [dot](#math-1-m6)
+> - [lerp](#math-1-m7)
+> - [screen_to_world_space](#math-1-m8)
+> - [world_to_screen_space](#math-1-m9)
+> - [+](#math-1-m10)
+> - [-](#math-1-m11)
+> - [*](#math-1-m12)
+> - [/](#math-1-m13)
+> - [=](#math-1-m14)
+##### Constructor ``new(x: _, y: _)`` <a id='math-1-c-1'></a>
 ``return _``
 
-##### Foreign Getter ``x`` {#1-g-1}
+##### Foreign Getter ``x`` <a id='math-1-g-1'></a>
 ``return _``
 
-##### Foreign Getter ``y`` {#1-g0}
+##### Foreign Getter ``y`` <a id='math-1-g0'></a>
 ``return _``
 
-##### Foreign Setter ``x = x: _`` {#1-s-1}
+##### Foreign Setter ``x = x: _`` <a id='math-1-s-1'></a>
 
-##### Foreign Setter ``y = y: _`` {#1-s0}
+##### Foreign Setter ``y = y: _`` <a id='math-1-s0'></a>
 
-##### Static Getter ``default`` {#1-g1}
+##### Static Getter ``default`` <a id='math-1-g1'></a>
 ``return _``
 
-##### Method ``getProperty()`` {#1-m-1}
+##### Method ``getProperty()`` <a id='math-1-m-1'></a>
 ``return _``
 
-##### Method ``setProperty()`` {#1-m0}
+##### Method ``setProperty()`` <a id='math-1-m0'></a>
 ``return _``
 
-##### Foreign Static Getter ``one`` {#1-g2}
+##### Foreign Static Getter ``one`` <a id='math-1-g2'></a>
 ``return _``
 
-##### Foreign Static Getter ``zero`` {#1-g3}
+##### Foreign Static Getter ``zero`` <a id='math-1-g3'></a>
 ``return _``
 
-##### Foreign Static Getter ``up`` {#1-g4}
+##### Foreign Static Getter ``up`` <a id='math-1-g4'></a>
 ``return _``
 
-##### Foreign Static Getter ``down`` {#1-g5}
+##### Foreign Static Getter ``down`` <a id='math-1-g5'></a>
 ``return _``
 
-##### Foreign Static Getter ``left`` {#1-g6}
+##### Foreign Static Getter ``left`` <a id='math-1-g6'></a>
 ``return _``
 
-##### Foreign Static Getter ``right`` {#1-g7}
+##### Foreign Static Getter ``right`` <a id='math-1-g7'></a>
 ``return _``
 
-##### Foreign Method ``magnitude()`` {#1-m1}
+##### Foreign Method ``magnitude()`` <a id='math-1-m1'></a>
 ``return _``
 
-##### Foreign Method ``magnitude_sqr()`` {#1-m2}
+##### Foreign Method ``magnitude_sqr()`` <a id='math-1-m2'></a>
 ``return _``
 
-##### Foreign Method ``normalized()`` {#1-m3}
+##### Foreign Method ``normalized()`` <a id='math-1-m3'></a>
 ``return _``
 
-##### Foreign Method ``normalize()`` {#1-m4}
+##### Foreign Method ``normalize()`` <a id='math-1-m4'></a>
 ``return _``
 
-##### Foreign Static Method ``cross(a: _, b: _)`` {#1-m5}
+##### Foreign Static Method ``cross(a: _, b: _)`` <a id='math-1-m5'></a>
 ``return _``
 
-##### Foreign Static Method ``dot(a: _, b: _)`` {#1-m6}
+##### Foreign Static Method ``dot(a: _, b: _)`` <a id='math-1-m6'></a>
 ``return _``
 
-##### Foreign Static Method ``lerp(a: _, b: _, t: _)`` {#1-m7}
+##### Foreign Static Method ``lerp(a: _, b: _, t: _)`` <a id='math-1-m7'></a>
 ``return _``
 
-##### Foreign Static Method ``screen_to_world_space(pos: _)`` {#1-m8}
+##### Foreign Static Method ``screen_to_world_space(pos: _)`` <a id='math-1-m8'></a>
 ``return _``
 
-##### Foreign Static Method ``world_to_screen_space(pos: _)`` {#1-m9}
+##### Foreign Static Method ``world_to_screen_space(pos: _)`` <a id='math-1-m9'></a>
 ``return _``
 
-##### Method ``+(other: _)`` {#1-m10}
+##### Method ``+(other: _)`` <a id='math-1-m10'></a>
 ``return _``
 
-##### Method ``-(other: _)`` {#1-m11}
+##### Method ``-(other: _)`` <a id='math-1-m11'></a>
 ``return _``
 
-##### Method ``*(other: _)`` {#1-m12}
+##### Method ``*(other: _)`` <a id='math-1-m12'></a>
 ``return _``
 
-##### Method ``/(other: _)`` {#1-m13}
+##### Method ``/(other: _)`` <a id='math-1-m13'></a>
 ``return _``
 
-##### Getter ``-`` {#1-g8}
+##### Getter ``-`` <a id='math-1-g8'></a>
 ``return _``
 
-##### Method ``==( = other: _)`` {#1-m14}
+##### Method ``==( = other: _)`` <a id='math-1-m14'></a>
 
-##### Getter ``toString`` {#1-g9}
+##### Getter ``toString`` <a id='math-1-g9'></a>
 ``return _``
 
 ## Module ``Trail``
 ### Classes
-> - [TrailField](#class-trailfield)
-> - [Trail](#class-trail)
-### Class ``TrailField``
+> - [TrailField](#trail--k-1)
+> - [Trail](#trail--k0)
+### Class ``TrailField`` <a id='trail--k-1'></a>
 >
 
 #### Constructors
-> - [new](#0-c-1)
-> - [new](#0-c0)
+> - [new](#trail-0-c-1)
+> - [new](#trail-0-c0)
 #### Getters
-> - [raw](#0-g-1)
-> - [value](#0-g0)
-> - [[t]](#0-g1)
-> - [curve](#0-g2)
+> - [raw](#trail-0-g-1)
+> - [value](#trail-0-g0)
+> - [[t]](#trail-0-g1)
+> - [curve](#trail-0-g2)
 #### Setters
-> - [value](#0-s-1)
-> - [[t]](#0-s0)
-> - [curve](#0-s1)
-##### Getter ``raw`` {#0-g-1}
+> - [value](#trail-0-s-1)
+> - [[t]](#trail-0-s0)
+> - [curve](#trail-0-s1)
+##### Getter ``raw`` <a id='trail-0-g-1'></a>
 ``return _``
 
-##### Getter ``value`` {#0-g0}
+##### Getter ``value`` <a id='trail-0-g0'></a>
 ``return _``
 
-##### Setter ``value = v: _`` {#0-s-1}
+##### Setter ``value = v: _`` <a id='trail-0-s-1'></a>
 
-##### Setter ``[t]`` {#0-s0}
+##### Setter ``[t]`` <a id='trail-0-s0'></a>
 
-##### Getter ``[t]`` {#0-g1}
+##### Getter ``[t]`` <a id='trail-0-g1'></a>
 ``return _``
 
-##### Getter ``curve`` {#0-g2}
+##### Getter ``curve`` <a id='trail-0-g2'></a>
 ``return _``
 
-##### Setter ``curve = v: _`` {#0-s1}
+##### Setter ``curve = v: _`` <a id='trail-0-s1'></a>
 
-##### Constructor ``new(v: _, c: _)`` {#0-c-1}
+##### Constructor ``new(v: _, c: _)`` <a id='trail-0-c-1'></a>
 ``return _``
 
-##### Constructor ``new(v: _)`` {#0-c0}
+##### Constructor ``new(v: _)`` <a id='trail-0-c0'></a>
 ``return _``
 
-### Class ``Trail``
+### Class ``Trail`` <a id='trail--k0'></a> 
 > Inherits from ``Behaviour``
 >
 
 #### Constructors
-> - [new(g) { super](#1-c-1)
-> - [new](#1-c0)
+> - [new(g) { super](#trail-1-c-1)
+> - [new](#trail-1-c0)
 #### Getters
-> - [gameobject](#1-g-1)
-> - [gamebehaviour](#1-g0)
-> - [default](#1-g1)
-> - [minDistance](#1-g2)
-> - [maxCount](#1-g3)
-> - [hist](#1-g4)
+> - [gameobject](#trail-1-g-1)
+> - [gamebehaviour](#trail-1-g0)
+> - [default](#trail-1-g1)
+> - [minDistance](#trail-1-g2)
+> - [maxCount](#trail-1-g3)
+> - [hist](#trail-1-g4)
 #### Setters
-> - [gameobject](#1-s-1)
-> - [gamebehaviour](#1-s0)
-> - [minDistance](#1-s1)
-> - [maxCount](#1-s2)
-> - [hist](#1-s3)
+> - [gameobject](#trail-1-s-1)
+> - [gamebehaviour](#trail-1-s0)
+> - [minDistance](#trail-1-s1)
+> - [maxCount](#trail-1-s2)
+> - [hist](#trail-1-s3)
 #### Methods
-> - [start](#1-m-1)
-> - [update](#1-m0)
-##### Static Getter ``gameobject`` {#1-g-1}
+> - [start](#trail-1-m-1)
+> - [update](#trail-1-m0)
+##### Static Getter ``gameobject`` <a id='trail-1-g-1'></a>
 ``return _``
 
-##### Static Setter ``gameobject = v) { __gameobject = GameObjectRef.new(v: _`` {#1-s-1}
+##### Static Setter ``gameobject = v) { __gameobject = GameObjectRef.new(v: _`` <a id='trail-1-s-1'></a>
 
-##### Static Getter ``gamebehaviour`` {#1-g0}
+##### Static Getter ``gamebehaviour`` <a id='trail-1-g0'></a>
 ``return _``
 
-##### Static Setter ``gamebehaviour = v: _`` {#1-s0}
+##### Static Setter ``gamebehaviour = v: _`` <a id='trail-1-s0'></a>
 
-##### Constructor ``new(g) { super(g) { super(g: _, Trail: _)`` {#1-c-1}
+##### Constructor ``new(g) { super(g) { super(g: _, Trail: _)`` <a id='trail-1-c-1'></a>
 ``return _``
 
-##### Static Getter ``default`` {#1-g1}
+##### Static Getter ``default`` <a id='trail-1-g1'></a>
 ``return _``
 
-##### Getter ``minDistance`` {#1-g2}
+##### Getter ``minDistance`` <a id='trail-1-g2'></a>
 ``return _``
 
-##### Setter ``minDistance = v: _`` {#1-s1}
+##### Setter ``minDistance = v: _`` <a id='trail-1-s1'></a>
 
-##### Getter ``maxCount`` {#1-g3}
+##### Getter ``maxCount`` <a id='trail-1-g3'></a>
 ``return _``
 
-##### Setter ``maxCount = v: _`` {#1-s2}
+##### Setter ``maxCount = v: _`` <a id='trail-1-s2'></a>
 
-##### Getter ``hist`` {#1-g4}
+##### Getter ``hist`` <a id='trail-1-g4'></a>
 ``return _``
 
-##### Setter ``hist = v: _`` {#1-s3}
+##### Setter ``hist = v: _`` <a id='trail-1-s3'></a>
 
-##### Constructor ``new()`` {#1-c0}
+##### Constructor ``new()`` <a id='trail-1-c0'></a>
 ``return _``
 
-##### Static Method ``start()`` {#1-m-1}
+##### Static Method ``start()`` <a id='trail-1-m-1'></a>
 ``return _``
 
-##### Static Method ``update()`` {#1-m0}
+##### Static Method ``update()`` <a id='trail-1-m0'></a>
 ``return _``
 
 ## Module ``ParticleSystem``
 ### Classes
-> - [ParticleField](#class-particlefield)
-> - [ParticleSystem](#class-particlesystem)
-### Class ``ParticleField``
+> - [ParticleField](#particlesystem--k-1)
+> - [ParticleSystem](#particlesystem--k0)
+### Class ``ParticleField`` <a id='particlesystem--k-1'></a>
 >
 
 #### Constructors
-> - [new](#0-c-1)
-> - [new](#0-c0)
+> - [new](#particlesystem-0-c-1)
+> - [new](#particlesystem-0-c0)
 #### Getters
-> - [raw](#0-g-1)
-> - [value](#0-g0)
-> - [[t]](#0-g1)
-> - [curve](#0-g2)
+> - [raw](#particlesystem-0-g-1)
+> - [value](#particlesystem-0-g0)
+> - [[t]](#particlesystem-0-g1)
+> - [curve](#particlesystem-0-g2)
 #### Setters
-> - [value](#0-s-1)
-> - [[t]](#0-s0)
-> - [curve](#0-s1)
-##### Getter ``raw`` {#0-g-1}
+> - [value](#particlesystem-0-s-1)
+> - [[t]](#particlesystem-0-s0)
+> - [curve](#particlesystem-0-s1)
+##### Getter ``raw`` <a id='particlesystem-0-g-1'></a>
 ``return _``
 
-##### Getter ``value`` {#0-g0}
+##### Getter ``value`` <a id='particlesystem-0-g0'></a>
 ``return _``
 
-##### Setter ``value = v: _`` {#0-s-1}
+##### Setter ``value = v: _`` <a id='particlesystem-0-s-1'></a>
 
-##### Setter ``[t]`` {#0-s0}
+##### Setter ``[t]`` <a id='particlesystem-0-s0'></a>
 
-##### Getter ``[t]`` {#0-g1}
+##### Getter ``[t]`` <a id='particlesystem-0-g1'></a>
 ``return _``
 
-##### Getter ``curve`` {#0-g2}
+##### Getter ``curve`` <a id='particlesystem-0-g2'></a>
 ``return _``
 
-##### Setter ``curve = v: _`` {#0-s1}
+##### Setter ``curve = v: _`` <a id='particlesystem-0-s1'></a>
 
-##### Constructor ``new(v: _, c: _)`` {#0-c-1}
+##### Constructor ``new(v: _, c: _)`` <a id='particlesystem-0-c-1'></a>
 ``return _``
 
-##### Constructor ``new(v: _)`` {#0-c0}
+##### Constructor ``new(v: _)`` <a id='particlesystem-0-c0'></a>
 ``return _``
 
-### Class ``ParticleSystem``
+### Class ``ParticleSystem`` <a id='particlesystem--k0'></a> 
 > Inherits from ``Behaviour``
 >
 
 #### Constructors
-> - [new(g) { super](#1-c-1)
-> - [new](#1-c0)
+> - [new(g) { super](#particlesystem-1-c-1)
+> - [new](#particlesystem-1-c0)
 #### Getters
-> - [gameobject](#1-g-1)
-> - [gamebehaviour](#1-g0)
-> - [default](#1-g1)
-> - [lifeSpan](#1-g2)
-> - [rate](#1-g3)
-> - [speed](#1-g4)
-> - [rotation](#1-g5)
-> - [direction](#1-g6)
-> - [scale](#1-g7)
-> - [color](#1-g8)
-> - [distance](#1-g9)
-> - [partSetup](#1-g10)
-> - [partStart](#1-g11)
-> - [internal_time](#1-g12)
-> - [parts](#1-g13)
-> - [internal_pos](#1-g14)
+> - [gameobject](#particlesystem-1-g-1)
+> - [gamebehaviour](#particlesystem-1-g0)
+> - [default](#particlesystem-1-g1)
+> - [lifeSpan](#particlesystem-1-g2)
+> - [rate](#particlesystem-1-g3)
+> - [speed](#particlesystem-1-g4)
+> - [rotation](#particlesystem-1-g5)
+> - [direction](#particlesystem-1-g6)
+> - [scale](#particlesystem-1-g7)
+> - [color](#particlesystem-1-g8)
+> - [distance](#particlesystem-1-g9)
+> - [partSetup](#particlesystem-1-g10)
+> - [partStart](#particlesystem-1-g11)
+> - [internal_time](#particlesystem-1-g12)
+> - [parts](#particlesystem-1-g13)
+> - [internal_pos](#particlesystem-1-g14)
 #### Setters
-> - [gameobject](#1-s-1)
-> - [gamebehaviour](#1-s0)
-> - [lifeSpan](#1-s1)
-> - [rate](#1-s2)
-> - [speed](#1-s3)
-> - [rotation](#1-s4)
-> - [direction](#1-s5)
-> - [scale](#1-s6)
-> - [color](#1-s7)
-> - [distance](#1-s8)
-> - [partSetup](#1-s9)
-> - [partStart](#1-s10)
-> - [internal_time](#1-s11)
-> - [parts](#1-s12)
-> - [internal_pos](#1-s13)
+> - [gameobject](#particlesystem-1-s-1)
+> - [gamebehaviour](#particlesystem-1-s0)
+> - [lifeSpan](#particlesystem-1-s1)
+> - [rate](#particlesystem-1-s2)
+> - [speed](#particlesystem-1-s3)
+> - [rotation](#particlesystem-1-s4)
+> - [direction](#particlesystem-1-s5)
+> - [scale](#particlesystem-1-s6)
+> - [color](#particlesystem-1-s7)
+> - [distance](#particlesystem-1-s8)
+> - [partSetup](#particlesystem-1-s9)
+> - [partStart](#particlesystem-1-s10)
+> - [internal_time](#particlesystem-1-s11)
+> - [parts](#particlesystem-1-s12)
+> - [internal_pos](#particlesystem-1-s13)
 #### Methods
-> - [play](#1-m-1)
-> - [stop](#1-m0)
-> - [toggle](#1-m1)
-> - [isPlaying](#1-m2)
-> - [emit](#1-m3)
-> - [update](#1-m4)
-##### Static Getter ``gameobject`` {#1-g-1}
+> - [play](#particlesystem-1-m-1)
+> - [stop](#particlesystem-1-m0)
+> - [toggle](#particlesystem-1-m1)
+> - [isPlaying](#particlesystem-1-m2)
+> - [emit](#particlesystem-1-m3)
+> - [update](#particlesystem-1-m4)
+##### Static Getter ``gameobject`` <a id='particlesystem-1-g-1'></a>
 ``return _``
 
-##### Static Setter ``gameobject = v) { __gameobject = GameObjectRef.new(v: _`` {#1-s-1}
+##### Static Setter ``gameobject = v) { __gameobject = GameObjectRef.new(v: _`` <a id='particlesystem-1-s-1'></a>
 
-##### Static Getter ``gamebehaviour`` {#1-g0}
+##### Static Getter ``gamebehaviour`` <a id='particlesystem-1-g0'></a>
 ``return _``
 
-##### Static Setter ``gamebehaviour = v: _`` {#1-s0}
+##### Static Setter ``gamebehaviour = v: _`` <a id='particlesystem-1-s0'></a>
 
-##### Constructor ``new(g) { super(g) { super(g: _, ParticleSystem: _)`` {#1-c-1}
+##### Constructor ``new(g) { super(g) { super(g: _, ParticleSystem: _)`` <a id='particlesystem-1-c-1'></a>
 ``return _``
 
-##### Static Getter ``default`` {#1-g1}
+##### Static Getter ``default`` <a id='particlesystem-1-g1'></a>
 ``return _``
 
-##### Getter ``lifeSpan`` {#1-g2}
+##### Getter ``lifeSpan`` <a id='particlesystem-1-g2'></a>
 ``return _``
 
-##### Setter ``lifeSpan = v: _`` {#1-s1}
+##### Setter ``lifeSpan = v: _`` <a id='particlesystem-1-s1'></a>
 
-##### Getter ``rate`` {#1-g3}
+##### Getter ``rate`` <a id='particlesystem-1-g3'></a>
 ``return _``
 
-##### Setter ``rate = v: _`` {#1-s2}
+##### Setter ``rate = v: _`` <a id='particlesystem-1-s2'></a>
 
-##### Getter ``speed`` {#1-g4}
+##### Getter ``speed`` <a id='particlesystem-1-g4'></a>
 ``return _``
 
-##### Setter ``speed = v: _`` {#1-s3}
+##### Setter ``speed = v: _`` <a id='particlesystem-1-s3'></a>
 
-##### Getter ``rotation`` {#1-g5}
+##### Getter ``rotation`` <a id='particlesystem-1-g5'></a>
 ``return _``
 
-##### Setter ``rotation = v: _`` {#1-s4}
+##### Setter ``rotation = v: _`` <a id='particlesystem-1-s4'></a>
 
-##### Getter ``direction`` {#1-g6}
+##### Getter ``direction`` <a id='particlesystem-1-g6'></a>
 ``return _``
 
-##### Setter ``direction = v: _`` {#1-s5}
+##### Setter ``direction = v: _`` <a id='particlesystem-1-s5'></a>
 
-##### Getter ``scale`` {#1-g7}
+##### Getter ``scale`` <a id='particlesystem-1-g7'></a>
 ``return _``
 
-##### Setter ``scale = v: _`` {#1-s6}
+##### Setter ``scale = v: _`` <a id='particlesystem-1-s6'></a>
 
-##### Getter ``color`` {#1-g8}
+##### Getter ``color`` <a id='particlesystem-1-g8'></a>
 ``return _``
 
-##### Setter ``color = v: _`` {#1-s7}
+##### Setter ``color = v: _`` <a id='particlesystem-1-s7'></a>
 
-##### Getter ``distance`` {#1-g9}
+##### Getter ``distance`` <a id='particlesystem-1-g9'></a>
 ``return _``
 
-##### Setter ``distance = v: _`` {#1-s8}
+##### Setter ``distance = v: _`` <a id='particlesystem-1-s8'></a>
 
-##### Getter ``partSetup`` {#1-g10}
+##### Getter ``partSetup`` <a id='particlesystem-1-g10'></a>
 ``return _``
 
-##### Setter ``partSetup = v: _`` {#1-s9}
+##### Setter ``partSetup = v: _`` <a id='particlesystem-1-s9'></a>
 
-##### Getter ``partStart`` {#1-g11}
+##### Getter ``partStart`` <a id='particlesystem-1-g11'></a>
 ``return _``
 
-##### Setter ``partStart = v: _`` {#1-s10}
+##### Setter ``partStart = v: _`` <a id='particlesystem-1-s10'></a>
 
-##### Getter ``internal_time`` {#1-g12}
+##### Getter ``internal_time`` <a id='particlesystem-1-g12'></a>
 ``return _``
 
-##### Setter ``internal_time = v: _`` {#1-s11}
+##### Setter ``internal_time = v: _`` <a id='particlesystem-1-s11'></a>
 
-##### Getter ``parts`` {#1-g13}
+##### Getter ``parts`` <a id='particlesystem-1-g13'></a>
 ``return _``
 
-##### Setter ``parts = v: _`` {#1-s12}
+##### Setter ``parts = v: _`` <a id='particlesystem-1-s12'></a>
 
-##### Getter ``internal_pos`` {#1-g14}
+##### Getter ``internal_pos`` <a id='particlesystem-1-g14'></a>
 ``return _``
 
-##### Setter ``internal_pos = v: _`` {#1-s13}
+##### Setter ``internal_pos = v: _`` <a id='particlesystem-1-s13'></a>
 
-##### Method ``play()`` {#1-m-1}
+##### Method ``play()`` <a id='particlesystem-1-m-1'></a>
 ``return _``
 
-##### Method ``stop()`` {#1-m0}
+##### Method ``stop()`` <a id='particlesystem-1-m0'></a>
 ``return _``
 
-##### Method ``toggle()`` {#1-m1}
+##### Method ``toggle()`` <a id='particlesystem-1-m1'></a>
 ``return _``
 
-##### Method ``isPlaying()`` {#1-m2}
+##### Method ``isPlaying()`` <a id='particlesystem-1-m2'></a>
 ``return _``
 
-##### Constructor ``new()`` {#1-c0}
+##### Constructor ``new()`` <a id='particlesystem-1-c0'></a>
 ``return _``
 
-##### Static Method ``emit()`` {#1-m3}
+##### Static Method ``emit()`` <a id='particlesystem-1-m3'></a>
 ``return _``
 
-##### Static Method ``update()`` {#1-m4}
+##### Static Method ``update()`` <a id='particlesystem-1-m4'></a>
 ``return _``
 
