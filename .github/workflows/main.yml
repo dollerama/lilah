@@ -33,4 +33,12 @@ jobs:
       - name: perl -V
         run: perl -V
       - name: WrenDoc.PL
-        run: perl src/scripts/WrenDocs.pl -out src/scripts/Test.md -in src/scripts/io.wren
+        run: perl src/scripts/WrenDocs.pl -out Test.md -in src/scripts/io.wren
+      - name: update file and push to remote
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    
+          git add -A
+          git commit -m "Update test.txt"
+          git push
