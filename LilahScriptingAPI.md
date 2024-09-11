@@ -239,9 +239,9 @@
 ##### Static Getter ``data`` <a id='game-0-g-1'></a>
 ``return Map``
 
-##### Static Setter ``data = v: _`` <a id='game-0-s-1'></a>
+##### Static Setter ``data = v: Any`` <a id='game-0-s-1'></a>
 
-##### Static Getter ``[i]: Any`` <a id='game-0-g0'></a>
+##### Static Getter ``[i]`` <a id='game-0-g0'></a>
 ``return Any``
 
 ##### Static Setter ``[i]: Any = v: Any`` <a id='game-0-s0'></a>
