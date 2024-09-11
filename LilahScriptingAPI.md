@@ -287,12 +287,10 @@
 
 ### Foreign Class ``Component`` <a id='game--k0'></a> 
 >
-> {class} Component
 > Rust dyn obj that all components derive from
 
 ### Foreign Class ``Text`` <a id='game--k1'></a> 
 >
-> {class} Text
 
 #### Constructors
 > - [new](#game-2-c-1)
@@ -312,51 +310,47 @@
 > - [set_text](#game-2-m2)
 > - [set_font](#game-2-m3)
 > - [set_font_size](#game-2-m4)
-##### Constructor ``new(text: {constructor} new(text: String, font: font: String))`` <a id='game-2-c-1'></a>
-``return Text``
+##### Constructor ``new(text: _, font: _)`` <a id='game-2-c-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} as_component`` <a id='game-2-g-1'></a>
-``return Component``
+##### Foreign Getter ```` <a id='game-2-g-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} text`` <a id='game-2-g0'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-2-g0'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} font`` <a id='game-2-g1'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-2-g1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} font_size`` <a id='game-2-g2'></a>
-``return Num``
+##### Foreign Getter ```` <a id='game-2-g2'></a>
+``return _``
 
 ##### Setter ``text = value: _`` <a id='game-2-s-1'></a>
-> {setter} text = value: String
 
 ##### Setter ``font = value: _`` <a id='game-2-s0'></a>
-> {setter} font = value: String
 
 ##### Setter ``font_size = value: _`` <a id='game-2-s1'></a>
-> {setter} font_size = value: Num
 
-##### Foreign Static Method ``get_text(go: {static method} get_text(go: GameObject))`` <a id='game-2-m-1'></a>
-``return String``
+##### Foreign Static Method ``get_text(go: _)`` <a id='game-2-m-1'></a>
+``return _``
 
-##### Foreign Static Method ``get_font(go: {static method} get_font(go: GameObject))`` <a id='game-2-m0'></a>
-``return String``
+##### Foreign Static Method ``get_font(go: _)`` <a id='game-2-m0'></a>
+``return _``
 
-##### Foreign Static Method ``get_font_size(go: {static method} get_font_size(go: GameObject))`` <a id='game-2-m1'></a>
-``return Num``
+##### Foreign Static Method ``get_font_size(go: _)`` <a id='game-2-m1'></a>
+``return _``
 
-##### Foreign Static Method ``set_text(go: {static method} set_text(go: GameObject, text: text: String))`` <a id='game-2-m2'></a>
-``return null``
+##### Foreign Static Method ``set_text(go: _, text: _)`` <a id='game-2-m2'></a>
+``return _``
 
-##### Foreign Static Method ``set_font(go: {static method} set_font(go: GameObject, font: font: String))`` <a id='game-2-m3'></a>
-``return null``
+##### Foreign Static Method ``set_font(go: _, font: _)`` <a id='game-2-m3'></a>
+``return _``
 
-##### Foreign Static Method ``set_font_size(go: {static method} set_font_size(go: GameObject, fs: fs: Num))`` <a id='game-2-m4'></a>
-``return null``
+##### Foreign Static Method ``set_font_size(go: _, fs: _)`` <a id='game-2-m4'></a>
+``return _``
 
 ### Foreign Class ``Sprite`` <a id='game--k2'></a> 
 >
-> {class} Sprite
 
 #### Constructors
 > - [new](#game-3-c-1)
@@ -374,46 +368,44 @@
 > - [cut_sprite_sheet](#game-3-m0)
 > - [set_sort](#game-3-m1)
 > - [set_tint](#game-3-m2)
-##### Constructor ``new(id: {constructor} new(id: String))`` <a id='game-3-c-1'></a>
-``return Sprite``
+##### Constructor ``new(id: _)`` <a id='game-3-c-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} parent`` <a id='game-3-g-1'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-3-g-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} as_component`` <a id='game-3-g0'></a>
-``return Component``
+##### Foreign Getter ```` <a id='game-3-g0'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} size`` <a id='game-3-g1'></a>
-``return Vec2``
+##### Foreign Getter ```` <a id='game-3-g1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} texture_id`` <a id='game-3-g2'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-3-g2'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} current_index`` <a id='game-3-g3'></a>
-``return Vec2``
+##### Foreign Getter ```` <a id='game-3-g3'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} tint`` <a id='game-3-g4'></a>
-``return [Num]``
+##### Foreign Getter ```` <a id='game-3-g4'></a>
+``return _``
 > Returns in the form [r,g,b,a]
 
 ##### Setter ``tint = value: _`` <a id='game-3-s-1'></a>
-> {setter} tint = value: [Num]
 
-##### Foreign Method ``cut_sprite_sheet(i: {method} cut_sprite_sheet(i: Vec2, j: j: Vec2))`` <a id='game-3-m-1'></a>
-``return null``
+##### Foreign Method ``cut_sprite_sheet(i: _, j: _)`` <a id='game-3-m-1'></a>
+``return _``
 
-##### Foreign Static Method ``cut_sprite_sheet(go: {method} cut_sprite_sheet(go: GameObject, i: i: Vec2, j: j: Vec2))`` <a id='game-3-m0'></a>
-``return null``
+##### Foreign Static Method ``cut_sprite_sheet(go: _, i: _, j: _)`` <a id='game-3-m0'></a>
+``return _``
 
-##### Foreign Static Method ``set_sort(go: {method} set_sort(go: GameObject, i: i: Num))`` <a id='game-3-m1'></a>
-``return null``
+##### Foreign Static Method ``set_sort(go: _, i: _)`` <a id='game-3-m1'></a>
+``return _``
 
-##### Foreign Static Method ``set_tint(go: {method} set_tint(go: GameObject, color: color: List))`` <a id='game-3-m2'></a>
-``return null``
+##### Foreign Static Method ``set_tint(go: _, color: _)`` <a id='game-3-m2'></a>
+``return _``
 
 ### Foreign Class ``Scene`` <a id='game--k3'></a> 
 >
-> {class} Scene
 
 #### Constructors
 > - [new](#game-4-c-1)
@@ -423,25 +415,24 @@
 > - [](#game-4-g1)
 #### Methods
 > - [getMarker](#game-4-m-1)
-##### Constructor ``new(i: {constructor} new(i: String))`` <a id='game-4-c-1'></a>
-``return Scene``
+##### Constructor ``new(i: _)`` <a id='game-4-c-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} parent`` <a id='game-4-g-1'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-4-g-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} as_component`` <a id='game-4-g0'></a>
-``return Component``
+##### Foreign Getter ```` <a id='game-4-g0'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} markers`` <a id='game-4-g1'></a>
-``return [{String: Vec2}]``
+##### Foreign Getter ```` <a id='game-4-g1'></a>
+``return _``
 
-##### Method ``getMarker(index: {method} getMarker(index: String))`` <a id='game-4-m-1'></a>
-``return [Vec2] | Vec2``
+##### Method ``getMarker(index: _)`` <a id='game-4-m-1'></a>
+``return _``
 > either returns the Vec2 that is mapped to the String or a list of Vec2's if the String has multiple mappings.
 
 ### Foreign Class ``Rigidbody`` <a id='game--k4'></a> 
 >
-> {class} Rigidbody
 
 #### Constructors
 > - [new](#game-5-c-1)
@@ -470,76 +461,72 @@
 > - [update_velocity_y](#game-5-m9)
 > - [set_rotation](#game-5-m10)
 ##### Constructor ``new()`` <a id='game-5-c-1'></a>
-``return Rigidbody``
+``return _``
 
-##### Foreign Getter ``: {getter} parent`` <a id='game-5-g-1'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-5-g-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} as_component`` <a id='game-5-g0'></a>
-``return Component``
+##### Foreign Getter ```` <a id='game-5-g0'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} position`` <a id='game-5-g1'></a>
-``return Vec2``
+##### Foreign Getter ```` <a id='game-5-g1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} velocity`` <a id='game-5-g2'></a>
-``return Vec2``
+##### Foreign Getter ```` <a id='game-5-g2'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} solid`` <a id='game-5-g3'></a>
-``return bool``
+##### Foreign Getter ```` <a id='game-5-g3'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} colliding`` <a id='game-5-g4'></a>
-``return Map/null``
+##### Foreign Getter ```` <a id='game-5-g4'></a>
+``return _``
 > returns a map in the form "name": _, "uuid": _ or null if no collision
 
 ##### Setter ``velocity = value: _`` <a id='game-5-s-1'></a>
-> {setter} velocity = value: Vec2
 
 ##### Setter ``solid = value: _`` <a id='game-5-s0'></a>
-> {setter} solid = value: bool
 
 ##### Setter ``position = value: _`` <a id='game-5-s1'></a>
-> {setter} position = value: Vec2
 
-##### Foreign Static Method ``colliding(go: {static method} colliding(go: GameObject))`` <a id='game-5-m-1'></a>
-``return Map/null``
+##### Foreign Static Method ``colliding(go: _)`` <a id='game-5-m-1'></a>
+``return _``
 > returns a map in the form "name": _, "uuid": _ or null if no collision
 
-##### Foreign Static Method ``set_solid(go: {static method} set_solid(go: GameObject, solid: solid: bool))`` <a id='game-5-m0'></a>
-``return null``
+##### Foreign Static Method ``set_solid(go: _, solid: _)`` <a id='game-5-m0'></a>
+``return _``
 
-##### Foreign Static Method ``set_position(go: {static method} set_position(go: GameObject, new_pos: new_pos: Vec2))`` <a id='game-5-m1'></a>
-``return null``
+##### Foreign Static Method ``set_position(go: _, new_pos: _)`` <a id='game-5-m1'></a>
+``return _``
 
-##### Foreign Static Method ``set_position_x(go: {static method} set_position_x(go: GameObject, new_x: new_x: Num))`` <a id='game-5-m2'></a>
-``return null``
+##### Foreign Static Method ``set_position_x(go: _, new_x: _)`` <a id='game-5-m2'></a>
+``return _``
 
-##### Foreign Static Method ``set_position_y(go: {static method} set_position_y(go: GameObject, new_y: new_y: Num))`` <a id='game-5-m3'></a>
-``return null``
+##### Foreign Static Method ``set_position_y(go: _, new_y: _)`` <a id='game-5-m3'></a>
+``return _``
 
-##### Foreign Static Method ``set_velocity(go: {static method} set_velocity(go: GameObject, vel: vel: Vec2))`` <a id='game-5-m4'></a>
-``return null``
+##### Foreign Static Method ``set_velocity(go: _, vel: _)`` <a id='game-5-m4'></a>
+``return _``
 
-##### Foreign Static Method ``set_velocity_x(go: {static method} set_velocity_x(go: GameObject, new_x: new_x: Num))`` <a id='game-5-m5'></a>
-``return null``
+##### Foreign Static Method ``set_velocity_x(go: _, new_x: _)`` <a id='game-5-m5'></a>
+``return _``
 
-##### Foreign Static Method ``set_velocity_y(go: {static method} set_velocity_y(go: GameObject, new_y: new_y: Num))`` <a id='game-5-m6'></a>
-``return null``
+##### Foreign Static Method ``set_velocity_y(go: _, new_y: _)`` <a id='game-5-m6'></a>
+``return _``
 
-##### Foreign Static Method ``update_velocity(go: {static method} update_velocity(go: GameObject, vel: vel: Vec2))`` <a id='game-5-m7'></a>
-``return null``
+##### Foreign Static Method ``update_velocity(go: _, vel: _)`` <a id='game-5-m7'></a>
+``return _``
 
-##### Foreign Static Method ``update_velocity_x(go: {static method} update_velocity_x(go: GameObject, new_x: new_x: Num))`` <a id='game-5-m8'></a>
-``return null``
+##### Foreign Static Method ``update_velocity_x(go: _, new_x: _)`` <a id='game-5-m8'></a>
+``return _``
 
-##### Foreign Static Method ``update_velocity_y(go: {static method} set_velocity(go: GameObject, new_y: new_y: Num))`` <a id='game-5-m9'></a>
-``return null``
+##### Foreign Static Method ``update_velocity_y(go: _, new_y: _)`` <a id='game-5-m9'></a>
+``return _``
 
-##### Foreign Static Method ``set_rotation(go: {static method} set_rotation(go: GameObject, new_rot: new_rot: Num))`` <a id='game-5-m10'></a>
-``return null``
+##### Foreign Static Method ``set_rotation(go: _, new_rot: _)`` <a id='game-5-m10'></a>
+``return _``
 
 ### Foreign Class ``Animator`` <a id='game--k5'></a> 
 >
-> {class} Animator
 
 #### Constructors
 > - [new](#game-6-c-1)
@@ -566,70 +553,67 @@
 > - [set_speed](#game-6-m9)
 > - [set_frame](#game-6-m10)
 ##### Constructor ``new()`` <a id='game-6-c-1'></a>
-``return Animator``
+``return _``
 
-##### Foreign Getter ``: {getter} parent`` <a id='game-6-g-1'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-6-g-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} as_component`` <a id='game-6-g0'></a>
-``return Component``
+##### Foreign Getter ```` <a id='game-6-g0'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} playing`` <a id='game-6-g1'></a>
-``return bool``
+##### Foreign Getter ```` <a id='game-6-g1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} speed`` <a id='game-6-g2'></a>
-``return Num``
+##### Foreign Getter ```` <a id='game-6-g2'></a>
+``return _``
 
 ##### Setter ``speed = value: _`` <a id='game-6-s-1'></a>
-> {setter} speed = value: Num
 
-##### Foreign Getter ``: {getter} frame`` <a id='game-6-g3'></a>
-``return Num``
+##### Foreign Getter ```` <a id='game-6-g3'></a>
+``return _``
 
 ##### Setter ``frame = value: _`` <a id='game-6-s0'></a>
-> {setter} frame = value: Num
 
 ##### Foreign Method ``play()`` <a id='game-6-m-1'></a>
-``return null``
+``return _``
 
 ##### Foreign Method ``stop()`` <a id='game-6-m0'></a>
-``return null``
+``return _``
 
-##### Foreign Method ``get_state(s: {method} get_state(s: String))`` <a id='game-6-m1'></a>
-``return Map``
+##### Foreign Method ``get_state(s: _)`` <a id='game-6-m1'></a>
+``return _``
 > returns map in the form state: value:Vec2
 
-##### Foreign Method ``set_state(s: {method} set_state(s: String))`` <a id='game-6-m2'></a>
-``return null``
+##### Foreign Method ``set_state(s: _)`` <a id='game-6-m2'></a>
+``return _``
 
-##### Foreign Method ``insert_state(s: {method} insert_state(s: String, i: i: Vec2))`` <a id='game-6-m3'></a>
-``return null``
+##### Foreign Method ``insert_state(s: _, i: _)`` <a id='game-6-m3'></a>
+``return _``
 
-##### Foreign Static Method ``play(g: {static method} play(go: GameObject))`` <a id='game-6-m4'></a>
-``return null``
+##### Foreign Static Method ``play(g: _)`` <a id='game-6-m4'></a>
+``return _``
 
-##### Foreign Static Method ``stop(g: {static method} stop(go: GameObject))`` <a id='game-6-m5'></a>
-``return null``
+##### Foreign Static Method ``stop(g: _)`` <a id='game-6-m5'></a>
+``return _``
 
-##### Foreign Static Method ``set_state(g: {static method} set_state(go: GameObject, s: s: String))`` <a id='game-6-m6'></a>
-``return null``
+##### Foreign Static Method ``set_state(g: _, s: _)`` <a id='game-6-m6'></a>
+``return _``
 
-##### Foreign Static Method ``get_state(g: {static method} get_state(go: GameObject, s: s: String))`` <a id='game-6-m7'></a>
-``return String``
+##### Foreign Static Method ``get_state(g: _, s: _)`` <a id='game-6-m7'></a>
+``return _``
 
-##### Foreign Static Method ``insert_state(g: {static method} insert_state(go: GameObject, s: s: String, i: i: Vec2))`` <a id='game-6-m8'></a>
-``return null``
+##### Foreign Static Method ``insert_state(g: _, s: _, i: _)`` <a id='game-6-m8'></a>
+``return _``
 
-##### Foreign Static Method ``set_speed(g: {static method} set_speed(go: GameObject, s: s: Num))`` <a id='game-6-m9'></a>
-``return null``
+##### Foreign Static Method ``set_speed(g: _, s: _)`` <a id='game-6-m9'></a>
+``return _``
 
-##### Foreign Static Method ``set_frame(g: {static method} set_frame(go: GameObject, f: f: Num))`` <a id='game-6-m10'></a>
-``return null``
+##### Foreign Static Method ``set_frame(g: _, f: _)`` <a id='game-6-m10'></a>
+``return _``
 
 ### Foreign Class ``Transform`` <a id='game--k6'></a> 
 > Inherits from ``Serializable``
 >
-> {class} Transform : Serializable
 
 #### Constructors
 > - [new](#game-7-c-1)
@@ -665,99 +649,94 @@
 > - [set_rotation](#game-7-m14)
 > - [update_rotation](#game-7-m15)
 > - [inverse_point](#game-7-m16)
-##### Constructor ``new(p: {constructor} new(p: Vec2))`` <a id='game-7-c-1'></a>
-``return Transform``
+##### Constructor ``new(p: _)`` <a id='game-7-c-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} as_component`` <a id='game-7-g-1'></a>
-``return Component``
+##### Foreign Getter ```` <a id='game-7-g-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} position`` <a id='game-7-g0'></a>
-``return Vec2``
+##### Foreign Getter ```` <a id='game-7-g0'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} scale`` <a id='game-7-g1'></a>
-``return Vec2``
+##### Foreign Getter ```` <a id='game-7-g1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} rotation`` <a id='game-7-g2'></a>
-``return Num``
+##### Foreign Getter ```` <a id='game-7-g2'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} pivot`` <a id='game-7-g3'></a>
-``return Vec2``
+##### Foreign Getter ```` <a id='game-7-g3'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} parent`` <a id='game-7-g4'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-7-g4'></a>
+``return _``
 
 ##### Setter ``position = value: _`` <a id='game-7-s-1'></a>
-> {setter} position = value: Vec2
 
 ##### Setter ``scale = value: _`` <a id='game-7-s0'></a>
-> {setter} scale = value: Vec2
 
 ##### Setter ``rotation = value: _`` <a id='game-7-s1'></a>
-> {setter} rotation = value: Num
 
 ##### Setter ``pivot = value: _`` <a id='game-7-s2'></a>
-> {setter} pivot = value: Vec2
 
-##### Static Getter ``default: {static getter} default`` <a id='game-7-g5'></a>
-``return Transform``
+##### Static Getter ``default`` <a id='game-7-g5'></a>
+``return _``
 
 ##### Method ``getProperty()`` <a id='game-7-m-1'></a>
-``return List/Fn``
+``return _``
 
 ##### Method ``setProperty()`` <a id='game-7-m0'></a>
-``return null``
+``return _``
 
-##### Foreign Static Method ``set_pivot(go: {static method} set_pivot(go: GameObject, new_pivot: new_pivot: Vec2))`` <a id='game-7-m1'></a>
-``return null``
+##### Foreign Static Method ``set_pivot(go: _, new_pivot: _)`` <a id='game-7-m1'></a>
+``return _``
 
-##### Foreign Static Method ``set_position(go: {static method} set_position(go: GameObject, new_pos: new_pos: Vec2))`` <a id='game-7-m2'></a>
-``return null``
+##### Foreign Static Method ``set_position(go: _, new_pos: _)`` <a id='game-7-m2'></a>
+``return _``
 
-##### Foreign Static Method ``set_position_x(go: {static method} set_position_x(go: GameObject, new_x: new_x: Num))`` <a id='game-7-m3'></a>
-``return null``
+##### Foreign Static Method ``set_position_x(go: _, new_x: _)`` <a id='game-7-m3'></a>
+``return _``
 
-##### Foreign Static Method ``set_position_y(go: {static method} set_position_y(go: GameObject, new_y: new_y: Num))`` <a id='game-7-m4'></a>
-``return null``
+##### Foreign Static Method ``set_position_y(go: _, new_y: _)`` <a id='game-7-m4'></a>
+``return _``
 
-##### Foreign Static Method ``update_position(go: {static method} update_position(go: GameObject, new_pos: new_pos: Vec2))`` <a id='game-7-m5'></a>
-``return null``
+##### Foreign Static Method ``update_position(go: _, new_pos: _)`` <a id='game-7-m5'></a>
+``return _``
 
-##### Foreign Static Method ``update_position_x(go: {static method} update_position_x(go: GameObject, new_x: new_x: Num))`` <a id='game-7-m6'></a>
-``return null``
+##### Foreign Static Method ``update_position_x(go: _, new_x: _)`` <a id='game-7-m6'></a>
+``return _``
 
-##### Foreign Static Method ``update_position_y(go: {static method} update_position_y(go: GameObject, new_y: new_y: Num))`` <a id='game-7-m7'></a>
-``return null``
+##### Foreign Static Method ``update_position_y(go: _, new_y: _)`` <a id='game-7-m7'></a>
+``return _``
 
-##### Foreign Static Method ``set_scale(go: {static method} set_scale(go: GameObject, new_scale: new_scale: Vec2))`` <a id='game-7-m8'></a>
-``return null``
+##### Foreign Static Method ``set_scale(go: _, new_scale: _)`` <a id='game-7-m8'></a>
+``return _``
 
-##### Foreign Static Method ``set_scale_x(go: {static method} set_scale_x(go: GameObject, new_x: new_x: Num))`` <a id='game-7-m9'></a>
-``return null``
+##### Foreign Static Method ``set_scale_x(go: _, new_x: _)`` <a id='game-7-m9'></a>
+``return _``
 
-##### Foreign Static Method ``set_scale_y(go: {static method} set_scale_y(go: GameObject, new_y: new_y: Num))`` <a id='game-7-m10'></a>
-``return null``
+##### Foreign Static Method ``set_scale_y(go: _, new_y: _)`` <a id='game-7-m10'></a>
+``return _``
 
-##### Foreign Static Method ``update_scale(go: {static method} update_scale(go: GameObject, new_scale: new_scale: Vec2))`` <a id='game-7-m11'></a>
-``return null``
+##### Foreign Static Method ``update_scale(go: _, new_scale: _)`` <a id='game-7-m11'></a>
+``return _``
 
-##### Foreign Static Method ``update_scale_x(go: {static method} update_scale_x(go: GameObject, new_x: new_x: Num))`` <a id='game-7-m12'></a>
-``return null``
+##### Foreign Static Method ``update_scale_x(go: _, new_x: _)`` <a id='game-7-m12'></a>
+``return _``
 
-##### Foreign Static Method ``update_scale_y(go: {static method} update_scale_y(go: GameObject, new_y: new_y: Num))`` <a id='game-7-m13'></a>
-``return null``
+##### Foreign Static Method ``update_scale_y(go: _, new_y: _)`` <a id='game-7-m13'></a>
+``return _``
 
-##### Foreign Static Method ``set_rotation(go: {static method} set_rotation(go: GameObject, new_rot: new_rot: Num))`` <a id='game-7-m14'></a>
-``return null``
+##### Foreign Static Method ``set_rotation(go: _, new_rot: _)`` <a id='game-7-m14'></a>
+``return _``
 
-##### Foreign Static Method ``update_rotation(go: {static method} update_rotation(go: GameObject, new_rot: new_rot: Num))`` <a id='game-7-m15'></a>
-``return null``
+##### Foreign Static Method ``update_rotation(go: _, new_rot: _)`` <a id='game-7-m15'></a>
+``return _``
 
-##### Foreign Static Method ``inverse_point(go: {static method} inverse_point(go: GameObject, point: point: Vec2))`` <a id='game-7-m16'></a>
-``return Vec2``
+##### Foreign Static Method ``inverse_point(go: _, point: _)`` <a id='game-7-m16'></a>
+``return _``
 
 ### Foreign Class ``GameObject`` <a id='game--k7'></a> 
 >
-> {class} GameObject
 
 #### Constructors
 > - [new](#game-8-c-1)
@@ -774,43 +753,41 @@
 > - [getComponent](#game-8-m0)
 > - [get](#game-8-m1)
 > - [add](#game-8-m2)
-##### Constructor ``new(name: {constructor} new(name: String))`` <a id='game-8-c-1'></a>
-``return GameObject``
+##### Constructor ``new(name: _)`` <a id='game-8-c-1'></a>
+``return _``
 
-##### Foreign Method ``addComponent(x: {method} add(x: Component))`` <a id='game-8-m-1'></a>
-``return null``
+##### Foreign Method ``addComponent(x: _)`` <a id='game-8-m-1'></a>
+``return _``
 
-##### Foreign Method ``getComponent(x: {method} getComponent(x: String))`` <a id='game-8-m0'></a>
-``return Component``
+##### Foreign Method ``getComponent(x: _)`` <a id='game-8-m0'></a>
+``return _``
 
-##### Method ``get(x: {method} set(x: Type)`` <a id='game-8-m1'></a>
-``return null``
+##### Method ``get(x: _)`` <a id='game-8-m1'></a>
+``return _``
 
 ##### Method ``add(x: _)`` <a id='game-8-m2'></a>
 ``return _``
 
-##### Foreign Getter ``: {getter} id`` <a id='game-8-g-1'></a>
-``return Map``
+##### Foreign Getter ```` <a id='game-8-g-1'></a>
+``return _``
 > Returns a map in the form "name": _, "uuid": _
 
-##### Foreign Getter ``: {getter} uuid`` <a id='game-8-g0'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-8-g0'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} name`` <a id='game-8-g1'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-8-g1'></a>
+``return _``
 
 ##### Foreign Setter ``name = v: _`` <a id='game-8-s-1'></a>
-> {setter} name = v: String
 
-##### Foreign Getter ``: {getter} components`` <a id='game-8-g2'></a>
-``return [Component]``
+##### Foreign Getter ```` <a id='game-8-g2'></a>
+``return _``
 
 ##### Getter ``toString`` <a id='game-8-g3'></a>
 ``return _``
 
 ### Foreign Class ``Sfx`` <a id='game--k8'></a> 
 >
-> {class} Sfx
 
 #### Constructors
 > - [new](#game-9-c-1)
@@ -828,45 +805,42 @@
 > - [get_volume](#game-9-m0)
 > - [set_volume](#game-9-m1)
 > - [play](#game-9-m2)
-##### Constructor ``new(name: {constructor} new(name: String, file: file: String))`` <a id='game-9-c-1'></a>
-``return Sfx``
+##### Constructor ``new(name: _, file: _)`` <a id='game-9-c-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} parent`` <a id='game-9-g-1'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-9-g-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} as_component`` <a id='game-9-g0'></a>
-``return Component``
+##### Foreign Getter ```` <a id='game-9-g0'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} name`` <a id='game-9-g1'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-9-g1'></a>
+``return _``
 
 ##### Foreign Setter ``name = v: _`` <a id='game-9-s-1'></a>
-> {setter} name = v: String
 
-##### Foreign Getter ``: {getter} volume`` <a id='game-9-g2'></a>
-``return Num``
+##### Foreign Getter ```` <a id='game-9-g2'></a>
+``return _``
 
 ##### Setter ``volume = value: _`` <a id='game-9-s0'></a>
-> {setter} volume = value: Num
 
-##### Foreign Getter ``: {getter} file`` <a id='game-9-g3'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-9-g3'></a>
+``return _``
 
 ##### Foreign Method ``play()`` <a id='game-9-m-1'></a>
-``return null``
+``return _``
 
-##### Foreign Static Method ``get_volume(go: {static method} get_volume(go: GameObject, name: name: String))`` <a id='game-9-m0'></a>
-``return Num``
+##### Foreign Static Method ``get_volume(go: _, name: _)`` <a id='game-9-m0'></a>
+``return _``
 
-##### Foreign Static Method ``set_volume(go: {static method} get_volume(go: GameObject, name: name: String, amt: amt: Num))`` <a id='game-9-m1'></a>
-``return null``
+##### Foreign Static Method ``set_volume(go: _, name: _, amt: _)`` <a id='game-9-m1'></a>
+``return _``
 
-##### Foreign Static Method ``play(go: {static method} play(go: GameObject, name: name: String))`` <a id='game-9-m2'></a>
-``return null``
+##### Foreign Static Method ``play(go: _, name: _)`` <a id='game-9-m2'></a>
+``return _``
 
 ### Foreign Class ``Line`` <a id='game--k9'></a> 
 >
-> {class} Line
 
 #### Constructors
 > - [new](#game-10-c-1)
@@ -896,80 +870,73 @@
 > - [insert_point](#game-10-m8)
 > - [set_point](#game-10-m9)
 ##### Constructor ``new()`` <a id='game-10-c-1'></a>
-``return Line``
-> constructs with no points and default thickness of 10.0
+``return _``
 
-##### Foreign Getter ``: {getter} parent`` <a id='game-10-g-1'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-10-g-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} as_component`` <a id='game-10-g0'></a>
-``return Component``
+##### Foreign Getter ```` <a id='game-10-g0'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} color`` <a id='game-10-g1'></a>
-``return [Num]``
-> Gets color in form [r,g,b,a]
+##### Foreign Getter ```` <a id='game-10-g1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} opacity`` <a id='game-10-g2'></a>
-``return [Num]``
+##### Foreign Getter ```` <a id='game-10-g2'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} sort`` <a id='game-10-g3'></a>
-``return Num``
+##### Foreign Getter ```` <a id='game-10-g3'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} thickness`` <a id='game-10-g4'></a>
-``return [Num]: ``
+##### Foreign Getter ```` <a id='game-10-g4'></a>
+``return _``
 > Gets line thickness in form [start, end]
 
-##### Foreign Getter ``: {getter} points`` <a id='game-10-g5'></a>
-``return [Vec2]``
+##### Foreign Getter ```` <a id='game-10-g5'></a>
+``return _``
 
 ##### Setter ``sort = value: _`` <a id='game-10-s-1'></a>
-> {setter} sort = value: Num
 
 ##### Setter ``color = value: _`` <a id='game-10-s0'></a>
-> {setter} color = value: [Num]
 
 ##### Setter ``opacity = value: _`` <a id='game-10-s1'></a>
-> {setter} opacity = value: [Num]
 
 ##### Setter ``thickness = value: _`` <a id='game-10-s2'></a>
-> {setter} thickness = value: [Num]
 
-##### Foreign Static Method ``set_sort(go: {static method} set_sort(go: GameObject, sort: sort: Num))`` <a id='game-10-m-1'></a>
-``return null``
+##### Foreign Static Method ``set_sort(go: _, sort: _)`` <a id='game-10-m-1'></a>
+``return _``
 
-##### Foreign Static Method ``get_sort(go: {static method} get_sort(go: GameObject))`` <a id='game-10-m0'></a>
-``return Num``
+##### Foreign Static Method ``get_sort(go: _)`` <a id='game-10-m0'></a>
+``return _``
 
-##### Foreign Static Method ``set_thickness(go: {static method} set_thickness(go: GameObject, thickness: thickness: [Num]))`` <a id='game-10-m1'></a>
-``return null``
+##### Foreign Static Method ``set_thickness(go: _, thickness: _)`` <a id='game-10-m1'></a>
+``return _``
 
-##### Foreign Static Method ``get_thickness(go: {static method} get_thickness(go: GameObject))`` <a id='game-10-m2'></a>
-``return [Num]``
+##### Foreign Static Method ``get_thickness(go: _)`` <a id='game-10-m2'></a>
+``return _``
 
-##### Foreign Static Method ``set_color(go: {static method} set_color(go: GameObject, color: color: [Num]))`` <a id='game-10-m3'></a>
-``return null``
+##### Foreign Static Method ``set_color(go: _, color: _)`` <a id='game-10-m3'></a>
+``return _``
 
-##### Foreign Static Method ``set_opacity(go: {static method} set_opacity(go: GameObject, opacity: opacity: [Num]))`` <a id='game-10-m4'></a>
-``return null``
+##### Foreign Static Method ``set_opacity(go: _, opacity: _)`` <a id='game-10-m4'></a>
+``return _``
 
-##### Foreign Static Method ``add_point(go: {static method} add_point(go: GameObject, point: point: Vec2))`` <a id='game-10-m5'></a>
-``return null``
+##### Foreign Static Method ``add_point(go: _, point: _)`` <a id='game-10-m5'></a>
+``return _``
 
-##### Foreign Static Method ``remove_point(go: {static method} remove_point(go: GameObject, index: index: Num))`` <a id='game-10-m6'></a>
-``return null``
+##### Foreign Static Method ``remove_point(go: _, index: _)`` <a id='game-10-m6'></a>
+``return _``
 
-##### Foreign Static Method ``pop_point(go: {static method} pop_point(go: GameObject))`` <a id='game-10-m7'></a>
-``return null``
+##### Foreign Static Method ``pop_point(go: _)`` <a id='game-10-m7'></a>
+``return _``
 
-##### Foreign Static Method ``insert_point(go: {static method} insert_point(go: GameObject, point: point: Vec2, index: index: Num))`` <a id='game-10-m8'></a>
-``return null``
+##### Foreign Static Method ``insert_point(go: _, point: _, index: _)`` <a id='game-10-m8'></a>
+``return _``
 
-##### Foreign Static Method ``set_point(go: {static method} set_point(go: GameObject, index: index: Num, point: point: Vec2))`` <a id='game-10-m9'></a>
-``return null``
+##### Foreign Static Method ``set_point(go: _, index: _, point: _)`` <a id='game-10-m9'></a>
+``return _``
 
 ### Foreign Class ``ComponentBehaviour`` <a id='game--k10'></a> 
 >
-> {class} ComponentBehaviour
 
 #### Constructors
 > - [new](#game-11-c-1)
@@ -977,27 +944,26 @@
 > - [](#game-11-g-1)
 > - [](#game-11-g0)
 > - [](#game-11-g1)
-##### Constructor ``new(b: {constructor} new(b: String))`` <a id='game-11-c-1'></a>
-``return ComponentBehaviour``
+##### Constructor ``new(b: _)`` <a id='game-11-c-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} as_component`` <a id='game-11-g-1'></a>
-``return Component``
+##### Foreign Getter ```` <a id='game-11-g-1'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} parent`` <a id='game-11-g0'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-11-g0'></a>
+``return _``
 
-##### Foreign Getter ``: {getter} uuid`` <a id='game-11-g1'></a>
-``return String``
+##### Foreign Getter ```` <a id='game-11-g1'></a>
+``return _``
 
 ### Foreign Class ``Debug`` <a id='game--k11'></a> 
 >
-> {class} Debug
 
 #### Methods
 > - [drawLine](#game-12-m-1)
 > - [printFrameInfo](#game-12-m0)
-##### Foreign Static Method ``drawLine(start: {static method} drawLine(start: Vec2, end: end: Vec2, color: color: [num]))`` <a id='game-12-m-1'></a>
-``return null``
+##### Foreign Static Method ``drawLine(start: _, end: _, color: _)`` <a id='game-12-m-1'></a>
+``return _``
 
 ##### Static Method ``printFrameInfo()`` <a id='game-12-m0'></a>
 ``return _``
