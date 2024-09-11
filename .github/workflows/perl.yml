@@ -33,7 +33,7 @@ jobs:
       - name: perl -V
         run: perl -V
       - name: WrenDoc.PL
-        run: perl src/scripts/WrenDocs.pl -out LilahScriptingAPI.md -in src/scripts/io.wren,src/scripts/game.wren,src/scripts/ParticleSystem.wren,src/scripts/Trail.wren,src/scripts/app.wren,src/scripts/math.wren
+        run: perl src/scripts/WrenDoc.pl -out LilahScriptingAPI.md -in src/scripts/io.wren,src/scripts/game.wren,src/scripts/ParticleSystem.wren,src/scripts/Trail.wren,src/scripts/app.wren,src/scripts/math.wren
       - name: update file and push to remote
         run: |
           git config --global user.name "github-actions[bot]"
