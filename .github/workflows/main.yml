@@ -33,4 +33,4 @@ jobs:
       - name: perl -V
         run: perl -V
       - name: WrenDoc.PL
-        run: perl src/scripts/WrenDocs.PL -out src/scripts/Test.md -in src/scripts/io.wren
+        run: perl src/scripts/WrenDocs.pl -out src/scripts/Test.md -in src/scripts/io.wren
