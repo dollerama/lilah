@@ -6,10 +6,10 @@ import "random" for Random
 class Behaviour is Serializable {
     ///_ -> Map
     static data { __data }
-    ///_ -> Map
+    ///Any -> Null 
     static data=(v) { __data = v }
 
-    ///Any -> Any
+    ///_ -> Any
     static [i] {
         return __data[i]
     }
